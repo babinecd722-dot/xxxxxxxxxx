@@ -1,47 +1,28 @@
 //Автор - @ted_resolution
 
 ===========================================================
-  ГАЙД ПО ИЗМЕНЕНИЮ КЛЮЧЕВЫХ СТРОК В ЛАУНЧЕРЕ RAGE RUSSIA
+  ЧТО И ГДЕ МЕНЯТЬ — КРАТКИЙ ГАЙД
 ===========================================================
 
-Тут расписано где и что менять в декомпилированных исходниках.
-Все пути указаны от корня репы. Строки указаны по номерам в файлах.
-
-ВАЖНО: это Flutter-приложение, скомпилированное в нативный код (AOT).
-Строки зашиты в бинарник libapp.so, просто так текстовик не поменяешь.
-Чтобы реально изменить поведение, нужно патчить бинарь через hex-редактор
-или пересобирать APK из восстановленного Dart-проекта.
-
-Ниже описано ГДЕ в декомпиле находится каждая строка, чтобы понимать
-что за что отвечает и что именно патчить.
+Все пути указаны от корня архива (rage_russia_launcher/).
+Номера строк — в указанных файлах.
 
 
 -----------------------------------------------------------
-1. НАДПИСЬ В ШАПКЕ "RAGE RUSSIA" (название в заголовке)
+1. НАДПИСЬ В ШАПКЕ "RAGE RUSSIA"
 -----------------------------------------------------------
 
 //Автор - @ted_resolution
 
-Файл: dart_decompiled/asm/ragerussia/features/app/presentation/widgets/title_widget.dart
+Файл: 02_ИСХОДНИКИ_DART/features/app/presentation/widgets/title_widget.dart
+  Строка 110:   "RAGE\n"        ← первая строка заголовка
+  Строка 199:   "RUSSIA"        ← вторая строка заголовка
 
-Строка 110:   r0 = "RAGE\n"
-  >> тут загружается первая часть надписи "RAGE" с переносом строки
+Файл: 02_ИСХОДНИКИ_DART/features/app/presentation/app_page.dart
+  Строка 92:    "RAGE RUSSIA"   ← title приложения (MaterialApp)
 
-Строка 199:   r0 = "RUSSIA"
-  >> тут загружается вторая часть "RUSSIA"
-
-Вместе они дают надпись:
-  RAGE
-  RUSSIA
-
-Также название приложения "RAGE RUSSIA" (title у MaterialApp) лежит тут:
-
-Файл: dart_decompiled/asm/ragerussia/features/app/presentation/app_page.dart
-Строка 92:    r1 = "RAGE RUSSIA"
-
-Файл: decompiled/resources/AndroidManifest.xml
-Строка 31:    android:label="RAGE RUSSIA"
-  >> это системное имя приложения в Android
+Файл: 04_МАНИФЕСТ/AndroidManifest.xml
+  Строка 31:    android:label="RAGE RUSSIA"   ← системное имя в Android
 
 
 -----------------------------------------------------------
@@ -50,74 +31,49 @@
 
 //Автор - @ted_resolution
 
-Обе кнопки ведут на один и тот же URL. При нажатии вызывается
-функция launch() из пакета url_launcher, которая открывает ссылку:
+Обе кнопки открывают одну ссылку: https://t.me/crmp_rage
 
-  https://t.me/crmp_rage
+Где текст кнопок:
+  Файл: 02_ИСХОДНИКИ_DART/features/app/presentation/widgets/start_page.dart
+    Строка 120:   "TELEGRAM"
+    Строка 238:   "ПОПОЛНИТЬ СЧЁТ"
 
-Где она прописана:
+Где ссылка зашита:
+  Файл: 06_FRIDA_И_ОТЛАДКА/object_pool.txt
+    Строка 12166:  [pp+0xd950] String: "https://t.me/crmp_rage"
 
-Файл: dart_decompiled/asm/url_launcher/src/legacy_api.dart
-Строка 22-23:  r1 = "https://t.me/crmp_rage"
-  >> основной вызов, отсюда url_launcher берет ссылку
+Для патча бинаря — ищи строку "https://t.me/crmp_rage" в файле:
+  05_НАТИВНЫЕ_БИБЛИОТЕКИ/arm64-v8a/libapp.so
 
-Файл: dart_decompiled/pp.txt (Object Pool - таблица всех строк)
-Строка 12166: [pp+0xd950] String: "https://t.me/crmp_rage"
-  >> смещение в object pool: 0xd950
-
-Файл: dart_decompiled/asm/ragerussia/features/app/presentation/widgets/start_page.dart
-Строки 120-121:   r0 = "TELEGRAM"
-  >> текст первой кнопки
-Строки 237-239:   r0 = "ПОПОЛНИТЬ СЧЁТ"
-  >> текст второй кнопки
-Строка 1229-1230: r0 = launch()
-  >> вызов открытия ссылки при нажатии (обе кнопки юзают одну closure
-     которая вызывает launch с захардкоженным URL)
-
-Чтобы изменить ссылку, надо патчить строку "https://t.me/crmp_rage"
-в бинарнике libapp.so по смещению из object pool (pp+0xd950).
+Меняй на свою ссылку той же длины или короче (добивай нулями).
 
 
 -----------------------------------------------------------
-3. ССЫЛКА СКАЧИВАНИЯ АПК (кнопка "ЗАГРУЗИТЬ" / "УСТАНОВИТЬ")
+3. URL СКАЧИВАНИЯ АПК (кнопка "ЗАГРУЗИТЬ")
 -----------------------------------------------------------
 
 //Автор - @ted_resolution
 
-При нажатии кнопки "ЗАГРУЗИТЬ" лаунчер качает два файла:
-  - сам лаунчер (обновление)
-  - игровой клиент
+Файл: 02_ИСХОДНИКИ_DART/features/app/presentation/bloc/bloc.dart
 
-URLs зашиты в bloc.dart, вот точные места:
+  Строка 1402:  "https://fastdl.ragerussia.online/version.json"
+    → проверка версии
 
-Файл: dart_decompiled/asm/ragerussia/features/app/presentation/bloc/bloc.dart
+  Строка 1406:  "https://fastdl.ragerussia.online/launcher.apk"
+    → скачивание игрового клиента
 
-  Строка 1402-1403:  "https://fastdl.ragerussia.online/version.json"
-    >> проверка версии (json с актуальной версией)
+  Строка 1410:  "https://fastdl.ragerussia.online/launcherMain.apk"
+    → скачивание обновления лаунчера
 
-  Строка 1406-1407:  "https://fastdl.ragerussia.online/launcher.apk"
-    >> скачивание APK лаунчера (game launcher)
+Повторные использования тех же ссылок:
+  Строка 1999:  launcherMain.apk  (скачка + установка)
+  Строка 2209:  launcher.apk      (скачка + установка)
 
-  Строка 1410-1411:  "https://fastdl.ragerussia.online/launcherMain.apk"
-    >> скачивание главного APK (сам лаунчер для обновления)
-
-  Строка 1999-2000:  "https://fastdl.ragerussia.online/launcherMain.apk"
-    >> повторное использование - скачивание + открытие через OpenFile
-
-  Строка 2209-2210:  "https://fastdl.ragerussia.online/launcher.apk"
-    >> повторное использование - скачивание + открытие через OpenFile
-
-Локальные имена файлов после скачки:
-
-  Строка 1394-1395:  "game.apk"       — имя скачанного игрового клиента
-  Строка 1398-1399:  "launcher.apk"   — имя скачанного лаунчера
-
-Смещения в Object Pool (для патча бинаря):
-
-Файл: dart_decompiled/pp.txt
-  Строка 8170:  [pp+0x7a30] "https://fastdl.ragerussia.online/version.json"
-  Строка 8171:  [pp+0x7a38] "https://fastdl.ragerussia.online/launcher.apk"
-  Строка 8172:  [pp+0x7a40] "https://fastdl.ragerussia.online/launcherMain.apk"
+Адреса в Object Pool для патча libapp.so:
+  06_FRIDA_И_ОТЛАДКА/object_pool.txt
+    [pp+0x7a30] "https://fastdl.ragerussia.online/version.json"
+    [pp+0x7a38] "https://fastdl.ragerussia.online/launcher.apk"
+    [pp+0x7a40] "https://fastdl.ragerussia.online/launcherMain.apk"
 
 
 -----------------------------------------------------------
@@ -126,66 +82,65 @@ URLs зашиты в bloc.dart, вот точные места:
 
 //Автор - @ted_resolution
 
-После установки кнопка меняется на "ЗАПУСТИТЬ". При нажатии
-лаунчер запускает игру через AndroidIntent:
+Файл: 02_ИСХОДНИКИ_DART/features/app/presentation/bloc/bloc.dart
 
-Файл: dart_decompiled/asm/ragerussia/features/app/presentation/bloc/bloc.dart
+  Строка 2869:  "com.rage.russia.LAUNCH_RAGE_RUSSIA"
+    → Android Intent action для запуска игры
 
-  Строка 2869-2870:  "com.rage.russia.LAUNCH_RAGE_RUSSIA"
-    >> это action для Android Intent, через него запускается игра
+  Строка 2368:  "com.ragerussia.launcher"
+    → package name приложения
 
-  Строка 2893-2894:  launch()
-    >> вызов AndroidIntent.launch() - фактический запуск
-
-  Строка 2368-2369:  "com.ragerussia.launcher"
-    >> package name приложения (используется для проверок)
-
-Файл: dart_decompiled/asm/ragerussia/features/app/presentation/widgets/start_page.dart
-  Строки 490-493:   "ЗАПУСТИТЬ" / "ЗАГРУЗИТЬ"
-    >> текст кнопки меняется в зависимости от состояния (field_b == true -> ЗАПУСТИТЬ)
-
-Строки 698-701:     "НАСТРОЙКИ"
-    >> кнопка настроек (просто к сведению)
+Файл: 02_ИСХОДНИКИ_DART/features/app/presentation/widgets/start_page.dart
+  Строка 491:   "ЗАПУСТИТЬ"   ← текст кнопки (если установлено)
+  Строка 494:   "ЗАГРУЗИТЬ"   ← текст кнопки (если не установлено)
 
 
 -----------------------------------------------------------
-5. ДОППНИТЕЛЬНЫЕ СТРОКИ (баннеры / слайдер)
+5. БАННЕРЫ / СЛАЙДЕР
 -----------------------------------------------------------
 
 //Автор - @ted_resolution
 
-Файл: dart_decompiled/asm/ragerussia/features/app/presentation/widgets/banner_slider.dart
+Файл: 02_ИСХОДНИКИ_DART/features/app/presentation/widgets/banner_slider.dart
 
-  Строка 1049-1050:  "t.me/rage_work"
-    >> ссылка на бота поддержки в баннере "Как связаться с администрацией"
-
-  Строка 1091-1092:  "forum.ragerussia.online"
-    >> ссылка на форум в баннере "Как стать администратором"
+  Строка 1049:  "t.me/rage_work"           ← бот поддержки
+  Строка 1091:  "forum.ragerussia.online"   ← форум проекта
 
 
 -----------------------------------------------------------
-ИТОГО - ЧТО МЕНЯТЬ ПОД СЕБЯ (краткая сводка)
+6. ИКОНКА И КАРТИНКИ
 -----------------------------------------------------------
 
 //Автор - @ted_resolution
 
-| Что                        | Где (файл : строка)                                   | Текущее значение                                       |
-|----------------------------|--------------------------------------------------------|--------------------------------------------------------|
-| Шапка (часть 1)            | title_widget.dart : 110                                | "RAGE\n"                                               |
-| Шапка (часть 2)            | title_widget.dart : 199                                | "RUSSIA"                                               |
-| Заголовок приложения       | app_page.dart : 92                                     | "RAGE RUSSIA"                                          |
-| Системное имя              | AndroidManifest.xml : 31                               | android:label="RAGE RUSSIA"                            |
-| Ссылка TELEGRAM/ПОПОЛНИТЬ  | url_launcher/legacy_api.dart : 22                      | https://t.me/crmp_rage                                 |
-| URL версии                 | bloc.dart : 1402                                       | https://fastdl.ragerussia.online/version.json          |
-| URL скачки лаунчера        | bloc.dart : 1406                                       | https://fastdl.ragerussia.online/launcher.apk          |
-| URL скачки главного APK    | bloc.dart : 1410                                       | https://fastdl.ragerussia.online/launcherMain.apk      |
-| Intent запуска игры        | bloc.dart : 2869                                       | com.rage.russia.LAUNCH_RAGE_RUSSIA                     |
-| Package name               | bloc.dart : 2368                                       | com.ragerussia.launcher                                |
-| Бот поддержки              | banner_slider.dart : 1049                              | t.me/rage_work                                         |
-| Форум                      | banner_slider.dart : 1091                              | forum.ragerussia.online                                |
+  03_РЕСУРСЫ/иконки/mipmap-*/launcher_icon.png  ← иконка приложения
+  03_РЕСУРСЫ/картинки/bg.png                     ← фон приложения
+  03_РЕСУРСЫ/картинки/logo.jpg                   ← логотип
+  03_РЕСУРСЫ/svg/tg.svg                          ← иконка телеграма
 
-Все эти строки зашиты в libapp.so (Dart AOT). Для реального патча
-нужно менять байты в бинарнике или пересобирать из Dart исходников.
+
+-----------------------------------------------------------
+СВОДНАЯ ТАБЛИЦА
+-----------------------------------------------------------
+
+//Автор - @ted_resolution
+
+| Что менять                  | Файл                                              | Строка | Значение сейчас                                   |
+|-----------------------------|-----------------------------------------------------|--------|---------------------------------------------------|
+| Шапка (1 часть)             | 02_.../title_widget.dart                            | 110    | RAGE\n                                            |
+| Шапка (2 часть)             | 02_.../title_widget.dart                            | 199    | RUSSIA                                            |
+| Название приложения         | 02_.../app_page.dart                                | 92     | RAGE RUSSIA                                       |
+| Название в Android          | 04_МАНИФЕСТ/AndroidManifest.xml                     | 31     | RAGE RUSSIA                                       |
+| Ссылка TELEGRAM/ПОПОЛНИТЬ   | libapp.so (смещение pp+0xd950)                      | —      | https://t.me/crmp_rage                            |
+| URL проверки версии         | libapp.so (pp+0x7a30)                               | —      | https://fastdl.ragerussia.online/version.json     |
+| URL скачки клиента          | libapp.so (pp+0x7a38)                               | —      | https://fastdl.ragerussia.online/launcher.apk     |
+| URL скачки лаунчера         | libapp.so (pp+0x7a40)                               | —      | https://fastdl.ragerussia.online/launcherMain.apk |
+| Intent запуска              | libapp.so                                           | —      | com.rage.russia.LAUNCH_RAGE_RUSSIA                |
+| Package name                | 04_МАНИФЕСТ/AndroidManifest.xml                     | 7      | com.ragerussia.launcher                           |
+| Бот поддержки               | libapp.so                                           | —      | t.me/rage_work                                    |
+| Форум                       | libapp.so                                           | —      | forum.ragerussia.online                           |
+| Иконка                      | 03_РЕСУРСЫ/иконки/                                  | —      | launcher_icon.png                                 |
+| Фон                         | 03_РЕСУРСЫ/картинки/                                | —      | bg.png                                            |
 
 Удачи братишка
 //Автор - @ted_resolution
