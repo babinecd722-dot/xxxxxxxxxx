@@ -1,0 +1,13 @@
+2026-03-06 17:28:15,119 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-03-06 17:28:15,119 [INFO] DM-SENT: Запуск polling...
+2026-03-06 17:28:15,416 [INFO] httpx: HTTP Request: POST https://api.telegram.org/bot7807315759:AAFAg7KOmUdja2uHjjYYAS_zIuEL-kFuu-s/getMe "HTTP/1.1 200 OK"
+2026-03-06 17:28:15,541 [INFO] httpx: HTTP Request: POST https://api.telegram.org/bot7807315759:AAFAg7KOmUdja2uHjjYYAS_zIuEL-kFuu-s/getMe "HTTP/1.1 200 OK"
+2026-03-06 17:28:15,542 [INFO] DM-SENT: Бот запущен: @dmsentbot (⚡️DM - СЕНТ)
+2026-03-06 17:28:15,639 [INFO] httpx: HTTP Request: POST https://api.telegram.org/bot7807315759:AAFAg7KOmUdja2uHjjYYAS_zIuEL-kFuu-s/deleteWebhook "HTTP/1.1 200 OK"
+2026-03-06 17:28:15,640 [INFO] apscheduler.scheduler: Added job "captcha_cleanup" to job store "default"
+2026-03-06 17:28:15,640 [INFO] apscheduler.scheduler: Scheduler started
+2026-03-06 17:28:15,640 [INFO] telegram.ext.Application: Application started
+2026-03-06 17:28:25,129 [INFO] apscheduler.executors.default: Running job "captcha_cleanup (trigger: interval[0:00:30], next run at: 2026-03-06 17:28:55 UTC)" (scheduled at 2026-03-06 17:28:25.119141+00:00)
+2026-03-06 17:28:25,132 [INFO] apscheduler.executors.default: Job "captcha_cleanup (trigger: interval[0:00:30], next run at: 2026-03-06 17:28:55 UTC)" executed successfully
+2026-03-06 17:28:25,933 [INFO] httpx: HTTP Request: POST https://api.telegram.org/bot7807315759:AAFAg7KOmUdja2uHjjYYAS_zIuEL-kFuu-s/getUpdates "HTTP/1.1 200 OK"
+2026-03-06 17:28:36,031 [INFO] httpx: HTTP Request: POST https://api.telegram.org/bot7807315759:AAFAg7KOmUdja2uHjjYYAS_zIuEL-kFuu-s/getUpdates "HTTP/1.1 200 OK"
