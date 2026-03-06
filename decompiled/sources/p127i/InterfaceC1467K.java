@@ -1,0 +1,6 @@
+package p127i;
+
+/* renamed from: i.K */
+/* loaded from: classes.dex */
+public interface InterfaceC1467K {
+}

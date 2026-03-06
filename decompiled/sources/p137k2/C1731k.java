@@ -1,0 +1,55 @@
+package p137k2;
+
+import p008B2.InterfaceC0046p;
+import p044L.C0408b;
+import p044L.C0411e;
+import p165r2.AbstractC2050e;
+import p165r2.C2053h;
+import p172t2.InterfaceC2124d;
+import p179v2.AbstractC2169f;
+
+/* renamed from: k2.k */
+/* loaded from: classes.dex */
+public final class C1731k extends AbstractC2169f implements InterfaceC0046p {
+
+    /* renamed from: o */
+    public /* synthetic */ Object f7154o;
+
+    /* renamed from: p */
+    public final /* synthetic */ C0411e f7155p;
+
+    /* renamed from: q */
+    public final /* synthetic */ String f7156q;
+
+    /* JADX WARN: 'super' call moved to the top of the method (can break code semantics) */
+    public C1731k(C0411e c0411e, String str, InterfaceC2124d interfaceC2124d) {
+        super(2, interfaceC2124d);
+        this.f7155p = c0411e;
+        this.f7156q = str;
+    }
+
+    @Override // p179v2.AbstractC2165b
+    /* renamed from: b */
+    public final InterfaceC2124d mo583b(Object obj, InterfaceC2124d interfaceC2124d) {
+        C1731k c1731k = new C1731k(this.f7155p, this.f7156q, interfaceC2124d);
+        c1731k.f7154o = obj;
+        return c1731k;
+    }
+
+    @Override // p008B2.InterfaceC0046p
+    /* renamed from: h */
+    public final Object mo272h(Object obj, Object obj2) {
+        C1731k c1731k = (C1731k) mo583b((C0408b) obj, (InterfaceC2124d) obj2);
+        C2053h c2053h = C2053h.f8338a;
+        c1731k.mo582m(c2053h);
+        return c2053h;
+    }
+
+    @Override // p179v2.AbstractC2165b
+    /* renamed from: m */
+    public final Object mo582m(Object obj) {
+        AbstractC2050e.m4049k(obj);
+        ((C0408b) this.f7154o).m799d(this.f7155p, this.f7156q);
+        return C2053h.f8338a;
+    }
+}
