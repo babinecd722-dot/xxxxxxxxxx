@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>BpcEditor</RootNamespace>
+    <AssemblyName>BpcEditor</AssemblyName>
+    <ApplicationIcon />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AstcSharp" Version="0.9.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="TestDataGen\**"/>
+    <Content Remove="TestDataGen\**"/>
+    <EmbeddedResource Remove="TestDataGen\**"/>
+    <None Remove="TestDataGen\**"/>
+    <Page Remove="TestDataGen\**"/>
+    <Resource Remove="TestDataGen\**"/>
+    <Compile Remove="Analyze\**"/>
+    <Content Remove="Analyze\**"/>
+    <EmbeddedResource Remove="Analyze\**"/>
+    <None Remove="Analyze\**"/>
+    <Compile Remove="analyze.csx"/>
+    <None Remove="analyze.csx"/>
+    <Compile Remove="Diag\**"/>
+    <Content Remove="Diag\**"/>
+    <EmbeddedResource Remove="Diag\**"/>
+    <None Remove="Diag\**"/>
+    <Compile Remove="DiagBtx.csx"/>
+    <None Remove="DiagBtx.csx"/>
+  </ItemGroup>
+
+</Project>
