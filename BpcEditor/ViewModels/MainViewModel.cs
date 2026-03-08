@@ -179,7 +179,8 @@ public sealed class MainViewModel : BaseViewModel
             _archive.Save(dlg.FileName);
             _currentFilePath = dlg.FileName;
             ArchiveName = Path.GetFileName(dlg.FileName);
-            StatusText = $"Сохранён: {ArchiveName}";
+            long savedSize = new FileInfo(dlg.FileName).Length;
+            StatusText = $"Сохранён: {ArchiveName}  •  size: {savedSize}";
         }
         catch (Exception ex)
         {
