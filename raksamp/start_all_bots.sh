@@ -22,14 +22,19 @@ source "$ROOT/bots/.launch.env"
 for d in "$ROOT/bots"/bot[0-9]*; do
   [[ -d "$d" ]] || continue
   [[ -f "$d/RakSAMPClient.exe" ]] || cp -f "$ROOT/RakSAMPClient.exe" "$d/"
-  [[ -f "$d/.nick" ]] || { echo "Нет $d/.nick — запусти setup_bots.py" >&2; exit 1; }
+  if [[ ! -f "$d/.nick" ]]; then
+    echo "Пропуск (нет .nick): $d — запусти python3 setup_bots.py" >&2
+    continue
+  fi
   nick="$(tr -d '\r\n' <"$d/.nick")"
   echo "Starting $(basename "$d") nick=$nick ..."
   (
     cd "$d"
     : >>"bot.log"
-    # RakSAMP парсит -n/-h/-p/-z после XML — фиксирует ник с '_' если клиент/сервер ковёркал строку.
-    nohup wine ./RakSAMPClient.exe -n "$nick" -h "$RAK_HOST" -p "$RAK_PORT" -z "$RAK_PASS" >>"bot.log" 2>&1 &
+    # RakSAMP: пустой -z ломает парсинг командной строки → ложный Invalid password на коннекте.
+    WINE_ARGS=(./RakSAMPClient.exe -n "$nick" -h "$RAK_HOST" -p "$RAK_PORT")
+    [[ -n "${RAK_PASS:-}" ]] && WINE_ARGS+=(-z "$RAK_PASS")
+    nohup wine "${WINE_ARGS[@]}" >>"bot.log" 2>&1 &
     echo $! >"bot.pid"
   )
   sleep "$STAGGER"
