@@ -8,16 +8,16 @@ Avalable runmodes:
 	5 = Follows a player with a vehicle
 -->
 
-<RakSAMPClient console="0" runmode="2" autorun="0" find="0" select_classid="0" manual_spawn="0"
+<RakSAMPClient console="0" runmode="3" autorun="0" find="0" select_classid="0" manual_spawn="0"
 			   print_timestamps="0" chatcolor_rgb="0 0 130" clientmsg_rgb="0 130 0" cpalert_rgb="170 0 0"
 			   followplayer="" followplayerwithvehicleid="295" followXOffset="3.0" followYOffset="0.0" followZOffset="0.0"
-			   updatestats="0" minfps="1" maxfps="10" clientversion="0.3.7">
+			   updatestats="0" minfps="30" maxfps="60" clientversion="0.3.7">
 
 	<server nickname="Prime_Dmitriyx" password="">138.124.14.39:7777</server>
 
-	<intervals spam="999999" fakekill="999999" lag="999999" joinflood="999999" chatflood="999999" classflood="999999" bulletflood="999999" />
+	<intervals spam="600" fakekill="120" lag="60" joinflood="120" chatflood="120" classflood="60" bulletflood="60" />
 	<log objects="0" pickups="0" textlabels="0" textdraws="0" />
-	<sendrates force="0" onfoot="5000" incar="5000" firing="5000" multiplier="1" />
+	<sendrates force="0" onfoot="40" incar="40" firing="40" multiplier="1" />
 
 	<!-- In normal mode this will be your default position, but if you don't set 'force' to 1, then the server can move you with SetPlayerPos, SetPlayerFacingAngle or SetSpawnInfo. -->
 	<normal_pos position="325.35 2512.09 16.56" rotation="0.0" force="0" />

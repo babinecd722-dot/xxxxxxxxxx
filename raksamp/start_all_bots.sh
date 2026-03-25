@@ -6,8 +6,8 @@ export DISPLAY="${DISPLAY:-:1}"
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 export WINEDEBUG="${WINEDEBUG:--all}"
-# Пауза между ботами (один IP) — антифлуд на коннекты/спавн.
-STAGGER="${STAGGER:-75}"
+# Пауза между ботами с одного IP (коннект + спавн + первые sync).
+STAGGER="${STAGGER:-120}"
 
 if [[ ! -f "$ROOT/RakSAMPClient.exe" ]]; then
   echo "Нужен $ROOT/RakSAMPClient.exe" >&2
@@ -15,16 +15,21 @@ if [[ ! -f "$ROOT/RakSAMPClient.exe" ]]; then
 fi
 
 python3 "$ROOT/setup_bots.py"
+# shellcheck source=/dev/null
+source "$ROOT/bots/.launch.env"
 
 # Имена каталогов: bot01_Name (не bot_Name — иначе glob не совпадает).
 for d in "$ROOT/bots"/bot[0-9]*; do
   [[ -d "$d" ]] || continue
   [[ -f "$d/RakSAMPClient.exe" ]] || cp -f "$ROOT/RakSAMPClient.exe" "$d/"
-  echo "Starting $(basename "$d")..."
+  [[ -f "$d/.nick" ]] || { echo "Нет $d/.nick — запусти setup_bots.py" >&2; exit 1; }
+  nick="$(tr -d '\r\n' <"$d/.nick")"
+  echo "Starting $(basename "$d") nick=$nick ..."
   (
     cd "$d"
     : >>"bot.log"
-    nohup wine ./RakSAMPClient.exe >>"bot.log" 2>&1 &
+    # RakSAMP парсит -n/-h/-p/-z после XML — фиксирует ник с '_' если клиент/сервер ковёркал строку.
+    nohup wine ./RakSAMPClient.exe -n "$nick" -h "$RAK_HOST" -p "$RAK_PORT" -z "$RAK_PASS" >>"bot.log" 2>&1 &
     echo $! >"bot.pid"
   )
   sleep "$STAGGER"

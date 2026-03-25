@@ -8,3 +8,5 @@ raksamp/__pycache__/
 raksamp/bots/
 raksamp/bots/*/bot.log
 raksamp/bots/*/bot.pid
+raksamp/bots/**/.nick
+raksamp/bots/.launch.env
