@@ -10,6 +10,10 @@ for pidfile in "$ROOT/bots"/bot[0-9]*/bot.pid; do
   fi
   rm -f "$pidfile"
 done
-# Не ждать все процессы Wine глобально — может зависнуть надолго.
+# Все оставшиеся инстансы (если pid файл потерян или запуск не через start_all_bots).
+pkill -TERM -f 'RakSAMPClient\.exe' 2>/dev/null || true
+sleep 2
+pkill -KILL -f 'RakSAMPClient\.exe' 2>/dev/null || true
+wineserver -k 2>/dev/null || true
 timeout 3 wineserver -w 2>/dev/null || true
-echo "Остановка ботов по bot.pid завершена."
+echo "Все RakSAMPClient.exe остановлены."
