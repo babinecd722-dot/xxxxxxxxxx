@@ -4,3 +4,4 @@ rage_russia_launcher/
 # RakSAMP — binary from GitHub release; keep repo small
 raksamp/RakSAMPClient.exe
 raksamp/*.log
+raksamp/__pycache__/
