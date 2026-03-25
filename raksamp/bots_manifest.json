@@ -2,16 +2,17 @@
   "server_host": "138.124.14.39",
   "server_port": 7777,
   "rcon_password": "",
+  "comment": "Ники First_Last — как у обычных игроков SA-MP; без префиксов бота и «геймерских» слитных слов.",
   "bots": [
-    {"nick": "Cursor_RakBot", "class_id": 0},
-    {"nick": "NovaStrike", "class_id": 1},
-    {"nick": "VoidRunner", "class_id": 2},
-    {"nick": "IceVector", "class_id": 3},
-    {"nick": "RedFlux", "class_id": 4},
-    {"nick": "DarkSignal", "class_id": 5},
-    {"nick": "ChromeGhost", "class_id": 6},
-    {"nick": "SynthWolf", "class_id": 7},
-    {"nick": "PixelHawk", "class_id": 8},
-    {"nick": "StormByte", "class_id": 9}
+    {"nick": "Alexander_Volkov", "class_id": 0},
+    {"nick": "Dmitry_Sokolov", "class_id": 1},
+    {"nick": "Maxim_Orlov", "class_id": 2},
+    {"nick": "Kirill_Zaytsev", "class_id": 3},
+    {"nick": "Artem_Morozov", "class_id": 4},
+    {"nick": "Ivan_Nikitin", "class_id": 5},
+    {"nick": "Sergey_Fadeyev", "class_id": 6},
+    {"nick": "Andrey_Lebedev", "class_id": 7},
+    {"nick": "Nikita_Gromov", "class_id": 8},
+    {"nick": "Pavel_Yegorov", "class_id": 9}
   ]
 }
