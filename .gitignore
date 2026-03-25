@@ -1,2 +1,6 @@
 # Extracted from decompiled_launcher.zip (source of truth is the zip)
 rage_russia_launcher/
+
+# RakSAMP — binary from GitHub release; keep repo small
+raksamp/RakSAMPClient.exe
+raksamp/*.log

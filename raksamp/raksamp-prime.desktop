@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RakSAMP Prime
+Comment=RakSAMP GUI — 138.124.14.39:7777 (Wine)
+Exec=/workspace/raksamp/run_wine.sh
+Path=/workspace/raksamp
+Icon=applications-wine
+Categories=Network;Game;
+StartupNotify=true
+Terminal=false
