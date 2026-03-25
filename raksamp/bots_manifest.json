@@ -1,0 +1,17 @@
+{
+  "server_host": "138.124.14.39",
+  "server_port": 7777,
+  "rcon_password": "",
+  "bots": [
+    {"nick": "Cursor_RakBot", "class_id": 0},
+    {"nick": "NovaStrike", "class_id": 1},
+    {"nick": "VoidRunner", "class_id": 2},
+    {"nick": "IceVector", "class_id": 3},
+    {"nick": "RedFlux", "class_id": 4},
+    {"nick": "DarkSignal", "class_id": 5},
+    {"nick": "ChromeGhost", "class_id": 6},
+    {"nick": "SynthWolf", "class_id": 7},
+    {"nick": "PixelHawk", "class_id": 8},
+    {"nick": "StormByte", "class_id": 9}
+  ]
+}

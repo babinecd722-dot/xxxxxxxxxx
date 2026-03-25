@@ -5,3 +5,6 @@ rage_russia_launcher/
 raksamp/RakSAMPClient.exe
 raksamp/*.log
 raksamp/__pycache__/
+raksamp/bots/
+raksamp/bots/*/bot.log
+raksamp/bots/*/bot.pid
