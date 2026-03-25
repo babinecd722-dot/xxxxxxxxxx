@@ -8,7 +8,7 @@ Avalable runmodes:
 	5 = Follows a player with a vehicle
 -->
 
-<RakSAMPClient console="0" runmode="3" autorun="0" find="1" select_classid="0" manual_spawn="1"
+<RakSAMPClient console="0" runmode="3" autorun="1" find="1" select_classid="0" manual_spawn="0"
 			   print_timestamps="0" chatcolor_rgb="0 0 130" clientmsg_rgb="0 130 0" cpalert_rgb="170 0 0"
 			   followplayer="KevY" followplayerwithvehicleid="295" followXOffset="3.0" followYOffset="0.0" followZOffset="0.0"
 			   updatestats="1" minfps="20" maxfps="90" clientversion="0.3.7">
@@ -22,8 +22,8 @@ Avalable runmodes:
 	<!-- In normal mode this will be your default position, but if you don't set 'force' to 1, then the server can move you with SetPlayerPos, SetPlayerFacingAngle or SetSpawnInfo. -->
 	<normal_pos position="325.35 2512.09 16.56" rotation="0.0" force="0" />
 
-	<!-- These get called when we successfully connected to a server. -->
-	<!-- <autorun>!selveh 4</autorun> -->
+	<!-- Autorun выполняется только ПОСЛЕ спавна. При manual_spawn=0 клиент сам жмёт класс (select_classid) и спавн. -->
+	<autorun>!teleport 0</autorun>
 	
 	<!-- Finds text from the chatbox and says something. -->
 	<!-- <find text="PM from" say="" bk_color="255 255 255" text_color="255 0 0" /> -->
