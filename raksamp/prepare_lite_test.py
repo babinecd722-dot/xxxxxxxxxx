@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent
 LITE = ROOT / "lite"
 OUT = ROOT / "lite_instances"
 
-IGNORE_NAMES = {".git", "__pycache__"}
+IGNORE_NAMES = {".git", "__pycache__", "README_SCRIPTS.md", "BLAST_LITE_SETUP.md"}
 
 INI_RELATIVE_PATHS = (
     Path("settings") / "RakSAMP Lite.ini",
@@ -106,34 +106,48 @@ def patch_settings(dest: Path, *, host: str, port: int, nick: str) -> None:
         canon.write_text(text, encoding="utf-8")
 
 
-def write_autoconnect(dest_scripts: Path, *, host: str, port: int, nick: str, slot: str) -> None:
+def write_autoconnect(
+    dest_scripts: Path, *, host: str, port: int, nick: str, slot: str, instance_root: Path
+) -> None:
     """Клиент при старте перезаписывает settings/RakSAMP Lite.ini на localhost — первый коннект шёл не туда.
     Блокируем onRequestConnect несколько секунд, пока Lua не выставит setServerAddress."""
     dest_scripts.mkdir(parents=True, exist_ok=True)
     addr = f"{host}:{port}"
     a = lua_quote(addr)
     n = lua_quote(nick)
-    extra = ""
+    log_host = str((instance_root / "raksamp_lite.log").resolve()).replace("\\", "/")
+    log_path_lua = lua_quote(log_host)
+    bot2_delay_lua = ""
     if slot == "bot2":
-        extra = """
-  local extra = math.random(55, 110)
-  ready_ts = ready_ts + extra
-  print("[00_autoconnect] +антифлуд второго окна " .. extra .. " s")
+        bot2_delay_lua = """
+local _d = math.random(55, 110)
+ready_ts = ready_ts + _d
+print("[00_autoconnect] bot2 extra delay +" .. _d .. "s")
 """
-    lua = f"""-- Автогенерация: адрес/ник (blast.hk threads/108052). onRequestConnect — см. README.
-require("addon")
+    lua = f"""require("addon")
 
-local ready_ts = 0
+math.randomseed(os.time())
+setServerAddress("{a}")
+setBotNick("{n}")
+local ready_ts = os.time() + 6{bot2_delay_lua}
 
 function onLoad()
-  math.randomseed(os.time())
-  setServerAddress("{a}")
-  setBotNick("{n}")
+  local f = io.open("{log_path_lua}", "w")
+  if f then
+    f:write("onLoad nick={n} addr={a}\\n")
+    f:close()
+  end
   setRate(RATE_LUA, 100)
   print("[00_autoconnect] {a} nick={n}")
-  -- ~2 с после старта exe перезаписывает ini на 127.0.0.1 — не даём коннектить до setServerAddress
-  ready_ts = os.time() + 6
-{extra}end
+end
+
+function onConnect()
+  local f = io.open("{log_path_lua}", "a")
+  if f then
+    f:write("onConnect OK\\n")
+    f:close()
+  end
+end
 
 function onRequestConnect()
   if os.time() < ready_ts then
@@ -150,6 +164,11 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=1801)
     ap.add_argument("--nick1", default="Test_BotOne")
     ap.add_argument("--nick2", default="Test_BotTwo")
+    ap.add_argument(
+        "--with-send-ping",
+        action="store_true",
+        help="Оставить 02_send_ping_fix.lua (глобальный onSendRPC может сломать samp.events вместе с 00/03/04 — по умолчанию файл удаляется из инстанса).",
+    )
     args = ap.parse_args()
     if not LITE.is_dir():
         print(f"Нет {LITE}", file=sys.stderr)
@@ -165,7 +184,17 @@ def main() -> int:
         d = OUT / slot
         copy_lite_tree(d)
         patch_settings(d, host=args.host, port=args.port, nick=nick)
-        write_autoconnect(d / "scripts", host=args.host, port=args.port, nick=nick, slot=slot)
+        write_autoconnect(
+            d / "scripts",
+            host=args.host,
+            port=args.port,
+            nick=nick,
+            slot=slot,
+            instance_root=d,
+        )
+        ping = d / "scripts" / "02_send_ping_fix.lua"
+        if not args.with_send_ping and ping.is_file():
+            ping.unlink()
         print(d)
     return 0
 

@@ -161,9 +161,15 @@ function onReceivePacket(id, bs)
 	end
 end
 
-function onLoad()
-	print(string.format("[AimSync FIX] Loaded! Author: %s (version %s)", CREDITS.AUTHOR, CREDITS.SCRIPT_VERSION))
-	gl.aim_info = genAimSyncInfo()
-	setRate(AIM_SYNC_RATE, 1000)
-	setRate(SPEC_SYNC_RATE, 100)
+do
+	local _prev = onLoad
+	function onLoad()
+		if _prev then
+			_prev()
+		end
+		print(string.format("[AimSync FIX] Loaded! Author: %s (version %s)", CREDITS.AUTHOR, CREDITS.SCRIPT_VERSION))
+		gl.aim_info = genAimSyncInfo()
+		setRate(AIM_SYNC_RATE, 1000)
+		setRate(SPEC_SYNC_RATE, 100)
+	end
 end

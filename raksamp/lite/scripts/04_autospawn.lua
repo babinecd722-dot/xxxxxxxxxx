@@ -2,8 +2,14 @@
 require("addon")
 local sampev = require("samp.events")
 
-function onLoad()
-	setRate(RATE_LUA, 200)
+do
+	local _prev = onLoad
+	function onLoad()
+		if _prev then
+			_prev()
+		end
+		setRate(RATE_LUA, 200)
+	end
 end
 
 function sampev.onSendSpawn()
