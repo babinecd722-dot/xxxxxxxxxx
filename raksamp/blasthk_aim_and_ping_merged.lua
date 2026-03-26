@@ -154,19 +154,14 @@ local function json_encode(t)
 end
 
 -- Отправить JSON-пакет серверу (эмуляция sendJsonData нативного клиента)
--- Формат: [1 byte: 0xFB] [4 bytes LE: screen_id] [N bytes: json_windows1251]
+-- Аналогично sendStatsUpdatePacket: первый байт bitstream = packet_id, потом данные.
+-- Формат: [0xFB=251] [uint32 screen_id] [string json_windows1251]
 local function pr_send(screen_id, json_str)
-	local data_len = 1 + 4 + #json_str  -- packet_id + screen_id + json
 	local bs = bitStream.new()
-	-- Packet id byte — пишем как первый байт данных пакета
-	-- RakSAMP Lite sendPacketEx сам добавит packet_id как первый байт, поэтому
-	-- в bitstream пишем начиная с screen_id
-	bs:writeUInt32(screen_id)
-	bs:writeString(json_str)
-	-- Отправляем как кастомный пакет 0xFB
-	-- sendPacketEx(priority, reliability, orderingChannel)
-	-- HIGH_PRIORITY=1, RELIABLE_ORDERED=9, channel=0
-	bs:sendPacketEx(1, 9, 0)
+	bs:writeUInt8(PKT_GUI_OUT)   -- 0xFB = 251 — packet type
+	bs:writeUInt32(screen_id)    -- 4 bytes LE screen_id
+	bs:writeString(json_str)     -- JSON bytes (windows-1251)
+	bs:sendPacketEx(1, 9, 0)    -- HIGH_PRIORITY, RELIABLE_ORDERED, channel 0
 	dbg(string.format("[PR-SEND] screen=%d json=%s", screen_id, json_str:sub(1, 200)))
 end
 
@@ -693,34 +688,67 @@ function onReceivePacket(id, bs)
 	-- PRIME RUSSIA кастомные GUI пакеты: 0xFB=251, 0xFC=252
 	-- ============================================================
 	if id == PKT_GUI_IN or id == PKT_GUI_IN2 then
-		-- Читаем screen_id (4 bytes LE)
+		-- Пакет начинается ПОСЛЕ packet_id byte (он уже считан RakSAMP Lite)
+		-- Проверяем что достаточно данных: минимум 4 байта screen_id
+		local unread_bits = bs:getNumberOfUnreadBits()
+		dbg(string.format("[PR-IN] pkt=%d unread_bits=%d", id, unread_bits))
+		if unread_bits < 32 then
+			dbg("[PR-IN] too short, skip")
+			return
+		end
+
+		-- Читаем screen_id (4 bytes = uint32 LE)
 		local screen_id_ok, screen_id = pcall(function() return bs:readUInt32() end)
 		if not screen_id_ok then
-			dbg("[PR-IN] failed to read screen_id from pkt " .. id)
+			dbg("[PR-IN] failed screen_id: " .. tostring(screen_id))
 			return
 		end
 
-		-- Читаем JSON (оставшиеся байты)
-		local json_bytes = {}
-		local ok = true
-		while ok do
-			local b_ok, b = pcall(function() return bs:readUInt8() end)
-			if not b_ok or b == nil then break end
-			json_bytes[#json_bytes + 1] = string.char(b)
-		end
-		local json_str = table.concat(json_bytes)
+		-- Читаем JSON — ровно столько байт сколько осталось
+		local remaining_bytes = math.floor(bs:getNumberOfUnreadBits() / 8)
+		dbg(string.format("[PR-IN] screen=%d remaining_bytes=%d", screen_id, remaining_bytes))
 
-		if json_str == "" then
-			dbg(string.format("[PR-IN] pkt=%d screen=%d empty json", id, screen_id))
+		if remaining_bytes <= 0 then
+			dbg("[PR-IN] no json data")
 			return
 		end
 
-		-- Обрабатываем
+		-- Используем readBuffer через ffi для безопасного чтения
+		local buf = ffi.new("uint8_t[?]", remaining_bytes + 1)
+		local rb_ok, rb_err = pcall(function()
+			bs:readBuffer(tonumber(ffi.cast("intptr_t", buf)), remaining_bytes)
+		end)
+		if not rb_ok then
+			dbg("[PR-IN] readBuffer fail: " .. tostring(rb_err))
+			-- Fallback: читаем побайтово только нужное количество
+			local json_bytes = {}
+			for i = 1, remaining_bytes do
+				local b_ok, b = pcall(function() return bs:readUInt8() end)
+				if not b_ok then break end
+				json_bytes[i] = string.char(b)
+			end
+			local json_str = table.concat(json_bytes)
+			if json_str ~= "" then
+				local ok2, err = pcall(handle_pr_packet, screen_id, json_str)
+				if not ok2 then dbg("[PR-IN] handle error: " .. tostring(err)) end
+			end
+			return false
+		end
+
+		buf[remaining_bytes] = 0
+		local json_str = ffi.string(buf, remaining_bytes)
+
+		if json_str == "" or json_str == "\0" then
+			dbg("[PR-IN] empty json")
+			return
+		end
+
+		dbg(string.format("[PR-IN] screen=%d json=%s", screen_id, json_str:sub(1, 200)))
 		local ok2, err = pcall(handle_pr_packet, screen_id, json_str)
 		if not ok2 then
-			dbg("[PR-IN] error: " .. tostring(err))
+			dbg("[PR-IN] handle error: " .. tostring(err))
 		end
-		return false  -- consume packet (не пропускаем дальше)
+		return false  -- consume packet
 	end
 end
 
