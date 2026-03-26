@@ -523,15 +523,31 @@ local function handle_pr_packet(screen_id, json_str)
 	-- ========================
 	elseif screen_id == 50 then
 		if o == 1 then
-			dbg("[PR] SPAWN_LOCATION: server opened, choosing first slot")
+			dbg("[PR] SPAWN_LOCATION: server opened, choosing first slot → then sendSpawnRequest")
 			newTask(function()
-				wait(300)
+				wait(400)
 				pr_do_spawn_location()
+				-- После выбора локации — спавнимся
+				wait(800)
+				if not isBotSpawned() then
+					dbg("[PR] SPAWN_LOCATION: calling sendSpawnRequest()")
+					sendSpawnRequest()
+					wait(1000)
+					if not isBotSpawned() then
+						sendSpawnRequest()
+					end
+				end
 			end)
 		elseif c == 1 then
 			dbg("[PR] SPAWN_LOCATION: closed")
+			-- Попытка спавна после закрытия окна спавна
+			if not isBotSpawned() then
+				newTask(function()
+					wait(300)
+					sendSpawnRequest()
+				end)
+			end
 		else
-			-- Уведомление о спавне
 			dbg(string.format("[PR] SPAWN_LOCATION update t=%s", tostring(tp)))
 		end
 
@@ -959,32 +975,18 @@ end
 
 function onRequestClassResponse(canSpawn, team, skin)
 	dbg(string.format("[merged] RequestClassResponse canSpawn=%s skin=%s", tostring(canSpawn), tostring(skin)))
-	-- Если canSpawn=true — немедленно шлём SpawnRequest!
-	if canSpawn then
-		newTask(function()
-			wait(200)
-			dbg("[merged] RequestClassResponse canSpawn=true → sendSpawnRequest()")
-			sendSpawnRequest()
-		end)
-	end
+	-- НЕ шлём sendSpawnRequest здесь! Спавн управляется через JSON GUI цепочку:
+	-- screen=38 t=0 → пол → скин → инвайт → screen=50 SpawnLocation → спавн
 end
 
 function onRequestSpawnResponse(response)
 	dbg(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
 end
 
--- SetSpawnInfo — немедленный спавн
+-- SetSpawnInfo — получили инфо о спавне, теперь можно заспавниться
 function onSetSpawnInfo(team, skin, unused, position, rotation, weapons, ammo)
-	dbg(string.format("[merged] onSetSpawnInfo skin=%s", tostring(skin)))
-	if not isBotSpawned() then
-		newTask(function()
-			wait(200)
-			if not isBotSpawned() then
-				dbg("[merged] onSetSpawnInfo -> sendSpawnRequest")
-				sendSpawnRequest()
-			end
-		end)
-	end
+	dbg(string.format("[merged] onSetSpawnInfo skin=%s — will spawn via SpawnLocation flow", tostring(skin)))
+	-- Спавн происходит после screen=50 SpawnLocation, не здесь
 end
 
 -- SA-MP диалог (стандартный, не PRIME RUSSIA)
@@ -1066,57 +1068,14 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 	PR.nick = ""
 	PR.pw = account_pw_from_env()
 
-	newTask(function()
-		wait(1200)
-		local pw = account_pw_from_env()
-
-		-- /register и /login (стандартные SA-MP команды)
-		if pw ~= "" then
-			dbg("[merged] onInitGame: /register + /login")
-			sendInput("/register " .. pw .. " " .. pw)
-			wait(1500)
-			sendInput("/login " .. pw)
-			wait(1500)
-		end
-
-		-- !spawn + RequestClass/Spawn цикл
-		local function tryRequestClass(cls)
-			local rbs = bitStream.new()
-			rbs:writeInt32(cls)
-			rbs:sendRPC(RPC_REQUESTCLASS)
-		end
-
-		sendInput("!spawn")
-		wait(400)
-		tryRequestClass(0)
-		wait(500)
-		sendSpawnRequest()
-		wait(800)
-
-		for attempt = 1, 80 do
-			if isBotSpawned() then
-				dbg("[merged] spawned OK at attempt " .. attempt)
-				return
-			end
-			local cls = (attempt - 1) % nclass
-			dbg(string.format("[merged] spawn attempt %d cls=%d", attempt, cls))
-
-			if pw ~= "" and attempt % 3 == 0 and attempt <= 15 then
-				sendInput("/login " .. pw)
-				wait(500)
-			end
-			if attempt % 5 == 0 then
-				sendInput("!spawn")
-				wait(300)
-			end
-
-			tryRequestClass(cls)
-			wait(500)
-			sendSpawnRequest()
-			wait(2000)
-		end
-		dbg("[merged] spawn timeout. pw_len=" .. #pw)
-	end)
+	-- Ничего не делаем здесь — спавн управляется цепочкой JSON GUI:
+	-- screen=38 {o:1,r:0/1} → регистрация/логин
+	--           {t:0} → выбор пола {t:3,r:0}
+	--           {t:3} → выбор скина {t:-1,i:78} + {t:5,r:78}
+	--           {t:0} → инвайт скип {t:4,s:""}
+	-- screen=50 {o:1,...} → спавн локация {t:0}
+	-- После этого isBotSpawned() = true
+	dbg("[merged] onInitGame: waiting for JSON GUI flow (screen 38/50)")
 end
 
 function onLoad()
