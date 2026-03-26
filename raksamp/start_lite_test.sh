@@ -20,7 +20,8 @@ python3 "$ROOT/prepare_lite_test.py" --host "$HOST" --port "$PORT" --nick1 "$N1"
   nohup bash "$ROOT/run_lite_instance_nohup.sh" bot1 &
   echo $! >"$ROOT/lite_instances/bot1/nohup.pid"
 )
-sleep "${LITE_STAGGER:-4}"
+# Пауза между двумя окнами с одного IP (антифлуд коннекта; blast.hk советует не «fast connect»).
+sleep "${LITE_STAGGER:-35}"
 (
   cd "$ROOT"
   nohup bash "$ROOT/run_lite_instance_nohup.sh" bot2 &

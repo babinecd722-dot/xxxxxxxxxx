@@ -39,6 +39,57 @@ def copy_lite_tree(dest: Path) -> None:
     shutil.copytree(LITE, dest, ignore=ignore)
 
 
+def patch_settings(dest: Path, *, host: str, port: int, nick: str) -> None:
+    ini = dest / "settings" / "RakSAMP Lite.ini"
+    if not ini.is_file():
+        return
+    lines = ini.read_text(encoding="utf-8", errors="replace").splitlines()
+    addr = f"{host}:{port}"
+    out: list[str] = []
+    in_server = False
+    for line in lines:
+        s = line.strip()
+        if s.startswith("[") and s.endswith("]"):
+            in_server = s.lower() == "[server]"
+            out.append(line)
+            continue
+        if in_server:
+            if s.lower().startswith("nick="):
+                out.append(f"nick={nick}")
+                continue
+            if s.lower().startswith("ip="):
+                out.append(f"ip={addr}")
+                continue
+        out.append(line)
+    ini.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
+def write_connect_stagger(dest_scripts: Path, slot: str) -> None:
+    """Второй клиент с того же IP — задержка перед allow connect (совет форума: не «быстрый коннект»)."""
+    if slot != "bot2":
+        p = dest_scripts / "01_connect_stagger.lua"
+        if p.is_file():
+            p.unlink()
+        return
+    lua = '''-- Антифлуд: второе окно с того же IP подключается позже (blast.hk / «быстрый коннект»).
+require("addon")
+local ready = 0
+
+function onLoad()
+  local sec = math.random(55, 110)
+  ready = os.time() + sec
+  print("[01_connect_stagger] задержка коннекта " .. sec .. " s")
+end
+
+function onRequestConnect()
+  if os.time() < ready then
+    return false
+  end
+end
+'''
+    (dest_scripts / "01_connect_stagger.lua").write_text(lua, encoding="utf-8")
+
+
 def write_autoconnect(dest_scripts: Path, *, host: str, port: int, nick: str) -> None:
     dest_scripts.mkdir(parents=True, exist_ok=True)
     addr = f"{host}:{port}"
@@ -78,6 +129,8 @@ def main() -> int:
     for slot, nick in (("bot1", args.nick1), ("bot2", args.nick2)):
         d = OUT / slot
         copy_lite_tree(d)
+        patch_settings(d, host=args.host, port=args.port, nick=nick)
+        write_connect_stagger(d / "scripts", slot)
         write_autoconnect(d / "scripts", host=args.host, port=args.port, nick=nick)
         print(d)
     return 0

@@ -8,7 +8,8 @@ end
 
 function sampev.onSendSpawn()
 	newTask(function()
-		wait(1200)
+		-- не шлём !spawn в одну миллисекунду с сервером — меньше шанс антифлуда
+		wait(math.random(2800, 5500))
 		runCommand("!spawn")
 	end)
 end
