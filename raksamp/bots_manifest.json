@@ -1,29 +1,19 @@
 {
-  "server_host": "185.189.255.97",
-  "server_port": 2183,
+  "server_host": "51.75.232.67",
+  "server_port": 1801,
   "rcon_password": "",
   "stagger_seconds": 3,
   "start_only_first": 0,
   "console": 0,
   "auto_spawn": true,
   "auto_spawn_chat_spawn": false,
-  "generate_bot_count": 450,
+  "generate_bot_count": 2,
   "nick_mode": "silly",
   "sequential_prefix": "Us",
-  "comment": "auto_spawn: manual_spawn=0, class spawn via select_classid (no !spawn chat). Set auto_spawn_chat_spawn true for old autorun !spawn. 185.189.255.97:2183.",
+  "comment": "2 бота на 51.75.232.67:1801, спавн через class без !spawn в чат.",
 
-  "nick_silly_first": [
-    "Rame", "Danya", "Vova", "Petya", "Kostya", "Sanya", "Misha", "Grisha",
-    "Borya", "Kolya", "Zhora", "Stepa", "Tema", "Lesha", "Serega", "Dimon",
-    "Valera", "Gosha", "Edik", "Fima", "Yura", "Oleg", "Vadik", "Roma",
-    "Anton", "Zhenya", "Stas", "Igor", "Fedya", "Slava"
-  ],
-  "nick_silly_last": [
-    "Kakashko", "Rashko", "Papashko", "Loh", "Durak", "Krabs", "Gopnik",
-    "Shmar", "Kek", "Aboba", "Pepe", "Chushpan", "Baran", "Olos", "Kryt",
-    "Tyupa", "Zadrot", "Nub", "Noob", "Lalka", "Fuflo", "Kisa", "Pups",
-    "Shnyaga", "Kekich", "Popa", "Zhopa", "Kakash", "Mimo", "Glup"
-  ],
+  "nick_silly_first": ["Rame", "Danya"],
+  "nick_silly_last": ["Kakashko", "Rashko"],
 
   "nick_first_names": [],
   "nick_last_names": [],
