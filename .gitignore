@@ -15,3 +15,8 @@ raksamp/bots/**/.account_pass
 raksamp/bots/**/.spawn_mode
 raksamp/bots/.launch.env
 raksamp/bots/supervisor_report.json
+
+# RakSAMP Lite (Windows build from blast.hk — положить вручную)
+raksamp/lite/*.exe
+raksamp/lite/*.zip
+raksamp/lite/*.dll
