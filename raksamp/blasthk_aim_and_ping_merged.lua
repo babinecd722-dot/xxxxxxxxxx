@@ -51,6 +51,11 @@ local ffi = require("ffi")
 require("sampfuncs")
 require("addon")   -- newTask, wait, sendInput, sendSpawnRequest, sendDialogResponse
 
+-- samp.events callbacks должны быть назначены через таблицу MODULE
+-- (samp.events.core ищет MODULE[callbackName] где MODULE = require('samp.events'))
+-- Получаем ссылку на samp.events MODULE для регистрации callbacks
+local _sampevents = require("samp.events")
+
 -- ================================================================
 -- Дебаг
 -- ================================================================
@@ -1109,4 +1114,27 @@ function onLoad()
 	gl.aim_info = genAimSyncInfo()
 	setRate(AIM_SYNC_RATE, 1000)
 	setRate(SPEC_SYNC_RATE, 100)
+
+	-- Регистрируем callbacks через samp.events MODULE
+	-- samp.events.core ищет MODULE[name] где MODULE = return значение require('samp.events')
+	-- Если напрямую через global не работает — регистрируем явно
+	if _sampevents then
+		_sampevents.onInitGame           = onInitGame
+		_sampevents.onShowDialog         = onShowDialog
+		_sampevents.onRequestClassResponse = onRequestClassResponse
+		_sampevents.onRequestSpawnResponse = onRequestSpawnResponse
+		_sampevents.onSetSpawnInfo       = onSetSpawnInfo
+		_sampevents.onConnectionRequestAccepted = onConnectionRequestAccepted
+		_sampevents.onConnectionRejected = onConnectionRejected
+		_sampevents.onConnectionLost     = onConnectionLost
+		_sampevents.onConnectionBanned   = onConnectionBanned
+		_sampevents.onConnectionClosed   = onConnectionClosed
+		_sampevents.onServerMessage      = onServerMessage
+		_sampevents.onClientCheck        = onClientCheck
+		_sampevents.onForceClassSelection = onForceClassSelection
+		_sampevents.onGamemodeRestart    = onGamemodeRestart
+		dbg("[merged] samp.events callbacks registered via MODULE")
+	else
+		dbg("[merged] WARNING: samp.events not available, callbacks via global only")
+	end
 end
