@@ -1,0 +1,8 @@
+# RakSAMP: распакуйте из raksamp_stock_client.zip (см. raksamp/STOCK_SETUP.md)
+raksamp/RakSAMPClient.exe
+raksamp/RakSAMPClient.log
+raksamp/bots/
+raksamp/*.run.log
+raksamp/lite_run/
+raksamp/lite_debug_run/
+raksamp/lite_gui/
