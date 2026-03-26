@@ -136,25 +136,74 @@ if json["c"] == 1  → closingScreen(screenId, json)   // закрыть GUI
 
 ---
 
-## Последовательность подключения/спавна
+## Полная последовательность регистрации (новый аккаунт)
 
 ```
-1. ENet connect → IP:PORT сервера
+1. ENet connect → 51.75.232.67:1801
 2. ConnectionAccepted (pkt 34)
-3. Сервер шлёт: onDialogRPCIncoming → BrDialogWindow (стиль MSGBOX/LIST/INPUT/PASSWORD)
-   ИЛИ: screenId=38 {"o":1, "r":0/1, ...} → GUIRegistration
+3. Сервер: screenId=38 {"o":1, "r":0, "f":0, "p":0}
+   → GUIRegistration открывается в режиме РЕГИСТРАЦИИ
 
-4а. Если SAMP-диалог (screenId=10):
-    Ответ: {"r": 1, "i": "ПАРОЛЬ", "l": 0} → sendJsonData(10, ...)
+4. Экран выбора способа регистрации (UILayoutRegistrationEnter)
+   → не шлёт JSON, просто открывает следующий layout
 
-4б. Если GUIRegistration (screenId=38):
-    Логин: {"t": 6, "s": "ПАРОЛЬ", "r": 0} → sendJsonData(38, ...)
-    Регистрация: {"t": 1, "s": "НИК", "p": "ПАРОЛЬ"} → sendJsonData(38, ...)
+5. UILayoutRegistrationCreatePassword (sublayout=1):
+   КЛИЕНТ: {"t":1, "s":"НИК", "p":"ПАРОЛЬ"}  → sendJsonData(38, ...)
 
-5. После успешного логина → closeAllWindows → onSpawn() → GUINotification(HUD) появляется
-6. SpawnLocation (screenId=50): {"o":1, "t":N, "m":[...]}
-   Ответ: {"t": <locationId>} → sendJsonData(50, ...)
-7. Спавн → isBotSpawned() = true
+6. Сервер: {"t":0}  → OK, переходим дальше (выбор пола)
+
+7. UILayoutRegistrationSex:
+   КЛИЕНТ: {"t":3, "r":0}  → мужской пол (r=1 = женский)
+   → sendJsonData(38, ...)
+
+8. Сервер: {"t":3}  → isMale сохранён, открывается UILayoutRegistrationPerson
+
+9. UILayoutRegistrationPerson:
+   При показе сразу: {"t":-1, "i":78}  → preview скина 78
+   Подтверждение:    {"t":5,  "r":78}  → выбрать скин 78
+   → sendJsonData(38, ...)
+   Мужские скины: [78, 79, 134, 136, 230, 246, 159, 71, 256]
+   Женские скины: [77, 135, 188, 212, 239, 218]
+
+10. Сервер: {"t":0}  → OK, открывается UILayoutRegistrationInvite
+
+11. UILayoutRegistrationInvite ("Тебя пригласил друг?"):
+    КНОПКА ПРОПУСТИТЬ: {"t":4, "s":""}  → sendJsonData(38, ...)
+    КНОПКА С НИКОМ:    {"t":4, "s":"НИК_ДРУГА"} → sendJsonData(38, ...)
+
+12. Регистрация завершена → GUIRegistration закрывается
+    → onSpawn() → HUD появляется
+
+13. SpawnLocation (screenId=50): {"o":1, "t":N, "m":[...locations...]}
+    КЛИЕНТ: {"t":0}  → первая локация → sendJsonData(50, ...)
+
+14. Спавн → isBotSpawned() = true
+```
+
+## Полная последовательность логина (существующий аккаунт)
+
+```
+1. ENet connect
+2. ConnectionAccepted (pkt 34)
+3. Сервер: screenId=38 {"o":1, "r":1, "f":0, "p":0}
+   → GUIRegistration в режиме ЛОГИНА
+
+4. UILayoutRegistrationLogin:
+   КЛИЕНТ: {"t":6, "s":"ПАРОЛЬ", "r":0}  → sendJsonData(38, ...)
+   (r=1 = автовход)
+
+5. Сервер: {"t":0}  → OK → onSpawn() → HUD
+
+6. SpawnLocation (screenId=50): {"t":0}
+
+7. Спавн
+```
+
+## Старый SAMP-диалог (screenId=10, если сервер использует стандартный диалог)
+
+```
+Входящий: {"o":1, "i":style, "c":"title", "s":"text", "l":"btn1", "r":"btn2"}
+Ответ:    {"r":button(0/1), "i":"input_text", "l":listItem} → sendJsonData(10, ...)
 ```
 
 ---

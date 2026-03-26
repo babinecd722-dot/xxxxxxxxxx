@@ -2,6 +2,19 @@
   Один файл = aim_fix_updated + send_ping_fix (логика как у Ulong / blast.hk).
   Два отдельных .lua в scripts/ несовместимы: второй перезаписывает onSendPacket первого
   → ломается синхра (в табе есть, телепорт по ID «нет игрока»).
+
+  PRIME RUSSIA (prime-rp.online) кастомный JSON GUI-протокол:
+  screenId=38 — Регистрация/Логин
+    Логин:        {"t":6, "s":"ПАРОЛЬ", "r":0}
+    Регистрация:  {"t":1, "s":"НИК", "p":"ПАРОЛЬ"}   (но ник у нас уже есть — имя бота)
+    Выбор пола:   {"t":3, "r":0}                      (0=мужской, 1=женский)
+    Скип инвайта: {"t":4, "s":""}
+    Скин:         {"t":5, "r":78}                     (первый мужской скин)
+    Скин preview: {"t":-1,"i":78}
+  screenId=10 — SAMP-диалог ответ
+    {"r":button, "i":"input", "l":listItem}
+  screenId=50 — SpawnLocation
+    {"t":locationId}
 ]]
 
 local utils = require("samp.events.utils")
@@ -16,6 +29,102 @@ local function account_pw_from_env()
 		return ""
 	end
 	return os.getenv("LITE_ACCOUNT_PASSWORD") or os.getenv("LITE_REGISTER_PASSWORD") or ""
+end
+
+-- =====================================================================
+-- PRIME RUSSIA JSON GUI protocol (реверс APK PRIMERUSSIA.apk)
+-- =====================================================================
+-- Состояние регистрации — запоминаем на каком шаге находимся
+local PR = {
+	reg_step       = 0,     -- текущий шаг (0=не начато)
+	is_registration = false, -- true=регистрация, false=логин
+	sex_sent       = false,
+	invite_sent    = false,
+	skin_sent      = false,
+	-- Скины мужские (из UILayoutRegistrationPerson.mMaleIds): 78,79,134,136,230,246,159,71,256
+	male_skins     = {78, 79, 134, 136, 230, 246, 159, 71, 256},
+	-- Скины женские (из UILayoutRegistrationPerson.mFemaleIds): 77,135,188,212,239,218
+	female_skins   = {77, 135, 188, 212, 239, 218},
+}
+
+-- Отправить JSON боту (эмуляция sendJsonData через sendInput в чат).
+-- RakSAMP Lite не поддерживает кастомный JSON-канал нативно,
+-- но мы логируем все шаги чтобы знать где застрял.
+local function pr_log(step, json_str)
+	dbg(string.format("[PR-GUI] step=%s json=%s", tostring(step), tostring(json_str)))
+end
+
+-- Полная последовательность регистрации для PRIME RUSSIA:
+-- 1. Сервер шлёт: screenId=38, {"o":1, "r":0/1, "f":0, "p":0}
+-- 2. Если r=0 (регистрация): ввод пароля → {"t":1,"s":ник,"p":пароль}
+--    Если r=1 (логин):        ввод пароль → {"t":6,"s":пароль,"r":0}
+-- 3. Сервер шлёт: screenId=38, {"t":0} — OK → следующий шаг
+-- 4. Если регистрация:
+--    4a. Выбор пола:   {"t":3,"r":0}
+--    4b. Сервер: {"t":3} → выбор скина
+--    4c. Скин preview: {"t":-1,"i":78}  + подтверждение: {"t":5,"r":78}
+--    4d. Сервер: {"t":0} → invite экран
+--    4e. Скип инвайта: {"t":4,"s":""}
+-- 5. SpawnLocation (screenId=50): {"t":0} — первая локация
+
+-- Функция вызывается из onInitGame и при получении JSON-пакетов от сервера
+function pr_handle_initgame(is_registration)
+	PR.is_registration = is_registration
+	PR.reg_step = 1
+	PR.sex_sent = false
+	PR.invite_sent = false
+	PR.skin_sent = false
+	local pw = account_pw_from_env()
+	local nick = getNickname and getNickname() or "Player"
+	dbg(string.format("[PR-GUI] InitGame: is_registration=%s nick=%s pw_len=%d",
+		tostring(is_registration), tostring(nick), #pw))
+	newTask(function()
+		wait(800)
+		if is_registration then
+			-- Регистрация: {"t":1, "s":"НИК", "p":"ПАРОЛЬ"}
+			if pw == "" then
+				pw = "Prime" .. tostring(math.random(1000, 9999))
+				dbg("[PR-GUI] no password in env, generated: " .. pw)
+			end
+			pr_log("REGISTER", '{"t":1,"s":"' .. nick .. '","p":"' .. pw:sub(1,3) .. '***"}')
+			sendInput("/g pr_reg " .. nick .. " " .. pw)
+		else
+			-- Логин: {"t":6, "s":"ПАРОЛЬ", "r":0}
+			if pw ~= "" then
+				pr_log("LOGIN", '{"t":6,"s":"***","r":0}')
+				sendInput("/g pr_login " .. pw)
+			end
+		end
+	end)
+end
+
+function pr_handle_sex_step()
+	if PR.sex_sent then return end
+	PR.sex_sent = true
+	pr_log("SEX", '{"t":3,"r":0}')
+	-- Мужской пол (r=0) — отправляем через чат-команду
+	sendInput("/g pr_sex 0")
+end
+
+function pr_handle_skin_step()
+	if PR.skin_sent then return end
+	PR.skin_sent = true
+	local skin = PR.male_skins[1]  -- первый мужской скин = 78
+	pr_log("SKIN_PREVIEW", '{"t":-1,"i":' .. skin .. '}')
+	pr_log("SKIN_CONFIRM", '{"t":5,"r":' .. skin .. '}')
+	sendInput("/g pr_skin " .. skin)
+end
+
+function pr_handle_invite_step()
+	if PR.invite_sent then return end
+	PR.invite_sent = true
+	pr_log("INVITE_SKIP", '{"t":4,"s":""}')
+	sendInput("/g pr_invite_skip")
+end
+
+function pr_handle_spawn_location()
+	pr_log("SPAWN_LOCATION", '{"t":0}')
+	sendInput("/g pr_spawn_loc 0")
 end
 
 local function dbg(...)
@@ -301,8 +410,29 @@ end
 
 function onServerMessage(color, text)
 	text = text or ""
-	local short = text:sub(1, 200)
-	dbg(string.format("[merged] ServerMessage color=%s text=%s", tostring(color), short))
+	local short = text:sub(1, 300)
+	dbg(string.format("[merged] ServerMessage color=%08X text=%s", tostring(color), short))
+	local low = short:lower()
+
+	-- Попытка определить шаг регистрации по сообщениям сервера
+	if low:find("зарегистрир", 1, true) or low:find("register", 1, true) then
+		dbg("[PR-GUI] ServerMsg: registration detected")
+		pr_handle_initgame(true)
+	elseif low:find("авторизац", 1, true) or low:find("добро пожаловать", 1, true) or low:find("welcome", 1, true) then
+		dbg("[PR-GUI] ServerMsg: login/welcome detected")
+	elseif low:find("пол", 1, true) and (low:find("выбер", 1, true) or low:find("выбор", 1, true)) then
+		dbg("[PR-GUI] ServerMsg: sex selection detected")
+		newTask(function() wait(500); pr_handle_sex_step() end)
+	elseif low:find("персонаж", 1, true) or low:find("скин", 1, true) or low:find("выбери внешн", 1, true) then
+		dbg("[PR-GUI] ServerMsg: skin selection detected")
+		newTask(function() wait(500); pr_handle_skin_step() end)
+	elseif low:find("пригласил", 1, true) or low:find("инвайт", 1, true) or low:find("invite", 1, true) or low:find("тебя пригласил", 1, true) then
+		dbg("[PR-GUI] ServerMsg: invite screen detected")
+		newTask(function() wait(500); pr_handle_invite_step() end)
+	elseif low:find("место спавна", 1, true) or low:find("spawn location", 1, true) or low:find("выбери место", 1, true) then
+		dbg("[PR-GUI] ServerMsg: spawn location detected")
+		newTask(function() wait(500); pr_handle_spawn_location() end)
+	end
 end
 
 function onClientCheck(requestType, subject, offset, length)
@@ -369,6 +499,17 @@ function onRequestSpawnResponse(response)
 	dbg(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
 end
 
+-- =====================================================================
+-- PRIME RUSSIA: обработка входящих RPC пакетов от сервера
+-- screenId=38 входящий: {"t":N} — шаги регистрации
+-- =====================================================================
+function onReceiveRPC_PR(id, bs)
+	-- RPC_SCRSHOWDIALOG = 61 — сервер шлёт через этот RPC кастомный JSON GUI
+	-- Но PRIME RUSSIA использует свой отдельный канал onJsonDataIncoming
+	-- который RakSAMP Lite не понимает нативно.
+	-- Здесь мы реагируем на стандартные SA-MP диалоги если они есть.
+end
+
 -- Регистрация/логин через диалог
 function onShowDialog(dialogId, style, title, button1, button2, text)
 	title = title or ""
@@ -378,52 +519,110 @@ function onShowDialog(dialogId, style, title, button1, button2, text)
 	local from_env = os.getenv and (os.getenv("LITE_DIALOG_INPUT") or "") or ""
 	-- Приоритет: LITE_DIALOG_INPUT > LITE_ACCOUNT_PASSWORD > сгенерированный
 	local inp = from_env ~= "" and from_env or pw
-	-- Определяем что сервер хочет
-	local wants_auth = blob:find("register", 1, true) or blob:find("регистр", 1, true)
-		or blob:find("password", 1, true) or blob:find("парол", 1, true)
-		or blob:find("login", 1, true) or blob:find("логин", 1, true)
-		or blob:find("sign", 1, true) or blob:find("email", 1, true)
-		or blob:find("аккаунт", 1, true) or blob:find("account", 1, true)
-		or blob:find("войти", 1, true) or blob:find("вход", 1, true)
-		or blob:find("пароль", 1, true)
-	if inp == "" and wants_auth then
-		inp = "RakBot_" .. tostring(math.random(10000, 99999))
-		dbg("[merged] Dialog: no password in env, using random: " .. inp)
+	local text_snip = text:sub(1, 300):gsub("\r", " "):gsub("\n", " ")
+	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q b1=%q text=%q",
+		dialogId, style, title, button1 or "", text_snip))
+
+	-- ============================================================
+	-- Определяем тип диалога по содержимому
+	-- ============================================================
+
+	-- 1. Логин/пароль — любой диалог с вводом пароля
+	local wants_password = blob:find("парол", 1, true) or blob:find("password", 1, true)
+		or blob:find("введите пароль", 1, true) or blob:find("enter password", 1, true)
+		or blob:find("авторизац", 1, true) or blob:find("логин", 1, true) or blob:find("login", 1, true)
+
+	-- 2. Регистрация
+	local wants_register = blob:find("регистр", 1, true) or blob:find("register", 1, true)
+		or blob:find("создать аккаунт", 1, true) or blob:find("придумайте пароль", 1, true)
+
+	-- 3. Выбор пола — скипаем через OK (мужской = первый вариант)
+	local wants_sex = blob:find("пол", 1, true) and (blob:find("выбер", 1, true) or blob:find("мужск", 1, true) or blob:find("женск", 1, true))
+
+	-- 4. Инвайт — нажимаем "Пропустить" (button2) или OK с пустым
+	local wants_invite = blob:find("пригласил", 1, true) or blob:find("инвайт", 1, true)
+		or blob:find("invite", 1, true) or blob:find("тебя пригласил", 1, true)
+		or blob:find("введи никнейм пригласившего", 1, true) or blob:find("пригласившего", 1, true)
+
+	-- 5. Выбор скина/персонажа
+	local wants_skin = blob:find("персонаж", 1, true) or blob:find("скин", 1, true)
+		or blob:find("внешн", 1, true) or blob:find("выбери стиль", 1, true)
+
+	-- 6. Место спавна
+	local wants_spawn_loc = blob:find("место спавна", 1, true) or blob:find("spawn location", 1, true)
+		or blob:find("выбери место", 1, true) or blob:find("спавн", 1, true)
+
+	-- Генерация пароля если нет
+	if inp == "" and (wants_password or wants_register) then
+		inp = "Prime" .. tostring(math.random(1000, 9999))
+		dbg("[merged] Dialog: no password, generated: " .. inp)
 	end
-	local text_snip = (text or ""):sub(1, 300):gsub("\r", " "):gsub("\n", " ")
-	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q b1=%q inp_len=%d text=%q",
-		dialogId, style, title or "", button1 or "", #inp, text_snip))
-	-- INPUT / PASSWORD — отправляем пароль
+
+	-- ============================================================
+	-- Обработка по типу диалога
+	-- ============================================================
+
+	-- ИНВАЙТ: всегда скипаем (кнопка "Пропустить" = button2 = кнопка 0 в диалоге)
+	if wants_invite then
+		dbg("[PR-GUI] Dialog: INVITE SKIP -> button2 (Пропустить), empty input")
+		-- button2 = 0 (правая кнопка), listitem=0, input=""
+		sendDialogResponse(dialogId, 0, 0, "")
+		pr_handle_invite_step()
+		return false
+	end
+
+	-- ПОЛ: выбираем мужской (первый вариант в списке)
+	if wants_sex then
+		dbg("[PR-GUI] Dialog: SEX -> row 0 (male)")
+		sendDialogResponse(dialogId, 1, 0, "")
+		pr_handle_sex_step()
+		return false
+	end
+
+	-- СКИН: подтверждаем первый скин
+	if wants_skin then
+		dbg("[PR-GUI] Dialog: SKIN -> OK, first skin=78")
+		pr_handle_skin_step()
+		sendDialogResponse(dialogId, 1, 0, "78")
+		return false
+	end
+
+	-- МЕСТО СПАВНА: выбираем первое
+	if wants_spawn_loc then
+		dbg("[PR-GUI] Dialog: SPAWN LOCATION -> row 0")
+		sendDialogResponse(dialogId, 1, 0, "")
+		pr_handle_spawn_location()
+		return false
+	end
+
+	-- INPUT / PASSWORD — пароль
 	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD then
-		if inp ~= "" then
-			dbg("[merged] Dialog INPUT/PASSWORD -> OK inp=" .. inp:sub(1,3) .. "***")
-			sendDialogResponse(dialogId, 1, 0, inp)
-			return false
-		else
-			dbg("[merged] Dialog INPUT/PASSWORD -> OK (empty input)")
-			sendDialogResponse(dialogId, 1, 0, "")
-			return false
-		end
+		dbg("[merged] Dialog INPUT/PASSWORD -> OK inp=" .. (inp ~= "" and inp:sub(1,3) .. "***" or "(empty)"))
+		sendDialogResponse(dialogId, 1, 0, inp)
+		return false
 	end
-	-- LIST / TABLIST — всегда выбираем первый пункт
+
+	-- LIST / TABLIST — первый пункт, с паролем если нужен
 	if style == DIALOG_STYLE_LIST or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
-		if wants_auth and inp ~= "" then
-			dbg("[merged] Dialog LIST/TABLIST (auth) -> OK row 0 inp=" .. inp:sub(1,3) .. "***")
+		if (wants_password or wants_register) and inp ~= "" then
+			dbg("[merged] Dialog LIST/TABLIST (auth) -> row 0 inp=" .. inp:sub(1,3) .. "***")
 			sendDialogResponse(dialogId, 1, 0, inp)
 		else
-			dbg("[merged] Dialog LIST/TABLIST -> OK row 0")
+			dbg("[merged] Dialog LIST/TABLIST -> row 0 (empty)")
 			sendDialogResponse(dialogId, 1, 0, "")
 		end
 		return false
 	end
+
 	-- MSGBOX — всегда OK
 	if style == DIALOG_STYLE_MSGBOX then
 		dbg("[merged] Dialog MSGBOX -> OK")
 		sendDialogResponse(dialogId, 1, 0, "")
 		return false
 	end
-	-- Любой другой стиль — тоже OK с паролем если есть
-	dbg(string.format("[merged] Dialog unknown style=%d -> OK", style))
+
+	-- Любой другой стиль
+	dbg(string.format("[merged] Dialog style=%d -> OK inp_len=%d", style, #inp))
 	sendDialogResponse(dialogId, 1, 0, inp)
 	return false
 end
@@ -442,7 +641,7 @@ function onSetSpawnInfo(team, skin, unused, position, rotation, weapons, ammo)
 	end
 end
 
--- InitGame = сервер реально пустил в игру; до этого RequestClass/Spawn часто игнорируются («как будто создают аккаунт»)
+-- InitGame = сервер реально пустил в игру; до этого RequestClass/Spawn часто игнорируются
 function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendlyFire)
 	local nclass = 10
 	if type(settings) == "table" and settings.classesAvailable then
@@ -453,46 +652,68 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 	end
 	dbg(string.format("[merged] onInitGame playerId=%s host=%s classes=%d", tostring(playerId), tostring(hostName), nclass))
 	gl.aim_info = genAimSyncInfo()
+
+	-- Сбрасываем состояние PR-регистрации при каждом InitGame
+	PR.reg_step = 0
+	PR.sex_sent = false
+	PR.invite_sent = false
+	PR.skin_sent = false
+
 	newTask(function()
-		-- Ждём диалогов логина (они могут прийти сразу с InitGame)
+		-- Ждём диалогов логина/регистрации (приходят сразу после InitGame)
 		wait(1200)
 		local pw = account_pw_from_env()
+
+		-- Шаг 1: SA-MP /login или /register команды (для обычных серверов)
 		if pw ~= "" then
-			dbg("[merged] sending /register and /login pw=" .. tostring(#pw) .. "chars")
+			dbg("[merged] onInitGame: /register + /login pw_len=" .. #pw)
 			sendInput("/register " .. pw .. " " .. pw)
 			wait(1500)
 			sendInput("/login " .. pw)
 			wait(1500)
 		end
-		-- Первый RequestClass
+
+		-- Шаг 2: !spawn + RequestClass/Spawn цикл
 		local function tryRequestClass(cls)
 			local rbs = bitStream.new()
 			rbs:writeInt32(cls)
 			rbs:sendRPC(RPC_REQUESTCLASS)
 		end
+
+		sendInput("!spawn")
+		wait(400)
 		tryRequestClass(0)
 		wait(500)
 		sendSpawnRequest()
 		wait(800)
-		-- Основной цикл спавна — 60 попыток
-		for attempt = 1, 60 do
+
+		-- Основной цикл спавна — 80 попыток (~3.5 минуты)
+		for attempt = 1, 80 do
 			if isBotSpawned() then
 				dbg("[merged] spawned OK at attempt " .. attempt)
 				return
 			end
 			local cls = (attempt - 1) % nclass
-			dbg(string.format("[merged] spawn attempt %d cls=%d spawned=%s", attempt, cls, tostring(isBotSpawned())))
-			-- Каждые 3 попытки повторяем логин на случай если диалог пришёл позже
-			if pw ~= "" and attempt % 3 == 0 and attempt <= 12 then
+			dbg(string.format("[merged] spawn attempt %d cls=%d", attempt, cls))
+
+			-- Каждые 3 попытки — повторяем /login (диалог мог прийти позже)
+			if pw ~= "" and attempt % 3 == 0 and attempt <= 15 then
 				sendInput("/login " .. pw)
-				wait(600)
+				wait(500)
 			end
+
+			-- Каждые 5 попыток — !spawn для ручного спавна
+			if attempt % 5 == 0 then
+				sendInput("!spawn")
+				wait(300)
+			end
+
 			tryRequestClass(cls)
-			wait(600)
+			wait(500)
 			sendSpawnRequest()
-			wait(1800)
+			wait(2000)
 		end
-		dbg("[merged] spawn timeout after 60 attempts. Проверь LITE_ACCOUNT_PASSWORD в bots_manifest.json")
+		dbg("[merged] spawn timeout. LITE_ACCOUNT_PASSWORD=" .. tostring(#pw) .. "chars")
 	end)
 end
 
