@@ -232,27 +232,65 @@ function onRequestSpawnResponse(response)
 	print(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
 end
 
-function onLoad()
-	print("[SEND PING FIX] LOADED. Author: Ulong (merged)")
-	print(string.format("[AimSync FIX] Loaded! Author: %s (version %s)", CREDITS.AUTHOR, CREDITS.SCRIPT_VERSION))
-	print("[merged] Connect Accepted packet 34 sanitize + class/spawn task")
+-- Регистрация/логин через диалог (часто «зависает» до InitGame без ответа)
+function onShowDialog(dialogId, style, title, button1, button2, text)
+	title = title or ""
+	text = text or ""
+	local blob = (title .. " " .. text):lower()
+	local from_env = os.getenv and (os.getenv("LITE_DIALOG_INPUT") or os.getenv("LITE_REGISTER_PASSWORD") or "") or ""
+	local inp = from_env
+	if inp == "" and (blob:find("register", 1, true) or blob:find("регистр", 1, true) or blob:find("password", 1, true) or blob:find("парол", 1, true)) then
+		inp = "RakBot_" .. tostring(math.random(10000, 99999))
+	end
+	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
+		if inp ~= "" then
+			print(string.format("[merged] Dialog id=%d style=%d -> OK + input len=%d", dialogId, style, #inp))
+			sendDialogResponse(dialogId, 1, 0, inp)
+			return false
+		end
+	end
+	if style == DIALOG_STYLE_MSGBOX then
+		print(string.format("[merged] Dialog msgbox id=%d -> OK", dialogId))
+		sendDialogResponse(dialogId, 1, 0, "")
+		return false
+	end
+end
+
+-- InitGame = сервер реально пустил в игру; до этого RequestClass/Spawn часто игнорируются («как будто создают аккаунт»)
+function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendlyFire)
+	local nclass = 10
+	if type(settings) == "table" and settings.classesAvailable then
+		local c = tonumber(settings.classesAvailable) or 0
+		if c > 0 then
+			nclass = math.min(c, 10)
+		end
+	end
+	print(string.format("[merged] onInitGame playerId=%s host=%s classes~=%d", tostring(playerId), tostring(hostName), nclass))
 	gl.aim_info = genAimSyncInfo()
-	setRate(AIM_SYNC_RATE, 1000)
-	setRate(SPEC_SYNC_RATE, 100)
-	-- Спавн здесь же: отдельный zzz_*.lua перезаписывал этот onLoad и отключал setRate выше.
 	newTask(function()
-		wait(3000)
-		for attempt = 1, 30 do
+		wait(2000)
+		for attempt = 1, 45 do
 			if isBotSpawned() then
+				print("[merged] spawned OK")
 				return
 			end
-			local cls = (attempt - 1) % 10
+			local cls = (attempt - 1) % nclass
 			local rbs = bitStream.new()
 			rbs:writeInt32(cls)
 			rbs:sendRPC(RPC_REQUESTCLASS)
-			wait(500)
+			wait(900)
 			sendSpawnRequest()
-			wait(2200)
+			wait(2800)
 		end
+		print("[merged] spawn timeout (проверь /login, античит, LITE_REGISTER_PASSWORD)")
 	end)
+end
+
+function onLoad()
+	print("[SEND PING FIX] LOADED. Author: Ulong (merged)")
+	print(string.format("[AimSync FIX] Loaded! Author: %s (version %s)", CREDITS.AUTHOR, CREDITS.SCRIPT_VERSION))
+	print("[merged] Connect fix + dialog auto (env LITE_REGISTER_PASSWORD) + class/spawn after onInitGame")
+	gl.aim_info = genAimSyncInfo()
+	setRate(AIM_SYNC_RATE, 1000)
+	setRate(SPEC_SYNC_RATE, 100)
 end

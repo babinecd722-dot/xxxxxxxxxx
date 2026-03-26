@@ -59,9 +59,7 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 
 Поэтому в репозитории **`raksamp/blasthk_aim_and_ping_merged.lua`** — **одна** склейка обоих скриптов (один `onSendPacket`: сначала ping на PlayerSync, потом aim / остальное). При обновлении оригиналов в корне **перенеси правки в merged** (или сравни diff).
 
-Плюс **`zzz_spawn_after_join.lua`** — **`sendSpawnRequest()`** после задержки.
-
-**`start_lite_two_bots.sh`** копирует только **`blasthk_aim_and_ping_merged.lua`**: aim + ping + **[Connect Accepted fix](https://blast.hk/threads/214267/)** (пакет 34) + цикл **RequestClass / RequestSpawn** (отдельный `zzz_*.lua` убран — он **перезаписывал `onLoad`** и отключал **`setRate`** из aim-фикса).
+**`start_lite_two_bots.sh`** копирует только **`blasthk_aim_and_ping_merged.lua`**: aim + ping + **[Connect Accepted fix](https://blast.hk/threads/214267/)** + **`onShowDialog`** (авто-OK / пароль из **`LITE_REGISTER_PASSWORD`** или случайный при словах register/password в тексте) + цикл **RequestClass / RequestSpawn** только после **`onInitGame`** (до InitGame RPC класса не помогают — «как будто ещё регистрация»).
 
 ### В табе есть, в мире нет / !players кривой — player pool (blast.hk)
 
@@ -72,10 +70,11 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 Запуск:
 
 ```bash
+export LITE_REGISTER_PASSWORD='твой_пароль_если_диалог'   # опционально
 ./raksamp/start_lite_two_bots.sh
 ```
 
-Каталоги: **`raksamp/lite_run/instance1_…`**, **`instance2_…`**. Логи: **`lite1.log`**, **`lite2.log`**.
+Каталоги: **`raksamp/lite_run/instance1_…`**, **`instance2_…`**. Логи: **`lite1.log`**, **`lite2.log`** (часто пустые под Wine — смотри консоль Lite, **`console=1`** в ini).
 
 ## Скрипт одного стокового запуска
 
