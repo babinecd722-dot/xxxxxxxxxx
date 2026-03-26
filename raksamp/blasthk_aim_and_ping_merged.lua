@@ -189,7 +189,10 @@ end
 -- Confirmed format from traffic analysis:
 -- incoming: [pkt_id][screen uint16][json_len uint16][json_len uint16 DUPLICATE][json]
 -- The "2 extra bytes" are a SECOND copy of json_len (both = len of json string)
-local PR_SEND_MODE = "3C"  -- 3C = 3-arg with pkt_id in bs, double json_len
+-- "3C" = [pkt_id][screen uint16][json_len uint16][json_len uint16 DUP][json]
+-- "3D" = [pkt_id][screen uint16][json] — NO length prefix at all
+-- Пробуем 3D — минимальный формат
+local PR_SEND_MODE = "3D"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
@@ -218,6 +221,12 @@ local function pr_send(screen_id, json_str)
 		bs:writeUInt16(screen_id)
 		bs:writeUInt16(#json_str)    -- json_len первый раз
 		bs:writeUInt16(#json_str)    -- json_len второй раз (дублирование)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 0)
+	elseif PR_SEND_MODE == "3D" then
+		-- Минимальный формат: [pkt_id][screen uint16][json bytes] — без length поля
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
 		bs:writeString(json_str)
 		bs:sendPacketEx(1, 9, 0)
 	else -- "3B"
