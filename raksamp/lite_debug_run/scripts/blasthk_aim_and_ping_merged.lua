@@ -192,7 +192,13 @@ end
 -- "3C" = [pkt_id][screen uint16][json_len uint16][json_len uint16 DUP][json]
 -- "3D" = [pkt_id][screen uint16][json] — NO length prefix at all
 -- Пробуем 3D — минимальный формат
-local PR_SEND_MODE = "3E"
+-- Пробуем разные комбинации reliability/channel
+-- "3C" = RELIABLE_ORDERED(9), ch0 + double json_len
+-- "3D" = no len, RELIABLE_ORDERED(9), ch0
+-- "3E" = sendRPCEx fallback
+-- "3F" = RELIABLE(8), ch0, no len
+-- "3G" = RELIABLE_ORDERED(9), ch1
+local PR_SEND_MODE = "3H"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
@@ -238,6 +244,24 @@ local function pr_send(screen_id, json_str)
 			bs:writeString(json_str)
 			bs:sendPacketEx(1, 9, 0)
 		end
+	elseif PR_SEND_MODE == "3F" then
+		-- RELIABLE(8) channel=0, no len
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 8, 0)
+	elseif PR_SEND_MODE == "3G" then
+		-- RELIABLE_ORDERED(9) channel=1
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 1)
+	elseif PR_SEND_MODE == "3H" then
+		-- UNRELIABLE(6) channel=0, no len  
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 6, 0)
 	elseif PR_SEND_MODE == "3D" then
 		-- Минимальный формат: [pkt_id][screen uint16][json bytes] — без length поля
 		bs:writeUInt8(PKT_GUI_OUT)

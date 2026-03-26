@@ -160,20 +160,44 @@ local function parse_json(s)
 	return t
 end
 
--- Простейший JSON-сериализатор для плоских объектов
+-- JSON-сериализатор с фиксированным порядком ключей
+-- Порядок: числовые/стандартные ключи как в оригинальном протоколе
 local function json_encode(t)
+	-- Сначала собираем ключи в стабильном порядке
+	local key_order = {"t", "o", "c", "r", "s", "p", "i", "l", "m", "tt", "d", "not", "id"}
 	local parts = {}
-	for k, v in pairs(t) do
-		local ks = '"' .. tostring(k) .. '"'
-		local vs
-		if type(v) == "string" then
-			vs = '"' .. v .. '"'
-		elseif type(v) == "boolean" then
-			vs = v and "true" or "false"
-		else
-			vs = tostring(v)
+	local used = {}
+	-- Сначала ключи из фиксированного списка
+	for _, k in ipairs(key_order) do
+		if t[k] ~= nil then
+			local ks = '"' .. k .. '"'
+			local v = t[k]
+			local vs
+			if type(v) == "string" then
+				vs = '"' .. v:gsub('"', '\\"') .. '"'
+			elseif type(v) == "boolean" then
+				vs = v and "true" or "false"
+			else
+				vs = tostring(v)
+			end
+			parts[#parts + 1] = ks .. ":" .. vs
+			used[k] = true
 		end
-		parts[#parts + 1] = ks .. ":" .. vs
+	end
+	-- Потом остальные ключи
+	for k, v in pairs(t) do
+		if not used[k] then
+			local ks = '"' .. tostring(k) .. '"'
+			local vs
+			if type(v) == "string" then
+				vs = '"' .. v:gsub('"', '\\"') .. '"'
+			elseif type(v) == "boolean" then
+				vs = v and "true" or "false"
+			else
+				vs = tostring(v)
+			end
+			parts[#parts + 1] = ks .. ":" .. vs
+		end
 	end
 	return "{" .. table.concat(parts, ",") .. "}"
 end
@@ -198,7 +222,7 @@ end
 -- "3E" = sendRPCEx fallback
 -- "3F" = RELIABLE(8), ch0, no len
 -- "3G" = RELIABLE_ORDERED(9), ch1
-local PR_SEND_MODE = "3F"
+local PR_SEND_MODE = "3C"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
@@ -424,15 +448,27 @@ local function handle_pr_packet(screen_id, json_str)
 				PR.is_registration = true
 				dbg("[PR] GUI38 OPEN: REGISTRATION mode")
 				newTask(function()
-					wait(600)
+					-- Ждём как будто пользователь вводит пароль (2 секунды)
+					wait(2000)
 					pr_do_register()
+					-- Если сервер не ответил за 15 сек — пробуем ещё раз
+					wait(15000)
+					if PR.active and not PR.sex_sent then
+						dbg("[PR] No response to t=1 after 15s, retrying register")
+						pr_do_register()
+					end
 				end)
 			else
 				PR.is_registration = false
 				dbg("[PR] GUI38 OPEN: LOGIN mode")
 				newTask(function()
-					wait(600)
+					wait(1500)
 					pr_do_login()
+					wait(15000)
+					if PR.active and PR.login_attempts < 3 then
+						dbg("[PR] No response to t=6 after 15s, retrying login")
+						pr_do_login()
+					end
 				end)
 			end
 			return
