@@ -187,32 +187,41 @@ end
 -- 3 args: bs:sendPacketEx(priority, reliability, channel)  → первый байт bs = packet_id
 -- 5 args: bs:sendPacketEx(packetId, priority, reliability, channel, broadcast)  → явный packet_id
 -- Используем 5-аргументный вариант: packet_id = 0xFB, данные = screen_id + json_len + json
--- Формат подтверждён из анализа входящих пакетов:
--- [pkt_id uint8][screen_id uint16][json_len uint16][2 extra bytes 0x00 0x00][json bytes]
+-- Отправка GUI-пакета серверу.
+-- Тестируем разные форматы чтобы найти правильный.
+-- PR_SEND_MODE: "5A"=5arg без extra, "5B"=5arg с 2 extra, "3A"=3arg+pktid без extra, "3B"=3arg+pktid+2extra
+local PR_SEND_MODE = "3A"
+
 local function pr_send(screen_id, json_str)
-	-- Версия 1: 5-arg sendPacketEx + 2 extra bytes + json
-	local ok, err = pcall(function()
-		local bs = bitStream.new()
+	local bs = bitStream.new()
+	if PR_SEND_MODE == "5A" then
 		bs:writeUInt16(screen_id)
 		bs:writeUInt16(#json_str)
-		bs:writeUInt8(0)        -- extra byte 1
-		bs:writeUInt8(0)        -- extra byte 2
 		bs:writeString(json_str)
-		bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false)
-	end)
-	if not ok then
-		-- Fallback: 3-arg (первый байт bitstream = pkt_id)
-		local bs2 = bitStream.new()
-		bs2:writeUInt8(PKT_GUI_OUT)
-		bs2:writeUInt16(screen_id)
-		bs2:writeUInt16(#json_str)
-		bs2:writeUInt8(0)
-		bs2:writeUInt8(0)
-		bs2:writeString(json_str)
-		bs2:sendPacketEx(1, 9, 0)
-		dbg("[PR-SEND] used fallback 3-arg: " .. tostring(err))
+		local ok, err = pcall(function() bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false) end)
+		if not ok then dbg("[PR] 5A failed: " .. tostring(err)) end
+	elseif PR_SEND_MODE == "5B" then
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)
+		bs:writeUInt8(0); bs:writeUInt8(0)
+		bs:writeString(json_str)
+		local ok, err = pcall(function() bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false) end)
+		if not ok then dbg("[PR] 5B failed: " .. tostring(err)) end
+	elseif PR_SEND_MODE == "3A" then
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 0)
+	else -- "3B" default
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)
+		bs:writeUInt8(0); bs:writeUInt8(0)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 0)
 	end
-	dbg(string.format("[PR-SEND] screen=%d len=%d json=%s", screen_id, #json_str, json_str:sub(1, 200)))
+	dbg(string.format("[PR-SEND mode=%s] screen=%d len=%d json=%s", PR_SEND_MODE, screen_id, #json_str, json_str:sub(1, 200)))
 end
 
 -- Отправить JSON объект серверу
