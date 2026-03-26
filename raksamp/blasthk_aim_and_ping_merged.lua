@@ -192,7 +192,7 @@ end
 -- "3C" = [pkt_id][screen uint16][json_len uint16][json_len uint16 DUP][json]
 -- "3D" = [pkt_id][screen uint16][json] — NO length prefix at all
 -- Пробуем 3D — минимальный формат
-local PR_SEND_MODE = "3D"
+local PR_SEND_MODE = "3E"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
@@ -223,6 +223,21 @@ local function pr_send(screen_id, json_str)
 		bs:writeUInt16(#json_str)    -- json_len второй раз (дублирование)
 		bs:writeString(json_str)
 		bs:sendPacketEx(1, 9, 0)
+	elseif PR_SEND_MODE == "3E" then
+		-- Через sendRPCEx(rpcId=251, priority=1)
+		-- данные: [screen uint16][json bytes]
+		bs:writeUInt16(screen_id)
+		bs:writeString(json_str)
+		local ok, err = pcall(function() bs:sendRPCEx(PKT_GUI_OUT, 1) end)
+		if not ok then
+			dbg("[PR] sendRPCEx failed: " .. tostring(err))
+			-- fallback
+			bs = bitStream.new()
+			bs:writeUInt8(PKT_GUI_OUT)
+			bs:writeUInt16(screen_id)
+			bs:writeString(json_str)
+			bs:sendPacketEx(1, 9, 0)
+		end
 	elseif PR_SEND_MODE == "3D" then
 		-- Минимальный формат: [pkt_id][screen uint16][json bytes] — без length поля
 		bs:writeUInt8(PKT_GUI_OUT)
