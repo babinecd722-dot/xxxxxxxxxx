@@ -224,7 +224,7 @@ end
 -- "3G" = RELIABLE_ORDERED(9), ch1
 -- 5A: sendPacketEx(0xFB, priority, reliability, channel, broadcast) — explicit packet ID
 -- данные: screen uint16 + json bytes (NO pkt_id byte, NO length prefix)
-local PR_SEND_MODE = "5A"
+local PR_SEND_MODE = "3C" -- most stable
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
