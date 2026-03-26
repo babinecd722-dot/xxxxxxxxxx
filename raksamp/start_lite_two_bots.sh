@@ -6,14 +6,13 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 ZIP="${LITE_ZIP:-$REPO_ROOT/RakSAMP Lite.zip}"
 MERGED="${BLASTHK_MERGED:-$ROOT/blasthk_aim_and_ping_merged.lua}"
-SPAWN_SRC="${SPAWN_LUA:-$ROOT/spawn_after_join.lua}"
 PATCH_PY="${LITE_POOL_PATCH:-$ROOT/patch_lite_playerpool.py}"
 RUNDIR="${LITE_RUNDIR:-$ROOT/lite_run}"
 export DISPLAY="${DISPLAY:-:1}"
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 
-for f in "$ZIP" "$MERGED" "$SPAWN_SRC" "$PATCH_PY"; do
+for f in "$ZIP" "$MERGED" "$PATCH_PY"; do
   [[ -f "$f" ]] || { echo "Нет файла: $f" >&2; exit 1; }
 done
 
@@ -114,9 +113,8 @@ for i in 1 2; do
   python3 "$PATCH_PY" "$INST/RakSAMP Lite.exe" || true
   mkdir -p "$INST/scripts"
   cp -f "$MERGED" "$INST/scripts/blasthk_aim_and_ping_merged.lua"
-  cp -f "$SPAWN_SRC" "$INST/scripts/zzz_spawn_after_join.lua"
   write_ini "$nick" "$INST"
-  echo "Инстанс $i: blasthk_aim_and_ping_merged.lua + zzz_spawn_after_join.lua"
+  echo "Инстанс $i: blasthk_aim_and_ping_merged.lua (aim+ping+connect34+class/spawn)"
 done
 
 echo "Запуск wine ..."

@@ -209,6 +209,21 @@ function onReceiveRPC(id, bs)
 end
 
 function onReceivePacket(id, bs)
+	-- [RakSamp Lite] Connect Accepted Fix (Ulong / blast.hk threads/214267) — кривой player_index в пакете 34
+	if id == PACKET_CONNECTION_REQUEST_ACCEPTED then
+		local ok, addr, port, pidx, chall = pcall(function()
+			bs:ignoreBits(8)
+			return bs:readUInt32(), bs:readUInt16(), bs:readUInt16(), bs:readUInt32()
+		end)
+		if ok and pidx and (pidx >= 0xFFF4 or pidx == 65535 or pidx == 65534) then
+			bs:setWriteOffset(8)
+			bs:writeUInt32(addr)
+			bs:writeUInt16(port)
+			bs:writeUInt16(0)
+			bs:writeUInt32(chall)
+		end
+		return
+	end
 	if id == PACKET_DISCONNECTION_NOTIFICATION or id == PACKET_CONNECTION_LOST or id == PACKET_CONNECTION_BANNED or id == PACKET_INVALID_PASSWORD then
 		gl.is_regular_pos = false
 		gl.bot_move = false
@@ -219,7 +234,24 @@ end
 function onLoad()
 	print("[SEND PING FIX] LOADED. Author: Ulong (merged)")
 	print(string.format("[AimSync FIX] Loaded! Author: %s (version %s)", CREDITS.AUTHOR, CREDITS.SCRIPT_VERSION))
+	print("[merged] Connect Accepted packet 34 sanitize + class/spawn task")
 	gl.aim_info = genAimSyncInfo()
 	setRate(AIM_SYNC_RATE, 1000)
 	setRate(SPEC_SYNC_RATE, 100)
+	-- Спавн здесь же: отдельный zzz_*.lua перезаписывал этот onLoad и отключал setRate выше.
+	newTask(function()
+		wait(3000)
+		for attempt = 1, 30 do
+			if isBotSpawned() then
+				return
+			end
+			local cls = (attempt - 1) % 10
+			local rbs = bitStream.new()
+			rbs:writeInt32(cls)
+			rbs:sendRPC(RPC_REQUESTCLASS)
+			wait(500)
+			sendSpawnRequest()
+			wait(2200)
+		end
+	end)
 end

@@ -61,7 +61,7 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 
 Плюс **`zzz_spawn_after_join.lua`** — **`sendSpawnRequest()`** после задержки.
 
-**`start_lite_two_bots.sh`** копирует **`blasthk_aim_and_ping_merged.lua`** + **`zzz_spawn_after_join.lua`**.
+**`start_lite_two_bots.sh`** копирует только **`blasthk_aim_and_ping_merged.lua`**: aim + ping + **[Connect Accepted fix](https://blast.hk/threads/214267/)** (пакет 34) + цикл **RequestClass / RequestSpawn** (отдельный `zzz_*.lua` убран — он **перезаписывал `onLoad`** и отключал **`setRate`** из aim-фикса).
 
 ### В табе есть, в мире нет / !players кривой — player pool (blast.hk)
 
