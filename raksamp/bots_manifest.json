@@ -5,10 +5,10 @@
   "stagger_seconds": 3,
   "start_only_first": 0,
   "console": 0,
-  "generate_bot_count": 2000,
-  "nick_mode": "sequential",
+  "generate_bot_count": 350,
+  "nick_mode": "cursor_ranks",
   "sequential_prefix": "Us",
-  "comment": "2000 слотов, ники Us_a0001+… (лимит SA-MP). console=0 — без GUI на каждое окно. stagger_seconds: антифлуд коннекта. Прошлые серверы: останови wine локально (stop_all_bots) — клиенты отвалятся сами. Один хост с 2000 процессами Wine — обычно не влезает в RAM; нужен кластер или снизить число.",
+  "comment": "350 ботов: Cursor_RakBot, Cursor_LeaderRakBot, Primee_Dev, ранги Cursor_* далее, затем First_Last. IP 80.66.82.140:5125. console=0 — без консоли на каждое окно. 350×Wine на одной машине обычно не влезает в RAM — при нехватке памяти задай start_only_first или меньший generate_bot_count.",
 
   "nick_first_names": [
     "Alexander", "Dmitry", "Maxim", "Kirill", "Artem", "Ivan", "Sergey",

@@ -25,7 +25,7 @@ def esc_attr(s: str) -> str:
     return escape(s, {'"': "&quot;", "'": "&apos;"})
 
 
-def validate_nick(nick: str) -> None:
+def validate_nick(nick: str, *, permissive: bool = False) -> None:
     if len(nick) < 3 or len(nick) > 24:
         raise ValueError(f"Ник вне лимита 3–24: {nick!r}")
     if nick.count("_") != 1 or nick.startswith("_") or nick.endswith("_"):
@@ -35,6 +35,12 @@ def validate_nick(nick: str) -> None:
         r"[A-Za-z][A-Za-z0-9]{1,21}", last
     ):
         raise ValueError(f"Имя_Фамилия только латиница/цифры: {nick!r}")
+    if permissive:
+        low = nick.lower()
+        for bad in ("admin", "moder"):
+            if bad in low:
+                raise ValueError(f"Зарезервировано: {bad!r} в {nick!r}")
+        return
     low = nick.lower()
     for bad in ("bot", "rak", "raksamp", "cursor", "fake", "npc", "test_", "_test", "admin", "moder"):
         if bad in low:
@@ -114,6 +120,73 @@ def _default_last_names() -> list[str]:
     ]
 
 
+def _cool_fill_nicks(need: int, *, permissive: bool) -> list[str]:
+    """Уникальные First_Last для рядовых ботов (ранги выше задаются отдельно)."""
+    firsts = [
+        "Apex", "Neo", "Volt", "Titan", "Ghost", "Storm", "Razor", "Fury", "Nova", "Orion",
+        "Axel", "Zane", "Kade", "Jett", "Rex", "Blade", "Cypher", "Drift", "Echo", "Flux",
+        "Grim", "Havoc", "Ion", "Jade", "Kairo", "Lyra", "Maverick", "Nyx", "Onyx", "Pulse",
+        "Quinn", "Rogue", "Slate", "Talon", "Vex", "Wraith", "Zen", "Arctic", "Cipher", "Dusk",
+    ]
+    lasts = [
+        "Shadow", "Vortex", "Striker", "Hunter", "Phantom", "Sentinel", "Frost", "Blaze", "Steel",
+        "Warden", "Reaper", "Specter", "Raven", "Hawk", "Wolf", "Viper", "Cobra", "Fang", "Claw",
+        "Storm", "Night", "Dawn", "Void", "Nova", "Pulse", "Edge", "Shard", "Bolt", "Surge",
+    ]
+    out: list[str] = []
+    seen: set[str] = set()
+    n = 0
+    while len(out) < need and n < 99999:
+        n += 1
+        f = firsts[(n - 1) % len(firsts)]
+        lbase = lasts[((n - 1) // len(firsts)) % len(lasts)]
+        suffix = (n - 1) // (len(firsts) * len(lasts))
+        last = f"{lbase}{suffix}" if suffix else lbase
+        nick = f"{f}_{last}"
+        if len(nick) > 24:
+            continue
+        try:
+            validate_nick(nick, permissive=permissive)
+        except ValueError:
+            continue
+        if nick in seen:
+            continue
+        seen.add(nick)
+        out.append(nick)
+    if len(out) < need:
+        raise ValueError(f"Не удалось набрать {need} уникальных «крутых» ников (есть {len(out)}).")
+    return out
+
+
+def _cursor_ranked_nicks(count: int, *, permissive: bool) -> list[dict]:
+    """Иерархия: Cursor_RakBot, Cursor_LeaderRakBot, Primee_Dev, остальные Cursor_* ранги, затем First_Last."""
+    leaders = [
+        "Cursor_RakBot",
+        "Cursor_LeaderRakBot",
+        "Primee_Dev",
+        "Cursor_ChiefRakBot",
+        "Cursor_VanguardRak",
+        "Cursor_StrategistRak",
+    ]
+    ordered: list[str] = []
+    for n in leaders:
+        if len(ordered) >= count:
+            break
+        validate_nick(n, permissive=permissive)
+        ordered.append(n)
+    need_fill = count - len(ordered)
+    if need_fill > 0:
+        for nick in _cool_fill_nicks(need_fill, permissive=permissive):
+            if nick in ordered:
+                continue
+            ordered.append(nick)
+            if len(ordered) >= count:
+                break
+    if len(ordered) < count:
+        raise ValueError(f"cursor_ranks: не хватило слотов ({len(ordered)} < {count}).")
+    return [{"nick": n, "class_id": i % 10} for i, n in enumerate(ordered[:count])]
+
+
 def _sequential_nicks(count: int, prefix: str = "Us") -> list[dict]:
     """Us_a0001 … — фамилия с буквы, цифры дальше (лимит SA-MP + validate_nick)."""
     p = str(prefix).strip()
@@ -134,7 +207,7 @@ def _sequential_nicks(count: int, prefix: str = "Us") -> list[dict]:
 
 
 def bots_from_manifest(data: dict) -> list[dict]:
-    """Список слотов: bots[], либо nick_mode sequential, либо комбинации имён."""
+    """Список слотов: bots[], либо nick_mode sequential, cursor_ranks, либо комбинации имён."""
     raw = data.get("bots")
     if isinstance(raw, list) and len(raw) > 0:
         return raw
@@ -142,6 +215,8 @@ def bots_from_manifest(data: dict) -> list[dict]:
     if count <= 0:
         raise ValueError("Укажите непустой bots[] или generate_bot_count > 0 в bots_manifest.json")
     mode = str(data.get("nick_mode", "names")).lower().strip()
+    if mode in ("cursor_ranks", "cursor_rak"):
+        return _cursor_ranked_nicks(count, permissive=True)
     if mode in ("sequential", "seq", "bulk"):
         prefix = str(data.get("sequential_prefix", "Us"))
         return _sequential_nicks(count, prefix)
@@ -214,6 +289,11 @@ def main() -> int:
     if not EXE_SRC.is_file():
         print(f"Нет {EXE_SRC}", file=sys.stderr)
         return 1
+    mode_l = str(data.get("nick_mode", "names")).lower().strip()
+    permissive = str(data.get("nick_validation", "")).lower() == "permissive" or mode_l in (
+        "cursor_ranks",
+        "cursor_rak",
+    )
 
     BOTS_ROOT.mkdir(parents=True, exist_ok=True)
     for old in sorted(BOTS_ROOT.glob("bot[0-9]*")):
@@ -229,7 +309,7 @@ def main() -> int:
     width = max(5, len(str(len(bots))))
     for i, b in enumerate(bots, start=1):
         nick = str(b["nick"])
-        validate_nick(nick)
+        validate_nick(nick, permissive=permissive)
         cid = int(b.get("class_id", 0))
         safe = sanitize_dir_name(nick)
         d = BOTS_ROOT / f"bot{i:0{width}d}_{safe}"
