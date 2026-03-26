@@ -49,6 +49,7 @@ local utils = require("samp.events.utils")
 local vector3d = require("vector3d")
 local ffi = require("ffi")
 require("sampfuncs")
+require("addon")   -- newTask, wait, sendInput, sendSpawnRequest, sendDialogResponse
 
 -- ================================================================
 -- Дебаг
