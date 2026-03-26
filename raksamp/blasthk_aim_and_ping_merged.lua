@@ -23,15 +23,15 @@
       r=0 → регистрация, r=1 → логин
 
     ЛОГИН:         {"t":6, "s":"ПАРОЛЬ", "r":0}
-    РЕГИСТРАЦИЯ:   {"t":1, "s":"НИК", "p":"ПАРОЛЬ"}
+    РЕГИСТРАЦИЯ шаг1: {"t":1, "p":"ПАРОЛЬ", "s":""}  (p=пароль, s=email пустой)
     ВЫБОР ПОЛА:    {"t":3, "r":0}  (0=муж, 1=жен)
-    СКИН PREVIEW:  {"t":-1, "i":78}
-    СКИН CONFIRM:  {"t":5, "r":78}
     ИНВАЙТ СКИП:   {"t":4, "s":""}
+    СКИН CONFIRM:  {"t":5, "r":78}  (r = gameId скина)
     ЗАКРЫТЬ GUI:   {"c":1}
 
-    Входящий {"t":0} → ОК, следующий шаг
-    Входящий {"t":3} → выбор скина (isMale confirmed)
+    Входящий {"t":3} → выбор пола (ответ на шаг 1 регистрации)
+    Входящий {"t":0} → ОК, следующий шаг (инвайт → скин)
+    Входящий {"t":-1} → регистрация завершена
 
   screenId=10 — SAMP-диалог
     Входящий: {"o":1, "i":style, "c":"title", "s":"text", "l":"btn1", "r":"btn2"}
@@ -39,7 +39,8 @@
 
   screenId=50 — SpawnLocation
     Входящий: {"o":1, "t":N, "m":[...]}
-    Ответ:    {"t":0}  → первая локация
+    Ответ:    {"t":1}  → Вокзал (сервер вычитает 1 → SPAWN_TYPE_VOKZAL=0)
+              1=Вокзал, 2=последнее место, 3=фракция, 4=дом, 5=гость, 6=семья
 
   Мужские скины: [78,79,134,136,230,246,159,71,256]
   Женские скины: [77,135,188,212,239,218]
@@ -296,11 +297,10 @@ local function pr_do_register()
 	end
 	PR.pw = pw
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	-- Генерируем ник формата Name_Surname каждый раз новый
-	PR.nick = gen_rp_nick()
-	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d", PR.reg_attempt, PR.nick, #pw))
-	-- {"t":1, "s":"Name_Surname", "p":"PASSWORD"}
-	pr_send_json(38, {t=1, s=PR.nick, p=pw})
+	dbg(string.format("[PR] REGISTER attempt=%d pw_len=%d", PR.reg_attempt, #pw))
+	-- Шаг 1: {"t":1, "p":"ПАРОЛЬ", "s":""} — пароль + email (s = email, можно пустой)
+	-- Ник не передаётся в JSON — он уже задан как SA-MP ник при подключении
+	pr_send_json(38, {t=1, p=pw, s=""})
 end
 
 local function pr_do_sex()
@@ -339,9 +339,10 @@ end
 local function pr_do_spawn_location()
 	if PR.spawn_loc_sent then return end
 	PR.spawn_loc_sent = true
-	dbg("[PR] SPAWN_LOCATION: first slot (t=0)")
-	-- {"t":0} — первая локация
-	pr_send_json(50, {t=0})
+	dbg("[PR] SPAWN_LOCATION: Вокзал (t=1, сервер вычитает 1 → SPAWN_TYPE_VOKZAL=0)")
+	-- {"t":1} — Вокзал; сервер вычитает 1, получается SPAWN_TYPE_VOKZAL=0
+	-- 1=Вокзал, 2=последнее место, 3=фракция, 4=дом, 5=гость, 6=семья
+	pr_send_json(50, {t=1})
 end
 
 -- ================================================================
@@ -409,26 +410,31 @@ local function handle_pr_packet(screen_id, json_str)
 		-- Входящий step response {"t":N}
 		if tp ~= nil then
 			if tp == 0 then
-				-- t=0 = OK, следующий шаг зависит от того где мы
+				-- t=0 = OK, следующий шаг
 				dbg("[PR] GUI38 t=0 (OK)")
 				if PR.is_registration then
+					-- Нормальный путь: t=3 → пол (sex_sent=true) → t=0 → инвайт → t=0 → скин
+					-- Если t=0 пришёл раньше t=3 (сервер нестандартный) — отправим пол сейчас
 					if not PR.sex_sent then
+						-- Резервный путь: пол ещё не отправлен (обычно пол отправляется по t=3)
 						newTask(function()
 							wait(400)
 							pr_do_sex()
 						end)
-					elseif not PR.skin_sent then
-						newTask(function()
-							wait(400)
-							pr_do_skin()
-						end)
 					elseif not PR.invite_sent then
+						-- Пол уже отправлен (по t=3) → шаг 3: инвайт-скип
 						newTask(function()
 							wait(400)
 							pr_do_invite_skip()
 						end)
+					elseif not PR.skin_sent then
+						-- Инвайт отправлен → шаг 4: выбор скина
+						newTask(function()
+							wait(400)
+							pr_do_skin()
+						end)
 					else
-						-- Регистрация завершена
+						-- Всё отправлено
 						dbg("[PR] GUI38: registration complete!")
 						PR.active = false
 					end
@@ -439,12 +445,17 @@ local function handle_pr_packet(screen_id, json_str)
 				end
 
 			elseif tp == 3 then
-				-- t=3 = пол принят, теперь выбор скина
-				dbg("[PR] GUI38 t=3: sex accepted, choose skin")
+				-- t=3 = сервер ждёт выбор пола (ответ на шаг 1 регистрации)
+				dbg("[PR] GUI38 t=3: server requests gender → sending male (r=0)")
 				newTask(function()
 					wait(400)
-					pr_do_skin()
+					pr_do_sex()
 				end)
+
+			elseif tp == -1 then
+				-- t=-1 = сервер подтвердил завершение регистрации
+				dbg("[PR] GUI38 t=-1: registration confirmed by server")
+				PR.active = false
 
 			elseif tp == 1 then
 				-- Пин/код (редко)
@@ -454,11 +465,10 @@ local function handle_pr_packet(screen_id, json_str)
 				-- Ошибка — неверный пароль, ник занят или пин
 				dbg("[PR] GUI38 t=2: error (bad pw / nick taken)")
 				if PR.is_registration then
-					-- Ник занят — пробуем новый уникальный ник
+					-- Ошибка регистрации — повторяем шаг 1
 					newTask(function()
 						wait(800)
-						PR.nick = gen_unique_nick()
-						dbg("[PR] GUI38 t=2: retrying with new nick: " .. PR.nick)
+						dbg("[PR] GUI38 t=2: retrying registration")
 						pr_do_register()
 					end)
 				elseif PR.login_attempts < 3 then
