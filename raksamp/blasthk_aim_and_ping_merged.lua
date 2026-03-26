@@ -190,7 +190,10 @@ end
 -- Отправка GUI-пакета серверу.
 -- Тестируем разные форматы чтобы найти правильный.
 -- PR_SEND_MODE: "5A"=5arg без extra, "5B"=5arg с 2 extra, "3A"=3arg+pktid без extra, "3B"=3arg+pktid+2extra
-local PR_SEND_MODE = "3A"
+-- Confirmed format from traffic analysis:
+-- incoming: [pkt_id][screen uint16][json_len uint16][json_len uint16 DUPLICATE][json]
+-- The "2 extra bytes" are a SECOND copy of json_len (both = len of json string)
+local PR_SEND_MODE = "3C"  -- 3C = 3-arg with pkt_id in bs, double json_len
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
@@ -213,7 +216,15 @@ local function pr_send(screen_id, json_str)
 		bs:writeUInt16(#json_str)
 		bs:writeString(json_str)
 		bs:sendPacketEx(1, 9, 0)
-	else -- "3B" default
+	elseif PR_SEND_MODE == "3C" then
+		-- CONFIRMED FORMAT: pkt_id + screen + json_len + json_len_again + json
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)    -- json_len первый раз
+		bs:writeUInt16(#json_str)    -- json_len второй раз (дублирование)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 0)
+	else -- "3B"
 		bs:writeUInt8(PKT_GUI_OUT)
 		bs:writeUInt16(screen_id)
 		bs:writeUInt16(#json_str)
