@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
-# Два RakSAMP Lite: только два lua в scripts/ как есть (без лоадеров).
-# Порядок загрузки Lite — по имени: сначала send_ping_fix.lua, потом z_aim_fix_updated.lua
-# (копия aim_fix_updated.lua под именем z_* чтобы aim шёл после ping и переопределил onSendPacket).
+# Два RakSAMP Lite. Два отдельных lua с blast.hk нельзя: второй затирает onSendPacket первого
+# → «в табе есть, в мире нет». Используем один merged + spawn.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 ZIP="${LITE_ZIP:-$REPO_ROOT/RakSAMP Lite.zip}"
-AIM_SRC="${AIM_FIX_LUA:-$REPO_ROOT/aim_fix_updated.lua}"
-PING_SRC="${PING_FIX_LUA:-$REPO_ROOT/send_ping_fix.lua}"
+MERGED="${BLASTHK_MERGED:-$ROOT/blasthk_aim_and_ping_merged.lua}"
 SPAWN_SRC="${SPAWN_LUA:-$ROOT/spawn_after_join.lua}"
 RUNDIR="${LITE_RUNDIR:-$ROOT/lite_run}"
 export DISPLAY="${DISPLAY:-:1}"
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 
-for f in "$ZIP" "$AIM_SRC" "$PING_SRC" "$SPAWN_SRC"; do
+for f in "$ZIP" "$MERGED" "$SPAWN_SRC"; do
   [[ -f "$f" ]] || { echo "Нет файла: $f" >&2; exit 1; }
 done
 
@@ -97,7 +95,7 @@ incar=500
 aim=6000
 lua=5
 [Coord]
-off_at_spawn=1
+off_at_spawn=0
 delay=300
 step=7.5
 EOF
@@ -113,11 +111,10 @@ for i in 1 2; do
   mkdir -p "$INST"
   unzip -q -o "$ZIP" -d "$INST"
   mkdir -p "$INST/scripts"
-  cp -f "$PING_SRC" "$INST/scripts/send_ping_fix.lua"
-  cp -f "$AIM_SRC" "$INST/scripts/z_aim_fix_updated.lua"
+  cp -f "$MERGED" "$INST/scripts/blasthk_aim_and_ping_merged.lua"
   cp -f "$SPAWN_SRC" "$INST/scripts/zzz_spawn_after_join.lua"
   write_ini "$nick" "$INST"
-  echo "Инстанс $i: send_ping_fix + z_aim_fix_updated + zzz_spawn_after_join"
+  echo "Инстанс $i: blasthk_aim_and_ping_merged.lua + zzz_spawn_after_join.lua"
 done
 
 echo "Запуск wine ..."

@@ -52,14 +52,16 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 
 Много окон с **одного IP** часто режутся античитом. На форумах ([пример](https://blast.hk/threads/224746/)) обычно советуют **прокси / разные IP** или скрипты под конкретный лаунчер.
 
-## RakSAMP Lite + два lua с blast.hk (два экземпляра)
+## RakSAMP Lite + blast.hk фиксы (два экземпляра)
 
-В корне: **`RakSAMP Lite.zip`**, **`aim_fix_updated.lua`**, **`send_ping_fix.lua`**.
+В корне репо по-прежнему лежат оригиналы **`aim_fix_updated.lua`** и **`send_ping_fix.lua`**.  
+В RakSAMP Lite **нельзя** подключать их **двумя файлами** в **`scripts/*.lua`**: у обоих свой глобальный **`onSendPacket`** — **второй файл полностью заменяет первый**, ping-логика **не выполняется**, aim ломает поток без неё → в табе игрок есть, **в мире/по ID — «нет игрока»**.
 
-**`start_lite_two_bots.sh`** копирует в каждый инстанс:
+Поэтому в репозитории **`raksamp/blasthk_aim_and_ping_merged.lua`** — **одна** склейка обоих скриптов (один `onSendPacket`: сначала ping на PlayerSync, потом aim / остальное). При обновлении оригиналов в корне **перенеси правки в merged** (или сравни diff).
 
-- **`scripts/send_ping_fix.lua`**, **`scripts/z_aim_fix_updated.lua`** (содержимое = **`aim_fix_updated.lua`**, префикс **`z_`** — грузится после send_ping, иначе ping перетрёт aim);
-- **`scripts/zzz_spawn_after_join.lua`** — только **`sendSpawnRequest()`** через **`newTask`/`wait`** после входа (два lua с blast.hk **спавн не делают**).
+Плюс **`zzz_spawn_after_join.lua`** — **`sendSpawnRequest()`** после задержки.
+
+**`start_lite_two_bots.sh`** копирует **`blasthk_aim_and_ping_merged.lua`** + **`zzz_spawn_after_join.lua`**.
 
 Запуск:
 
