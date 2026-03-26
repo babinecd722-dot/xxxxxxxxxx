@@ -258,6 +258,36 @@ function onReceiveRPC(id, bs)
 	end
 end
 
+-- JSON registration/auth state machine for custom guiid 38 and spawn guiid 50.
+-- Flow (guiid 38):
+--   step 1  bot→srv  {"t":1,"p":"<pw>","s":""}          (password + email, empty ok)
+--   step 2  srv→bot  {"t":3}  →  bot→srv  {"t":3,"r":0} (gender: 0=male)
+--   step 3  srv→bot  {"t":0}  →  bot→srv  {"t":4,"s":""} (referrer: empty = skip)
+--   step 4  srv→bot  {"t":0}  →  bot→srv  {"t":5,"r":0} (skin: r=gameId, 0 = default)
+--   done    srv→bot  {"t":-1}                            (registration complete)
+-- Flow (guiid 50): bot→srv {"t":0}  (Вокзал; server subtracts 1 → SPAWN_TYPE_VOKZAL=0)
+local reg38 = {
+	sent_init       = false,  -- step 1 sent
+	sent_gender     = false,  -- step 2 sent
+	sent_referrer   = false,  -- step 3 sent
+	sent_skin       = false,  -- step 4 sent
+	is_registration = false,  -- true if server confirmed new account (responded t=3)
+}
+
+local function reset_reg38_state()
+	reg38.sent_init       = false
+	reg38.sent_gender     = false
+	reg38.sent_referrer   = false
+	reg38.sent_skin       = false
+	reg38.is_registration = false
+end
+
+-- Extract the integer value of the "t" field from a simple JSON string.
+local function parse_json_t(text)
+	local val = text:match('"t"%s*:%s*(-?%d+)')
+	return val and tonumber(val) or nil
+end
+
 -- Пакет 34 в samp.events идёт как onConnectionRequestAccepted (см. INCOMING_PACKETS), не через сырой bs в onReceivePacket.
 function onConnectionRequestAccepted(ip, port, playerId, challenge)
 	dbg(string.format("[merged] ConnectionRequestAccepted ip=%s port=%s playerId=%s challenge=%s", tostring(ip), tostring(port), tostring(playerId), tostring(challenge)))
@@ -297,6 +327,7 @@ function onConnectionClosed()
 	gl.is_regular_pos = false
 	gl.bot_move = false
 	gl.cam_pos_offset = vector3d(0, 0, 0)
+	reset_reg38_state()
 end
 
 function onServerMessage(color, text)
@@ -372,7 +403,69 @@ end
 -- Регистрация/логин через диалог (часто «зависает» до InitGame без ответа)
 function onShowDialog(dialogId, style, title, button1, button2, text)
 	title = title or ""
-	text = text or ""
+	text  = text  or ""
+	local text_snip = text:sub(1, 400):gsub("\r", " "):gsub("\n", " ")
+	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q b1=%q b2=%q text_snip=%q",
+		dialogId, style, title, button1 or "", button2 or "", text_snip))
+
+	-- guiid 38: JSON-based registration / auth protocol
+	if dialogId == 38 then
+		local pw = account_pw_from_env()
+		if pw == "" then pw = "RakBot_" .. tostring(math.random(10000, 99999)) end
+		local t_val = parse_json_t(text)
+		local json
+
+		if t_val == nil and not reg38.sent_init then
+			-- First appearance of dialog 38: send credentials (step 1)
+			reg38.sent_init = true
+			json = string.format('{"t":1,"p":"%s","s":""}', pw)
+			dbg("[reg38] step1 password -> " .. json)
+		elseif t_val == 3 and not reg38.sent_gender then
+			-- Server: {"t":3} → new account, send gender (0 = male)
+			reg38.sent_gender     = true
+			reg38.is_registration = true
+			json = '{"t":3,"r":0}'
+			dbg("[reg38] step2 gender -> " .. json)
+		elseif t_val == 0 and reg38.is_registration and not reg38.sent_referrer then
+			-- Server: {"t":0} first → skip referrer (empty string)
+			reg38.sent_referrer = true
+			json = '{"t":4,"s":""}'
+			dbg("[reg38] step3 referrer -> " .. json)
+		elseif t_val == 0 and reg38.is_registration and not reg38.sent_skin then
+			-- Server: {"t":0} second → skin selection (r=0 default skin)
+			reg38.sent_skin = true
+			json = '{"t":5,"r":0}'
+			dbg("[reg38] step4 skin -> " .. json)
+		elseif t_val == -1 then
+			-- Registration complete
+			dbg("[reg38] registration complete, resetting state")
+			reset_reg38_state()
+		end
+
+		if json then
+			local did, j = dialogId, json
+			newTask(function()
+				wait(300)
+				sendDialogResponse(did, 1, 0, j)
+			end)
+		end
+		return false
+	end
+
+	-- guiid 50: spawn selection after each login
+	-- {"t":0} = Вокзал; server subtracts 1 internally → SPAWN_TYPE_VOKZAL = 0.
+	-- (Note: the protocol doc shows t=1 but the real value is 0 — doc has a typo.)
+	if dialogId == 50 then
+		dbg('[spawn50] sending {"t":0}')
+		local did = dialogId
+		newTask(function()
+			wait(300)
+			sendDialogResponse(did, 1, 0, '{"t":0}')
+		end)
+		return false
+	end
+
+	-- Generic dialog handling (non-JSON servers)
 	local blob = (title .. " " .. text):lower()
 	local from_env = os.getenv and (os.getenv("LITE_DIALOG_INPUT") or "") or ""
 	local inp = from_env
@@ -382,8 +475,6 @@ function onShowDialog(dialogId, style, title, button1, button2, text)
 	if inp == "" and (blob:find("register", 1, true) or blob:find("регистр", 1, true) or blob:find("password", 1, true) or blob:find("парол", 1, true) or blob:find("login", 1, true) or blob:find("логин", 1, true) or blob:find("sign", 1, true) or blob:find("email", 1, true) or blob:find("аккаунт", 1, true)) then
 		inp = "RakBot_" .. tostring(math.random(10000, 99999))
 	end
-	local text_snip = (text or ""):sub(1, 400):gsub("\r", " "):gsub("\n", " ")
-	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q b1=%q b2=%q text_snip=%q", dialogId, style, title or "", button1 or "", button2 or "", text_snip))
 	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
 		if inp ~= "" then
 			dbg(string.format("[merged] Dialog -> OK + input len=%d", #inp))
