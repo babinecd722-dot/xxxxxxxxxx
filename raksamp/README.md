@@ -2,12 +2,12 @@
 
 ## 1. Скачать RakSAMP Lite
 
-Официальное вложение в теме [RakSAMP Lite (Rei)](https://www.blast.hk/threads/108052/): **`RakSAMP Lite.zip`**.
+- Зеркало в репозитории: [`RakSAMP Lite.zip` (raw)](https://github.com/babinecd722-dot/xxxxxxxxxx/raw/main/RakSAMP%20Lite.zip) — распакуй в **`raksamp/lite/`**.
+- Оригинал: вложение в теме [RakSAMP Lite (Rei)](https://www.blast.hk/threads/108052/).
 
-Из этого окружения **прямая загрузка вложения без cookie не работает**. Варианты:
+Без зеркала **прямая загрузка вложения blast.hk без cookie не работает**. Варианты:
 
-- Скачать вручную и распаковать в **`raksamp/lite/`** (рядом с папкой **`scripts/`**).
-- Или: взять из браузера cookie **`xf_session`** и выполнить:
+- Взять из браузера cookie **`xf_session`** и выполнить:
   ```bash
   cd raksamp
   BLAST_SESSION_COOKIE='значение_xf_session' bash fetch_blast_lite.sh
@@ -43,3 +43,7 @@
 ## Устаревший сток RakSAMP (XML + бот-армия)
 
 Удалён из репозитория. Для стокового клиента: [samiirWasHere/raksamp **client.zip**](https://github.com/samiirWasHere/raksamp).
+
+## blast.hk — аккаунт
+
+Я **не могу** зарегистрировать учётку на blast.hk за тебя: нужны капча, согласие с правилами и подтверждение почты **с твоего** Gmail. Открой [register](https://www.blast.hk/register/) в браузере, укажи **dbabinec09@gmail.com**, подтверди письмо — после этого вложения Lua скачиваются самим.

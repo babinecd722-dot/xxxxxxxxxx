@@ -12,7 +12,11 @@ if [[ ! -d "$LITE_ROOT" ]]; then
   exit 1
 fi
 EXE=""
-for candidate in "$LITE_ROOT"/RakSAMP_Lite.exe "$LITE_ROOT"/RakSAMPLite.exe "$LITE_ROOT"/RakSAMP*.exe; do
+for candidate in \
+  "$LITE_ROOT/RakSAMP Lite.exe" \
+  "$LITE_ROOT/RakSAMP_Lite.exe" \
+  "$LITE_ROOT/RakSAMPLite.exe" \
+  "$LITE_ROOT"/RakSAMP*.exe; do
   [[ -f "$candidate" ]] || continue
   EXE="$candidate"
   break

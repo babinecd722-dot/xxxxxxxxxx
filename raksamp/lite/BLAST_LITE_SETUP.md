@@ -4,7 +4,7 @@
 
 ## Установка бинарника
 
-1. Скачай `RakSAMP Lite.zip` с [threads/108052](https://www.blast.hk/threads/108052/) (вложение к посту Rei).
+1. Скачай `RakSAMP Lite.zip`: [raw на GitHub](https://github.com/babinecd722-dot/xxxxxxxxxx/raw/main/RakSAMP%20Lite.zip) или вложение [threads/108052](https://www.blast.hk/threads/108052/).
 2. Распакуй сюда: `raksamp/lite/` рядом с папкой `scripts/`.
 3. Переименуй exe в **`RakSAMP_Lite.exe`** или поправь имя в `run_lite_wine.sh` / `.desktop`.
 

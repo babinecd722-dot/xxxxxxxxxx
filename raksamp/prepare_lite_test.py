@@ -19,8 +19,9 @@ def lua_quote(s: str) -> str:
 
 
 def has_lite_exe(folder: Path) -> bool:
-    if (folder / "RakSAMP_Lite.exe").is_file():
-        return True
+    for name in ("RakSAMP Lite.exe", "RakSAMP_Lite.exe", "RakSAMPLite.exe"):
+        if (folder / name).is_file():
+            return True
     for p in folder.glob("RakSAMP*.exe"):
         if "uninstall" not in p.name.lower():
             return True
