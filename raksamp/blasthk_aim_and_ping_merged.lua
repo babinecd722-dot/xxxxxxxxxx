@@ -222,7 +222,9 @@ end
 -- "3E" = sendRPCEx fallback
 -- "3F" = RELIABLE(8), ch0, no len
 -- "3G" = RELIABLE_ORDERED(9), ch1
-local PR_SEND_MODE = "3C"
+-- 5A: sendPacketEx(0xFB, priority, reliability, channel, broadcast) — explicit packet ID
+-- данные: screen uint16 + json bytes (NO pkt_id byte, NO length prefix)
+local PR_SEND_MODE = "5A"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
