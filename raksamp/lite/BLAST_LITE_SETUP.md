@@ -14,7 +14,8 @@
 raksamp/lite/
   RakSAMP_Lite.exe      ← с форума
   scripts/              ← из репозитория (уже есть)
-      01_send_ping_style_fix.lua
+      10_send_ping_style_fix.lua
+      00_autoconnect.lua        ← генерится prepare_lite_test.py в lite_instances/bot*
       README_SCRIPTS.md
 ```
 

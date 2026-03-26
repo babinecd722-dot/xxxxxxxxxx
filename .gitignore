@@ -1,20 +1,12 @@
 # Extracted from decompiled_launcher.zip (source of truth is the zip)
 rage_russia_launcher/
 
-# RakSAMP — binary from GitHub release; keep repo small
-raksamp/RakSAMPClient.exe
 raksamp/*.log
 raksamp/__pycache__/
-raksamp/bot.pid
+raksamp/lite_instances/
+raksamp/lite_upload/
+raksamp/lite_unpack/
 raksamp/bots/
-raksamp/bots/*/bot.log
-raksamp/bots/*/bot.pid
-raksamp/bots/**/.nick
-raksamp/bots/**/.class_id
-raksamp/bots/**/.account_pass
-raksamp/bots/**/.spawn_mode
-raksamp/bots/.launch.env
-raksamp/bots/supervisor_report.json
 
 # RakSAMP Lite (Windows build from blast.hk — положить вручную)
 raksamp/lite/*.exe

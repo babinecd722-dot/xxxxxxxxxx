@@ -1,8 +1,8 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=RakSAMP Prime
-Comment=RakSAMP: окно подключения (IP, порт, ник, пароль), затем Wine
+Name=RakSAMP Lite (blast.hk)
+Comment=GUI: два тестовых бота, Lua-фиксы из lite/scripts/
 Exec=/workspace/raksamp/raksamp-launcher.sh
 Path=/workspace/raksamp
 Icon=applications-wine
