@@ -70,6 +70,21 @@ local function account_pw_from_env()
 	return os.getenv("LITE_ACCOUNT_PASSWORD") or os.getenv("LITE_REGISTER_PASSWORD") or ""
 end
 
+-- Читаем ник из settings/RakSAMP Lite.ini (рабочая папка = папка exe)
+local function get_bot_nick()
+	local f = io.open("settings/RakSAMP Lite.ini", "r")
+	if not f then return "" end
+	for line in f:lines() do
+		local nick = line:match("^nick%s*=%s*(.+)$")
+		if nick then
+			f:close()
+			return nick:gsub("%s+$", "")  -- trim trailing whitespace
+		end
+	end
+	f:close()
+	return ""
+end
+
 ffi.cdef[[
 	typedef unsigned long DWORD;
 	DWORD GetCurrentProcessId();
@@ -285,7 +300,7 @@ local function handle_pr_packet(screen_id, json_str)
 			PR.sex_sent = false
 			PR.skin_sent = false
 			PR.invite_sent = false
-			PR.nick = getBotName and getBotName() or ""
+			PR.nick = get_bot_nick()
 			PR.pw = account_pw_from_env()
 
 			if r == 0 then
