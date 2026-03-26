@@ -51,6 +51,11 @@ local ffi = require("ffi")
 require("sampfuncs")
 require("addon")   -- newTask, wait, sendInput, sendSpawnRequest, sendDialogResponse
 
+-- samp.events callbacks должны быть назначены через таблицу MODULE
+-- (samp.events.core ищет MODULE[callbackName] где MODULE = require('samp.events'))
+-- Получаем ссылку на samp.events MODULE для регистрации callbacks
+local _sampevents = require("samp.events")
+
 -- ================================================================
 -- Дебаг
 -- ================================================================
@@ -266,6 +271,23 @@ local function pr_do_login()
 	pr_send_json(38, {t=6, s=pw, r=0})
 end
 
+-- Списки имён и фамилий для генерации ника формата Name_Surname
+local NICK_FIRST = {
+	"Ivan","Pavel","Maxim","Artem","Denis","Roman","Vitaly","Oleg","Kirill","Dmitry",
+	"Alexey","Andrey","Sergey","Anton","Nikita","Vladislav","Timur","Ruslan","Mikhail","Evgeny"
+}
+local NICK_LAST = {
+	"Volkov","Petrov","Smirnov","Novikov","Morozov","Frolov","Kozlov","Popov","Lebedev","Sokolov",
+	"Orlov","Zaycev","Kuznecov","Sidorov","Gromov","Stepanov","Nikitin","Fedorov","Makarov","Titov"
+}
+
+local function gen_rp_nick()
+	-- Формат строго First_Last — без цифр
+	local first = NICK_FIRST[math.random(#NICK_FIRST)]
+	local last  = NICK_LAST[math.random(#NICK_LAST)]
+	return first .. "_" .. last
+end
+
 local function pr_do_register()
 	local pw = PR.pw ~= "" and PR.pw or account_pw_from_env()
 	if pw == "" then
@@ -273,15 +295,11 @@ local function pr_do_register()
 		dbg("[PR] REGISTER: no password, using generated: " .. pw)
 	end
 	PR.pw = pw
-	-- При каждой попытке регистрации генерируем уникальный ник
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	-- Всегда уникальный ник: буквы + 4 random цифры
-	local names = {"Ivan","Pavel","Maxim","Artem","Denis","Roman","Vitaly","Oleg","Kirill"}
-	local base = names[math.random(#names)]
-	PR.nick = base .. tostring(math.random(1000, 9999))
-	dbg(string.format("[PR] Generated nick: %s (attempt %d)", PR.nick, PR.reg_attempt))
+	-- Генерируем ник формата Name_Surname каждый раз новый
+	PR.nick = gen_rp_nick()
 	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d", PR.reg_attempt, PR.nick, #pw))
-	-- {"t":1, "s":"NICK", "p":"PASSWORD"}
+	-- {"t":1, "s":"Name_Surname", "p":"PASSWORD"}
 	pr_send_json(38, {t=1, s=PR.nick, p=pw})
 end
 
@@ -518,15 +536,31 @@ local function handle_pr_packet(screen_id, json_str)
 	-- ========================
 	elseif screen_id == 50 then
 		if o == 1 then
-			dbg("[PR] SPAWN_LOCATION: server opened, choosing first slot")
+			dbg("[PR] SPAWN_LOCATION: server opened, choosing first slot → then sendSpawnRequest")
 			newTask(function()
-				wait(300)
+				wait(400)
 				pr_do_spawn_location()
+				-- После выбора локации — спавнимся
+				wait(800)
+				if not isBotSpawned() then
+					dbg("[PR] SPAWN_LOCATION: calling sendSpawnRequest()")
+					sendSpawnRequest()
+					wait(1000)
+					if not isBotSpawned() then
+						sendSpawnRequest()
+					end
+				end
 			end)
 		elseif c == 1 then
 			dbg("[PR] SPAWN_LOCATION: closed")
+			-- Попытка спавна после закрытия окна спавна
+			if not isBotSpawned() then
+				newTask(function()
+					wait(300)
+					sendSpawnRequest()
+				end)
+			end
 		else
-			-- Уведомление о спавне
 			dbg(string.format("[PR] SPAWN_LOCATION update t=%s", tostring(tp)))
 		end
 
@@ -852,6 +886,11 @@ end
 -- ================================================================
 
 function onReceiveRPC(id, bs)
+	-- Логируем ВСЕ RPC кроме частых
+	if id ~= RPC_SCRWORLDPLAYERADD and id ~= RPC_SCRSERVERQUIT and id ~= RPC_SCRSERVERJOIN
+		and id ~= RPC_UPDATESCORESPINGSIPS and id ~= RPC_SRVNETSTATS then
+		dbg(string.format("[RPC in] id=%d", id))
+	end
 	if id == RPC_SCRSETPLAYERDRUNKLEVEL then
 		DRUNK_LEVEL = bs:readInt32()
 	end
@@ -911,9 +950,14 @@ end
 
 function onServerMessage(color, text)
 	text = text or ""
-	local short = text:sub(1, 300)
-	dbg(string.format("[merged] ServerMsg color=%08X text=%s", color or 0, short))
-	-- Логируем все сообщения — может помочь увидеть что требует сервер
+	-- Конвертируем в hex для безопасного отображения non-ASCII (windows-1251)
+	local hex = ""
+	for i = 1, math.min(#text, 100) do
+		hex = hex .. string.format("%02X ", text:byte(i))
+	end
+	-- Также пробуем как ASCII (заменяя non-printable на .)
+	local ascii = text:sub(1, 100):gsub("[%c\x80-\xFF]", ".")
+	dbg(string.format("[merged] ServerMsg color=%08X ascii=%q hex=%s", color or 0, ascii, hex))
 end
 
 function onClientCheck(requestType, subject, offset, length)
@@ -944,24 +988,18 @@ end
 
 function onRequestClassResponse(canSpawn, team, skin)
 	dbg(string.format("[merged] RequestClassResponse canSpawn=%s skin=%s", tostring(canSpawn), tostring(skin)))
+	-- НЕ шлём sendSpawnRequest здесь! Спавн управляется через JSON GUI цепочку:
+	-- screen=38 t=0 → пол → скин → инвайт → screen=50 SpawnLocation → спавн
 end
 
 function onRequestSpawnResponse(response)
 	dbg(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
 end
 
--- SetSpawnInfo — немедленный спавн
+-- SetSpawnInfo — получили инфо о спавне, теперь можно заспавниться
 function onSetSpawnInfo(team, skin, unused, position, rotation, weapons, ammo)
-	dbg(string.format("[merged] onSetSpawnInfo skin=%s", tostring(skin)))
-	if not isBotSpawned() then
-		newTask(function()
-			wait(200)
-			if not isBotSpawned() then
-				dbg("[merged] onSetSpawnInfo -> sendSpawnRequest")
-				sendSpawnRequest()
-			end
-		end)
-	end
+	dbg(string.format("[merged] onSetSpawnInfo skin=%s — will spawn via SpawnLocation flow", tostring(skin)))
+	-- Спавн происходит после screen=50 SpawnLocation, не здесь
 end
 
 -- SA-MP диалог (стандартный, не PRIME RUSSIA)
@@ -1043,57 +1081,14 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 	PR.nick = ""
 	PR.pw = account_pw_from_env()
 
-	newTask(function()
-		wait(1200)
-		local pw = account_pw_from_env()
-
-		-- /register и /login (стандартные SA-MP команды)
-		if pw ~= "" then
-			dbg("[merged] onInitGame: /register + /login")
-			sendInput("/register " .. pw .. " " .. pw)
-			wait(1500)
-			sendInput("/login " .. pw)
-			wait(1500)
-		end
-
-		-- !spawn + RequestClass/Spawn цикл
-		local function tryRequestClass(cls)
-			local rbs = bitStream.new()
-			rbs:writeInt32(cls)
-			rbs:sendRPC(RPC_REQUESTCLASS)
-		end
-
-		sendInput("!spawn")
-		wait(400)
-		tryRequestClass(0)
-		wait(500)
-		sendSpawnRequest()
-		wait(800)
-
-		for attempt = 1, 80 do
-			if isBotSpawned() then
-				dbg("[merged] spawned OK at attempt " .. attempt)
-				return
-			end
-			local cls = (attempt - 1) % nclass
-			dbg(string.format("[merged] spawn attempt %d cls=%d", attempt, cls))
-
-			if pw ~= "" and attempt % 3 == 0 and attempt <= 15 then
-				sendInput("/login " .. pw)
-				wait(500)
-			end
-			if attempt % 5 == 0 then
-				sendInput("!spawn")
-				wait(300)
-			end
-
-			tryRequestClass(cls)
-			wait(500)
-			sendSpawnRequest()
-			wait(2000)
-		end
-		dbg("[merged] spawn timeout. pw_len=" .. #pw)
-	end)
+	-- Ничего не делаем здесь — спавн управляется цепочкой JSON GUI:
+	-- screen=38 {o:1,r:0/1} → регистрация/логин
+	--           {t:0} → выбор пола {t:3,r:0}
+	--           {t:3} → выбор скина {t:-1,i:78} + {t:5,r:78}
+	--           {t:0} → инвайт скип {t:4,s:""}
+	-- screen=50 {o:1,...} → спавн локация {t:0}
+	-- После этого isBotSpawned() = true
+	dbg("[merged] onInitGame: waiting for JSON GUI flow (screen 38/50)")
 end
 
 function onLoad()
@@ -1104,4 +1099,27 @@ function onLoad()
 	gl.aim_info = genAimSyncInfo()
 	setRate(AIM_SYNC_RATE, 1000)
 	setRate(SPEC_SYNC_RATE, 100)
+
+	-- Регистрируем callbacks через samp.events MODULE
+	-- samp.events.core ищет MODULE[name] где MODULE = return значение require('samp.events')
+	-- Если напрямую через global не работает — регистрируем явно
+	if _sampevents then
+		_sampevents.onInitGame           = onInitGame
+		_sampevents.onShowDialog         = onShowDialog
+		_sampevents.onRequestClassResponse = onRequestClassResponse
+		_sampevents.onRequestSpawnResponse = onRequestSpawnResponse
+		_sampevents.onSetSpawnInfo       = onSetSpawnInfo
+		_sampevents.onConnectionRequestAccepted = onConnectionRequestAccepted
+		_sampevents.onConnectionRejected = onConnectionRejected
+		_sampevents.onConnectionLost     = onConnectionLost
+		_sampevents.onConnectionBanned   = onConnectionBanned
+		_sampevents.onConnectionClosed   = onConnectionClosed
+		_sampevents.onServerMessage      = onServerMessage
+		_sampevents.onClientCheck        = onClientCheck
+		_sampevents.onForceClassSelection = onForceClassSelection
+		_sampevents.onGamemodeRestart    = onGamemodeRestart
+		dbg("[merged] samp.events callbacks registered via MODULE")
+	else
+		dbg("[merged] WARNING: samp.events not available, callbacks via global only")
+	end
 end

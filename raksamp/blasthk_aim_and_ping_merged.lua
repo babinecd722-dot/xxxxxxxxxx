@@ -271,6 +271,23 @@ local function pr_do_login()
 	pr_send_json(38, {t=6, s=pw, r=0})
 end
 
+-- Списки имён и фамилий для генерации ника формата Name_Surname
+local NICK_FIRST = {
+	"Ivan","Pavel","Maxim","Artem","Denis","Roman","Vitaly","Oleg","Kirill","Dmitry",
+	"Alexey","Andrey","Sergey","Anton","Nikita","Vladislav","Timur","Ruslan","Mikhail","Evgeny"
+}
+local NICK_LAST = {
+	"Volkov","Petrov","Smirnov","Novikov","Morozov","Frolov","Kozlov","Popov","Lebedev","Sokolov",
+	"Orlov","Zaycev","Kuznecov","Sidorov","Gromov","Stepanov","Nikitin","Fedorov","Makarov","Titov"
+}
+
+local function gen_rp_nick()
+	-- Формат строго First_Last — без цифр
+	local first = NICK_FIRST[math.random(#NICK_FIRST)]
+	local last  = NICK_LAST[math.random(#NICK_LAST)]
+	return first .. "_" .. last
+end
+
 local function pr_do_register()
 	local pw = PR.pw ~= "" and PR.pw or account_pw_from_env()
 	if pw == "" then
@@ -278,15 +295,11 @@ local function pr_do_register()
 		dbg("[PR] REGISTER: no password, using generated: " .. pw)
 	end
 	PR.pw = pw
-	-- При каждой попытке регистрации генерируем уникальный ник
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	-- Всегда уникальный ник: буквы + 4 random цифры
-	local names = {"Ivan","Pavel","Maxim","Artem","Denis","Roman","Vitaly","Oleg","Kirill"}
-	local base = names[math.random(#names)]
-	PR.nick = base .. tostring(math.random(1000, 9999))
-	dbg(string.format("[PR] Generated nick: %s (attempt %d)", PR.nick, PR.reg_attempt))
+	-- Генерируем ник формата Name_Surname каждый раз новый
+	PR.nick = gen_rp_nick()
 	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d", PR.reg_attempt, PR.nick, #pw))
-	-- {"t":1, "s":"NICK", "p":"PASSWORD"}
+	-- {"t":1, "s":"Name_Surname", "p":"PASSWORD"}
 	pr_send_json(38, {t=1, s=PR.nick, p=pw})
 end
 
