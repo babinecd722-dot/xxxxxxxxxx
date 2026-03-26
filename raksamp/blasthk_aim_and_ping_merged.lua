@@ -921,9 +921,14 @@ end
 
 function onServerMessage(color, text)
 	text = text or ""
-	local short = text:sub(1, 300)
-	dbg(string.format("[merged] ServerMsg color=%08X text=%s", color or 0, short))
-	-- Логируем все сообщения — может помочь увидеть что требует сервер
+	-- Конвертируем в hex для безопасного отображения non-ASCII (windows-1251)
+	local hex = ""
+	for i = 1, math.min(#text, 100) do
+		hex = hex .. string.format("%02X ", text:byte(i))
+	end
+	-- Также пробуем как ASCII (заменяя non-printable на .)
+	local ascii = text:sub(1, 100):gsub("[%c\x80-\xFF]", ".")
+	dbg(string.format("[merged] ServerMsg color=%08X ascii=%q hex=%s", color or 0, ascii, hex))
 end
 
 function onClientCheck(requestType, subject, offset, length)
