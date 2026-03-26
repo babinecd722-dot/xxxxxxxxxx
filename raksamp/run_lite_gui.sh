@@ -6,17 +6,41 @@ REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 ZIP="${LITE_ZIP:-$REPO_ROOT/RakSAMP Lite.zip}"
 GUI_DIR="${LITE_GUI_DIR:-$ROOT/lite_gui}"
 PATCH_PY="${LITE_POOL_PATCH:-$ROOT/patch_lite_playerpool.py}"
+MERGED="${BLASTHK_MERGED:-$ROOT/blasthk_aim_and_ping_merged.lua}"
+BUNDLE="${FORUM_BUNDLE:-$ROOT/00_forum_bundle.lua}"
+FORUM_DIR="${FORUM_LUA_DIR:-$ROOT/forum_lua_blasthk}"
 export DISPLAY="${DISPLAY:-:1}"
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 
 [[ -f "$ZIP" ]] || { echo "Нет $ZIP" >&2; exit 1; }
+[[ -f "$MERGED" ]] || { echo "Нет $MERGED" >&2; exit 1; }
+[[ -f "$BUNDLE" ]] || { echo "Нет $BUNDLE" >&2; exit 1; }
+[[ -d "$FORUM_DIR" ]] || { echo "Нет $FORUM_DIR" >&2; exit 1; }
 mkdir -p "$GUI_DIR"
 cd "$GUI_DIR"
 unzip -q -o "$ZIP" -d .
 python3 "$PATCH_PY" "./RakSAMP Lite.exe" 2>/dev/null || true
 
+mkdir -p scripts
+cp -f "$BUNDLE" scripts/00_forum_bundle.lua
+rm -rf scripts/forum_lua_blasthk
+cp -a "$FORUM_DIR" scripts/forum_lua_blasthk
+cp -f "$MERGED" scripts/blasthk_aim_and_ping_merged.lua
+
 MANIFEST="${LITE_MANIFEST:-$ROOT/bots_manifest.json}"
+export LITE_ACCOUNT_PASSWORD="$(LITE_MANIFEST_PATH="$MANIFEST" python3 <<'PY'
+import json, os, sys
+from pathlib import Path
+p = Path(os.environ["LITE_MANIFEST_PATH"])
+pw = ""
+if p.is_file():
+    d = json.loads(p.read_text(encoding="utf-8"))
+    pw = str(d.get("lite_account_password") or d.get("lite_register_password") or "")
+sys.stdout.write(pw)
+PY
+)"
+
 python3 - "$MANIFEST" <<'PY'
 import json, sys
 from pathlib import Path
@@ -39,7 +63,7 @@ if p.is_file():
             nick = str(f[0]) + "_Bot"
 ip_port = f"{host}:{port}"
 ini = f"""[Client]
-console=1
+console=0
 color_tags=1
 timestamp=1
 timestamp_ms=0
