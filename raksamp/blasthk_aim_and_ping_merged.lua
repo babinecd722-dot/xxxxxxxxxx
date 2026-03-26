@@ -154,15 +154,15 @@ local function json_encode(t)
 end
 
 -- Отправить JSON-пакет серверу (эмуляция sendJsonData нативного клиента)
--- Аналогично sendStatsUpdatePacket: первый байт bitstream = packet_id, потом данные.
--- Формат: [0xFB=251] [uint32 screen_id] [string json_windows1251]
+-- Формат из реверса: [uint8 pkt_id=0xFB][uint16 screen_id][uint16 json_len][json bytes]
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
-	bs:writeUInt8(PKT_GUI_OUT)   -- 0xFB = 251 — packet type
-	bs:writeUInt32(screen_id)    -- 4 bytes LE screen_id
-	bs:writeString(json_str)     -- JSON bytes (windows-1251)
-	bs:sendPacketEx(1, 9, 0)    -- HIGH_PRIORITY, RELIABLE_ORDERED, channel 0
-	dbg(string.format("[PR-SEND] screen=%d json=%s", screen_id, json_str:sub(1, 200)))
+	bs:writeUInt8(PKT_GUI_OUT)        -- 0xFB = 251
+	bs:writeUInt16(screen_id)         -- uint16 screen_id
+	bs:writeUInt16(#json_str)         -- uint16 json length
+	bs:writeString(json_str)          -- JSON bytes
+	bs:sendPacketEx(1, 9, 0)         -- HIGH_PRIORITY, RELIABLE_ORDERED, ch0
+	dbg(string.format("[PR-SEND] screen=%d len=%d json=%s", screen_id, #json_str, json_str:sub(1, 200)))
 end
 
 -- Отправить JSON объект серверу
@@ -690,27 +690,26 @@ function onReceivePacket(id, bs)
 	if id == PKT_GUI_IN or id == PKT_GUI_IN2 then
 		local unread_bits = bs:getNumberOfUnreadBits()
 		dbg(string.format("[PR-IN] pkt=%d unread_bits=%d", id, unread_bits))
-		if unread_bits < 8 then return end
+		-- Минимум: 1(pkt_id) + 2(screen_id) + 2(json_len) = 40 bits
+		if unread_bits < 40 then return end
 
-		-- Для кастомных пакетов (не в INCOMING_PACKETS) ignoreBits(8) НЕ применяется.
-		-- Т.е. первый байт = packet_id (0xFB/0xFC), нам его нужно пропустить.
-		-- Затем: uint32 LE screen_id + JSON string.
-		bs:readUInt8()  -- пропускаем packet_id byte (уже известен как id)
-		if bs:getNumberOfUnreadBits() < 32 then
-			dbg("[PR-IN] too short after skip pkt_id")
-			return
-		end
+		-- Формат пакета (из реверса): [uint8 pkt_id][uint16 screen_id][uint16 json_len][json bytes]
+		-- (ignoreBits(8) не применяется к неизвестным id — битстрим начинается с pkt_id)
+		bs:readUInt8()   -- пропускаем packet_id (0xFB/0xFC)
 
-		-- screen_id (4 bytes uint32 LE)
-		local screen_id_ok, screen_id = pcall(function() return bs:readUInt32() end)
-		if not screen_id_ok then
-			dbg("[PR-IN] failed screen_id: " .. tostring(screen_id))
-			return
-		end
+		-- screen_id = uint16
+		local screen_id = bs:readUInt16()
 
-		-- Читаем JSON — ровно столько байт сколько осталось
+		-- json_len = uint16
+		local json_len = bs:readUInt16()
+
 		local remaining_bytes = math.floor(bs:getNumberOfUnreadBits() / 8)
-		dbg(string.format("[PR-IN] screen=%d remaining_bytes=%d", screen_id, remaining_bytes))
+		dbg(string.format("[PR-IN] screen=%d json_len=%d remaining=%d", screen_id, json_len, remaining_bytes))
+
+		-- Используем json_len если корректен, иначе remaining
+		if json_len > 0 and json_len <= remaining_bytes then
+			remaining_bytes = json_len
+		end
 
 		if remaining_bytes <= 0 then
 			dbg("[PR-IN] no json data")
