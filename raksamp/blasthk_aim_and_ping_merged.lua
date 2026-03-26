@@ -688,16 +688,20 @@ function onReceivePacket(id, bs)
 	-- PRIME RUSSIA кастомные GUI пакеты: 0xFB=251, 0xFC=252
 	-- ============================================================
 	if id == PKT_GUI_IN or id == PKT_GUI_IN2 then
-		-- Пакет начинается ПОСЛЕ packet_id byte (он уже считан RakSAMP Lite)
-		-- Проверяем что достаточно данных: минимум 4 байта screen_id
 		local unread_bits = bs:getNumberOfUnreadBits()
 		dbg(string.format("[PR-IN] pkt=%d unread_bits=%d", id, unread_bits))
-		if unread_bits < 32 then
-			dbg("[PR-IN] too short, skip")
+		if unread_bits < 8 then return end
+
+		-- Для кастомных пакетов (не в INCOMING_PACKETS) ignoreBits(8) НЕ применяется.
+		-- Т.е. первый байт = packet_id (0xFB/0xFC), нам его нужно пропустить.
+		-- Затем: uint32 LE screen_id + JSON string.
+		bs:readUInt8()  -- пропускаем packet_id byte (уже известен как id)
+		if bs:getNumberOfUnreadBits() < 32 then
+			dbg("[PR-IN] too short after skip pkt_id")
 			return
 		end
 
-		-- Читаем screen_id (4 bytes = uint32 LE)
+		-- screen_id (4 bytes uint32 LE)
 		local screen_id_ok, screen_id = pcall(function() return bs:readUInt32() end)
 		if not screen_id_ok then
 			dbg("[PR-IN] failed screen_id: " .. tostring(screen_id))
