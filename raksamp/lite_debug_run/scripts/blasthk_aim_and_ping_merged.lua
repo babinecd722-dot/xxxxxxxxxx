@@ -187,32 +187,52 @@ end
 -- 3 args: bs:sendPacketEx(priority, reliability, channel)  → первый байт bs = packet_id
 -- 5 args: bs:sendPacketEx(packetId, priority, reliability, channel, broadcast)  → явный packet_id
 -- Используем 5-аргументный вариант: packet_id = 0xFB, данные = screen_id + json_len + json
--- Формат подтверждён из анализа входящих пакетов:
--- [pkt_id uint8][screen_id uint16][json_len uint16][2 extra bytes 0x00 0x00][json bytes]
+-- Отправка GUI-пакета серверу.
+-- Тестируем разные форматы чтобы найти правильный.
+-- PR_SEND_MODE: "5A"=5arg без extra, "5B"=5arg с 2 extra, "3A"=3arg+pktid без extra, "3B"=3arg+pktid+2extra
+-- Confirmed format from traffic analysis:
+-- incoming: [pkt_id][screen uint16][json_len uint16][json_len uint16 DUPLICATE][json]
+-- The "2 extra bytes" are a SECOND copy of json_len (both = len of json string)
+local PR_SEND_MODE = "3C"  -- 3C = 3-arg with pkt_id in bs, double json_len
+
 local function pr_send(screen_id, json_str)
-	-- Версия 1: 5-arg sendPacketEx + 2 extra bytes + json
-	local ok, err = pcall(function()
-		local bs = bitStream.new()
+	local bs = bitStream.new()
+	if PR_SEND_MODE == "5A" then
 		bs:writeUInt16(screen_id)
 		bs:writeUInt16(#json_str)
-		bs:writeUInt8(0)        -- extra byte 1
-		bs:writeUInt8(0)        -- extra byte 2
 		bs:writeString(json_str)
-		bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false)
-	end)
-	if not ok then
-		-- Fallback: 3-arg (первый байт bitstream = pkt_id)
-		local bs2 = bitStream.new()
-		bs2:writeUInt8(PKT_GUI_OUT)
-		bs2:writeUInt16(screen_id)
-		bs2:writeUInt16(#json_str)
-		bs2:writeUInt8(0)
-		bs2:writeUInt8(0)
-		bs2:writeString(json_str)
-		bs2:sendPacketEx(1, 9, 0)
-		dbg("[PR-SEND] used fallback 3-arg: " .. tostring(err))
+		local ok, err = pcall(function() bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false) end)
+		if not ok then dbg("[PR] 5A failed: " .. tostring(err)) end
+	elseif PR_SEND_MODE == "5B" then
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)
+		bs:writeUInt8(0); bs:writeUInt8(0)
+		bs:writeString(json_str)
+		local ok, err = pcall(function() bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false) end)
+		if not ok then dbg("[PR] 5B failed: " .. tostring(err)) end
+	elseif PR_SEND_MODE == "3A" then
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 0)
+	elseif PR_SEND_MODE == "3C" then
+		-- CONFIRMED FORMAT: pkt_id + screen + json_len + json_len_again + json
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)    -- json_len первый раз
+		bs:writeUInt16(#json_str)    -- json_len второй раз (дублирование)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 0)
+	else -- "3B"
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)
+		bs:writeUInt8(0); bs:writeUInt8(0)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 0)
 	end
-	dbg(string.format("[PR-SEND] screen=%d len=%d json=%s", screen_id, #json_str, json_str:sub(1, 200)))
+	dbg(string.format("[PR-SEND mode=%s] screen=%d len=%d json=%s", PR_SEND_MODE, screen_id, #json_str, json_str:sub(1, 200)))
 end
 
 -- Отправить JSON объект серверу
@@ -254,18 +274,12 @@ local function pr_do_register()
 	end
 	PR.pw = pw
 	-- При каждой попытке регистрации генерируем уникальный ник
-	-- Каждый раз используем уникальный ник чтобы избежать конфликта
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	if PR.reg_attempt == 1 then
-		-- Первая попытка — используем ник из ini + суффикс для уникальности
-		local base = get_bot_nick()
-		if base == "" then base = "Bot" end
-		base = base:gsub("_%d+$", "")
-		PR.nick = base .. tostring(math.random(100, 999))
-	else
-		-- Повторные — полностью случайный
-		PR.nick = gen_unique_nick()
-	end
+	-- Всегда уникальный ник: буквы + 4 random цифры
+	local names = {"Ivan","Pavel","Maxim","Artem","Denis","Roman","Vitaly","Oleg","Kirill"}
+	local base = names[math.random(#names)]
+	PR.nick = base .. tostring(math.random(1000, 9999))
+	dbg(string.format("[PR] Generated nick: %s (attempt %d)", PR.nick, PR.reg_attempt))
 	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d", PR.reg_attempt, PR.nick, #pw))
 	-- {"t":1, "s":"NICK", "p":"PASSWORD"}
 	pr_send_json(38, {t=1, s=PR.nick, p=pw})
@@ -724,12 +738,10 @@ end
 -- ================================================================
 
 function onReceivePacket(id, bs)
-	-- Логируем все пакеты (первые 200 подробно, потом только неизвестные)
-	if gl.pkt_log_left and gl.pkt_log_left > 0 then
-		gl.pkt_log_left = gl.pkt_log_left - 1
-		dbg("[pkt in] id=" .. tostring(id))
-	elseif id ~= PACKET_PLAYER_SYNC and id ~= PACKET_VEHICLE_SYNC and id ~= PACKET_AIM_SYNC
-		and id ~= PACKET_MARKERS_SYNC and id ~= PACKET_STATS_UPDATE then
+	-- Логируем все пакеты кроме шумных sync-пакетов
+	if id ~= PACKET_PLAYER_SYNC and id ~= PACKET_VEHICLE_SYNC and id ~= PACKET_AIM_SYNC
+		and id ~= PACKET_MARKERS_SYNC and id ~= PACKET_STATS_UPDATE
+		and id ~= PACKET_UNOCCUPIED_SYNC and id ~= PACKET_PASSENGER_SYNC then
 		dbg("[pkt in] id=" .. tostring(id))
 	end
 

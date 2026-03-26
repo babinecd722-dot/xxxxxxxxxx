@@ -852,6 +852,11 @@ end
 -- ================================================================
 
 function onReceiveRPC(id, bs)
+	-- Логируем ВСЕ RPC кроме частых
+	if id ~= RPC_SCRWORLDPLAYERADD and id ~= RPC_SCRSERVERQUIT and id ~= RPC_SCRSERVERJOIN
+		and id ~= RPC_UPDATESCORESPINGSIPS and id ~= RPC_SRVNETSTATS then
+		dbg(string.format("[RPC in] id=%d", id))
+	end
 	if id == RPC_SCRSETPLAYERDRUNKLEVEL then
 		DRUNK_LEVEL = bs:readInt32()
 	end
