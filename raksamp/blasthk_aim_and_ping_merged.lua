@@ -254,18 +254,12 @@ local function pr_do_register()
 	end
 	PR.pw = pw
 	-- При каждой попытке регистрации генерируем уникальный ник
-	-- Каждый раз используем уникальный ник чтобы избежать конфликта
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	if PR.reg_attempt == 1 then
-		-- Первая попытка — используем ник из ini + суффикс для уникальности
-		local base = get_bot_nick()
-		if base == "" then base = "Bot" end
-		base = base:gsub("_%d+$", "")
-		PR.nick = base .. tostring(math.random(100, 999))
-	else
-		-- Повторные — полностью случайный
-		PR.nick = gen_unique_nick()
-	end
+	-- Всегда уникальный ник: буквы + 4 random цифры
+	local names = {"Ivan","Pavel","Maxim","Artem","Denis","Roman","Vitaly","Oleg","Kirill"}
+	local base = names[math.random(#names)]
+	PR.nick = base .. tostring(math.random(1000, 9999))
+	dbg(string.format("[PR] Generated nick: %s (attempt %d)", PR.nick, PR.reg_attempt))
 	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d", PR.reg_attempt, PR.nick, #pw))
 	-- {"t":1, "s":"NICK", "p":"PASSWORD"}
 	pr_send_json(38, {t=1, s=PR.nick, p=pw})
@@ -724,12 +718,10 @@ end
 -- ================================================================
 
 function onReceivePacket(id, bs)
-	-- Логируем все пакеты (первые 200 подробно, потом только неизвестные)
-	if gl.pkt_log_left and gl.pkt_log_left > 0 then
-		gl.pkt_log_left = gl.pkt_log_left - 1
-		dbg("[pkt in] id=" .. tostring(id))
-	elseif id ~= PACKET_PLAYER_SYNC and id ~= PACKET_VEHICLE_SYNC and id ~= PACKET_AIM_SYNC
-		and id ~= PACKET_MARKERS_SYNC and id ~= PACKET_STATS_UPDATE then
+	-- Логируем все пакеты кроме шумных sync-пакетов
+	if id ~= PACKET_PLAYER_SYNC and id ~= PACKET_VEHICLE_SYNC and id ~= PACKET_AIM_SYNC
+		and id ~= PACKET_MARKERS_SYNC and id ~= PACKET_STATS_UPDATE
+		and id ~= PACKET_UNOCCUPIED_SYNC and id ~= PACKET_PASSENGER_SYNC then
 		dbg("[pkt in] id=" .. tostring(id))
 	end
 

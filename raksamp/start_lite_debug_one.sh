@@ -104,7 +104,7 @@ echo "Debug run: $DBGDIR nick=$NICK -> $IP_PORT pw_len=${#LITE_ACCOUNT_PASSWORD}
   env LITE_ACCOUNT_PASSWORD="$LITE_ACCOUNT_PASSWORD" wine "./RakSAMP Lite.exe" >>wine_stdout.log 2>&1 &
   echo $! > lite.wine.pid
 )
-sleep 180
+sleep 300
 echo "======== lite_debug.log ========"
 cat "$DBGDIR/lite_debug.log" 2>/dev/null || echo "(empty)"
 echo "======== wine_stdout.log (tail) ========"
