@@ -959,6 +959,14 @@ end
 
 function onRequestClassResponse(canSpawn, team, skin)
 	dbg(string.format("[merged] RequestClassResponse canSpawn=%s skin=%s", tostring(canSpawn), tostring(skin)))
+	-- Если canSpawn=true — немедленно шлём SpawnRequest!
+	if canSpawn then
+		newTask(function()
+			wait(200)
+			dbg("[merged] RequestClassResponse canSpawn=true → sendSpawnRequest()")
+			sendSpawnRequest()
+		end)
+	end
 end
 
 function onRequestSpawnResponse(response)
