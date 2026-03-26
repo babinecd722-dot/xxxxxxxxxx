@@ -5,10 +5,11 @@
   "stagger_seconds": 3,
   "start_only_first": 0,
   "console": 0,
+  "auto_spawn": true,
   "generate_bot_count": 450,
   "nick_mode": "silly",
   "sequential_prefix": "Us",
-  "comment": "450 ботов, тупые ники. 185.189.255.97:2183. stagger_seconds 3 — пауза между стартами.",
+  "comment": "auto_spawn=true: manual_spawn=0 + autorun !spawn после коннекта (без консоли). 450 ботов, 185.189.255.97:2183.",
 
   "nick_silly_first": [
     "Rame", "Danya", "Vova", "Petya", "Kostya", "Sanya", "Misha", "Grisha",

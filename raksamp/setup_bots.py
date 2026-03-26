@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Создаёт bots/botXX_Name/ — только стоковый RakSAMPClient.xml (как в client.zip).
+"""Создаёт bots/botXX_Name/ — стоковый RakSAMPClient.xml (как в client.zip).
 
-Без <find>, без autorun, manual_spawn=1 (спавн вручную: !spawn в консоли RakSAMP).
+По умолчанию manual_spawn=1. В bots_manifest.json: auto_spawn=true — manual_spawn=0 и
+<autorun>!spawn</autorun> после коннекта (без консоли). Или manual_spawn / autorun_commands вручную.
 Ник и сервер только в XML; start_all_bots.sh запускает wine без -n/-h/-p.
 """
 
@@ -47,6 +48,18 @@ def validate_nick(nick: str, *, permissive: bool = False) -> None:
             raise ValueError(f"Подозрительно: {bad!r} в {nick!r}")
 
 
+def _autorun_block(commands: list[str]) -> str:
+    if not commands:
+        return ""
+    lines = []
+    for cmd in commands:
+        c = str(cmd).strip()
+        if not c:
+            continue
+        lines.append(f"\t<autorun>{escape(c, {'"': '&quot;', "'": '&apos;'})}</autorun>")
+    return ("\n" + "\n".join(lines)) if lines else ""
+
+
 def build_stock_xml(
     *,
     nick: str,
@@ -55,12 +68,18 @@ def build_stock_xml(
     port: int,
     rcon: str,
     console: int,
+    manual_spawn: int = 1,
+    autorun_commands: list[str] | None = None,
 ) -> str:
     """Параметры как в оригинале samiirWasHere/raksamp client/RakSAMPClient.xml."""
     nick_a, host_esc, rcon_a = map(esc_attr, (nick, host, rcon))
     port_s = str(int(port))
+    cmds = list(autorun_commands or [])
+    ar = 1 if cmds else 0
+    autorun_xml = _autorun_block(cmds)
+    ms = 1 if int(manual_spawn) != 0 else 0
     return f"""<!--
-	Сток RakSAMP 0.3.7: manual_spawn=1, find=0, без autopilot в чат.
+	RakSAMP 0.3.7: manual_spawn={ms}, find=0. autorun после успешного коннекта.
 -->
 <!--
 Avalable runmodes:
@@ -72,12 +91,13 @@ Avalable runmodes:
 	5 = Follows a player with a vehicle
 -->
 
-<RakSAMPClient console="{console}" runmode="3" autorun="0" find="0" select_classid="{class_id}" manual_spawn="1"
+<RakSAMPClient console="{console}" runmode="3" autorun="{ar}" find="0" select_classid="{class_id}" manual_spawn="{ms}"
 			   print_timestamps="0" chatcolor_rgb="0 0 130" clientmsg_rgb="0 130 0" cpalert_rgb="170 0 0"
 			   followplayer="" followplayerwithvehicleid="295" followXOffset="3.0" followYOffset="0.0" followZOffset="0.0"
 			   updatestats="1" minfps="20" maxfps="90" clientversion="0.3.7">
 
 	<server nickname="{nick_a}" password="{rcon_a}">{host_esc}:{port_s}</server>
+{autorun_xml}
 
 	<intervals spam="150" fakekill="35" lag="20" joinflood="50" chatflood="20" classflood="30" bulletflood="25" />
 	<log objects="0" pickups="0" textlabels="0" textdraws="0" />
@@ -370,6 +390,21 @@ def main() -> int:
         "dumb",
     )
 
+    autorun_cmds: list[str] = []
+    raw_ar = data.get("autorun_commands")
+    if isinstance(raw_ar, list):
+        autorun_cmds = [str(x).strip() for x in raw_ar if str(x).strip()]
+    if data.get("auto_spawn", False):
+        manual_spawn_flag = 0
+        if not autorun_cmds:
+            autorun_cmds = ["!spawn"]
+    elif "manual_spawn" in data:
+        manual_spawn_flag = int(data["manual_spawn"])
+    elif autorun_cmds:
+        manual_spawn_flag = 0
+    else:
+        manual_spawn_flag = 1
+
     BOTS_ROOT.mkdir(parents=True, exist_ok=True)
     for old in sorted(BOTS_ROOT.glob("bot[0-9]*")):
         if old.is_dir():
@@ -389,7 +424,16 @@ def main() -> int:
         safe = sanitize_dir_name(nick)
         d = BOTS_ROOT / f"bot{i:0{width}d}_{safe}"
         d.mkdir(parents=True, exist_ok=True)
-        xml = build_stock_xml(nick=nick, class_id=cid, host=host, port=port, rcon=rcon, console=console)
+        xml = build_stock_xml(
+            nick=nick,
+            class_id=cid,
+            host=host,
+            port=port,
+            rcon=rcon,
+            console=console,
+            manual_spawn=manual_spawn_flag,
+            autorun_commands=autorun_cmds if autorun_cmds else None,
+        )
         (d / "RakSAMPClient.xml").write_text(xml, encoding="utf-8")
         (d / ".nick").write_text(nick + "\n", encoding="utf-8")
         (d / ".class_id").write_text(str(cid) + "\n", encoding="utf-8")
