@@ -8,12 +8,13 @@ REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 ZIP="${LITE_ZIP:-$REPO_ROOT/RakSAMP Lite.zip}"
 AIM_SRC="${AIM_FIX_LUA:-$REPO_ROOT/aim_fix_updated.lua}"
 PING_SRC="${PING_FIX_LUA:-$REPO_ROOT/send_ping_fix.lua}"
+SPAWN_SRC="${SPAWN_LUA:-$ROOT/spawn_after_join.lua}"
 RUNDIR="${LITE_RUNDIR:-$ROOT/lite_run}"
 export DISPLAY="${DISPLAY:-:1}"
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 
-for f in "$ZIP" "$AIM_SRC" "$PING_SRC"; do
+for f in "$ZIP" "$AIM_SRC" "$PING_SRC" "$SPAWN_SRC"; do
   [[ -f "$f" ]] || { echo "Нет файла: $f" >&2; exit 1; }
 done
 
@@ -114,8 +115,9 @@ for i in 1 2; do
   mkdir -p "$INST/scripts"
   cp -f "$PING_SRC" "$INST/scripts/send_ping_fix.lua"
   cp -f "$AIM_SRC" "$INST/scripts/z_aim_fix_updated.lua"
+  cp -f "$SPAWN_SRC" "$INST/scripts/zzz_spawn_after_join.lua"
   write_ini "$nick" "$INST"
-  echo "Инстанс $i: scripts/send_ping_fix.lua + scripts/z_aim_fix_updated.lua (как aim_fix_updated.lua)"
+  echo "Инстанс $i: send_ping_fix + z_aim_fix_updated + zzz_spawn_after_join"
 done
 
 echo "Запуск wine ..."

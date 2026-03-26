@@ -56,10 +56,10 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 
 В корне: **`RakSAMP Lite.zip`**, **`aim_fix_updated.lua`**, **`send_ping_fix.lua`**.
 
-**`start_lite_two_bots.sh`** копирует в каждый инстанс только:
+**`start_lite_two_bots.sh`** копирует в каждый инстанс:
 
-- **`scripts/send_ping_fix.lua`** — как в репо;
-- **`scripts/z_aim_fix_updated.lua`** — это **тот же файл**, что **`aim_fix_updated.lua`**, только имя с префиксом **`z_`**, чтобы Lite загрузил его **после** send_ping (иначе алфавитный порядок: `aim_*` раньше `send_*`, и ping-фикс перезапишет aim).
+- **`scripts/send_ping_fix.lua`**, **`scripts/z_aim_fix_updated.lua`** (содержимое = **`aim_fix_updated.lua`**, префикс **`z_`** — грузится после send_ping, иначе ping перетрёт aim);
+- **`scripts/zzz_spawn_after_join.lua`** — только **`sendSpawnRequest()`** через **`newTask`/`wait`** после входа (два lua с blast.hk **спавн не делают**).
 
 Запуск:
 
