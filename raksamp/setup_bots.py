@@ -345,7 +345,12 @@ def main() -> int:
     host = str(data["server_host"])
     port = int(data["server_port"])
     rcon = str(data.get("rcon_password", ""))
-    stagger = int(data.get("stagger_seconds", 120))
+    try:
+        stagger = float(data.get("stagger_seconds", 120))
+    except (TypeError, ValueError):
+        stagger = 120.0
+    if stagger < 0:
+        stagger = 0.0
     start_first = int(data.get("start_only_first", 0))
     console = int(data.get("console", 1))
     try:
@@ -372,7 +377,7 @@ def main() -> int:
 
     (BOTS_ROOT / ".launch.env").write_text(
         f'RAK_HOST="{host}"\nRAK_PORT="{port}"\nRAK_PASS="{rcon}"\n'
-        f'STAGGER_SEC="{stagger}"\nSTART_ONLY_FIRST="{start_first}"\n',
+        f'STAGGER_SEC="{stagger:g}"\nSTART_ONLY_FIRST="{start_first}"\n',
         encoding="utf-8",
     )
 
