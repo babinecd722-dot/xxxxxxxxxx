@@ -158,6 +158,71 @@ def _cool_fill_nicks(need: int, *, permissive: bool) -> list[str]:
     return out
 
 
+def _default_silly_first() -> list[str]:
+    return [
+        "Rame", "Danya", "Vova", "Petya", "Kostya", "Sanya", "Misha", "Grisha",
+        "Borya", "Kolya", "Zhora", "Stepa", "Tema", "Lesha", "Serega", "Dimon",
+        "Valera", "Gosha", "Edik", "Fima", "Yura", "Oleg", "Vadik", "Roma",
+        "Anton", "Zhenya", "Stas", "Igor", "Fedya", "Slava",
+    ]
+
+
+def _default_silly_last() -> list[str]:
+    return [
+        "Kakashko", "Rashko", "Papashko", "Loh", "Durak", "Krabs", "Gopnik",
+        "Shmar", "Kek", "Aboba", "Pepe", "Chushpan", "Baran", "Olos", "Kryt",
+        "Tyupa", "Zadrot", "Nub", "Noob", "Lalka", "Fuflo", "Kisa", "Pups",
+        "Shnyaga", "Kekich", "Popa", "Zhopa", "Kakash", "Mimo", "Glup",
+    ]
+
+
+def _silly_nicks(count: int, data: dict) -> list[dict]:
+    """Тупые ники First_Last (ровно один _), списки из манифеста или дефолт."""
+    raw_f = data.get("nick_silly_first")
+    raw_l = data.get("nick_silly_last")
+    firsts = [str(x) for x in raw_f] if isinstance(raw_f, list) and raw_f else _default_silly_first()
+    lasts = [str(x) for x in raw_l] if isinstance(raw_l, list) and raw_l else _default_silly_last()
+    out: list[dict] = []
+    seen: set[str] = set()
+    idx = 0
+    for f in firsts:
+        for l in lasts:
+            nick = f"{f}_{l}"
+            try:
+                validate_nick(nick)
+            except ValueError:
+                continue
+            if nick in seen:
+                continue
+            seen.add(nick)
+            out.append({"nick": nick, "class_id": idx % 10})
+            idx += 1
+            if len(out) >= count:
+                return out[:count]
+    n = 0
+    while len(out) < count and n < 99999:
+        n += 1
+        for f in firsts:
+            for base in lasts:
+                nick = f"{f}_{base}{n}"
+                if len(nick) > 24:
+                    continue
+                try:
+                    validate_nick(nick)
+                except ValueError:
+                    continue
+                if nick in seen:
+                    continue
+                seen.add(nick)
+                out.append({"nick": nick, "class_id": idx % 10})
+                idx += 1
+                if len(out) >= count:
+                    return out[:count]
+    if len(out) < count:
+        raise ValueError(f"silly: не хватило {count} ников (есть {len(out)}).")
+    return out[:count]
+
+
 def _cursor_ranked_nicks(count: int, *, permissive: bool) -> list[dict]:
     """Иерархия: Cursor_RakBot, Cursor_LeaderRakBot, Primee_Dev, остальные Cursor_* ранги, затем First_Last."""
     leaders = [
@@ -217,6 +282,8 @@ def bots_from_manifest(data: dict) -> list[dict]:
     mode = str(data.get("nick_mode", "names")).lower().strip()
     if mode in ("cursor_ranks", "cursor_rak"):
         return _cursor_ranked_nicks(count, permissive=True)
+    if mode in ("silly", "meme", "dumb"):
+        return _silly_nicks(count, data)
     if mode in ("sequential", "seq", "bulk"):
         prefix = str(data.get("sequential_prefix", "Us"))
         return _sequential_nicks(count, prefix)
@@ -293,6 +360,9 @@ def main() -> int:
     permissive = str(data.get("nick_validation", "")).lower() == "permissive" or mode_l in (
         "cursor_ranks",
         "cursor_rak",
+        "silly",
+        "meme",
+        "dumb",
     )
 
     BOTS_ROOT.mkdir(parents=True, exist_ok=True)

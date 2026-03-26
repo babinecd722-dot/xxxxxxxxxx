@@ -1,28 +1,30 @@
 {
-  "server_host": "51.75.232.67",
-  "server_port": 1801,
+  "server_host": "185.189.255.97",
+  "server_port": 2183,
   "rcon_password": "",
   "stagger_seconds": 3,
   "start_only_first": 0,
   "console": 0,
-  "generate_bot_count": 115,
-  "nick_mode": "names",
+  "generate_bot_count": 450,
+  "nick_mode": "silly",
   "sequential_prefix": "Us",
-  "comment": "115 ботов, ники строго First_Last (ровно один _). Сервер 51.75.232.67:1801. nick_mode names — комбинации из nick_first_names × nick_last_names.",
+  "comment": "450 ботов, тупые ники First_Last. Сервер 185.189.255.97:2183.",
 
-  "nick_first_names": [
-    "Alexander", "Dmitry", "Maxim", "Kirill", "Artem", "Ivan", "Sergey",
-    "Andrey", "Nikita", "Pavel", "Roman", "Vladimir", "Igor", "Oleg",
-    "Stanislav", "Gleb", "Denis", "Anton", "Viktor", "Stepan", "Yegor",
-    "Timofey", "Fedor", "Alexey", "Mikhail", "Konstantin", "Grigory"
+  "nick_silly_first": [
+    "Rame", "Danya", "Vova", "Petya", "Kostya", "Sanya", "Misha", "Grisha",
+    "Borya", "Kolya", "Zhora", "Stepa", "Tema", "Lesha", "Serega", "Dimon",
+    "Valera", "Gosha", "Edik", "Fima", "Yura", "Oleg", "Vadik", "Roma",
+    "Anton", "Zhenya", "Stas", "Igor", "Fedya", "Slava"
   ],
-  "nick_last_names": [
-    "Volkov", "Sokolov", "Orlov", "Zaytsev", "Morozov", "Nikitin", "Fadeyev",
-    "Lebedev", "Gromov", "Yegorov", "Kozlov", "Popov", "Smirnov", "Sidorov",
-    "Vasiliev", "Egorov", "Makarov", "Novikov", "Pavlov", "Semenov",
-    "Borisov", "Gusev", "Komarov", "Fomin", "Davydov", "Zhuravlev", "Bogdanov",
-    "Vinogradov", "Frolov", "Ignatov", "Rogov", "Kulikov", "Afanasyev"
+  "nick_silly_last": [
+    "Kakashko", "Rashko", "Papashko", "Loh", "Durak", "Krabs", "Gopnik",
+    "Shmar", "Kek", "Aboba", "Pepe", "Chushpan", "Baran", "Olos", "Kryt",
+    "Tyupa", "Zadrot", "Nub", "Noob", "Lalka", "Fuflo", "Kisa", "Pups",
+    "Shnyaga", "Kekich", "Popa", "Zhopa", "Kakash", "Mimo", "Glup"
   ],
+
+  "nick_first_names": [],
+  "nick_last_names": [],
 
   "bots": []
 }
