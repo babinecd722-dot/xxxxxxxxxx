@@ -1,24 +1,21 @@
 #!/usr/bin/env bash
-# Два экземпляра RakSAMP Lite (Wine) с объединённым Lua (AimSync + send_ping).
-# Рабочая директория процесса = папка инстанса (иначе Lite не найдёт scripts/).
+# Два RakSAMP Lite (Wine). Два lua с blast.hk лежат в корне репо — копируются в scripts/forum/
+# без автозагрузки; подключает 00_blasthk_loader.lua (имя с 00 — грузится первым).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 ZIP="${LITE_ZIP:-$REPO_ROOT/RakSAMP Lite.zip}"
-MERGED="${LITE_MERGED:-$ROOT/lite_merged_fixes.lua}"
+AIM_SRC="${AIM_FIX_LUA:-$REPO_ROOT/aim_fix_updated.lua}"
+PING_SRC="${PING_FIX_LUA:-$REPO_ROOT/send_ping_fix.lua}"
+LOADER="${BLASTHK_LOADER:-$ROOT/00_blasthk_loader.lua}"
 RUNDIR="${LITE_RUNDIR:-$ROOT/lite_run}"
 export DISPLAY="${DISPLAY:-:1}"
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 
-if [[ ! -f "$ZIP" ]]; then
-  echo "Нет архива: $ZIP (положи RakSAMP Lite.zip в корень репо или задай LITE_ZIP)" >&2
-  exit 1
-fi
-if [[ ! -f "$MERGED" ]]; then
-  echo "Нет $MERGED" >&2
-  exit 1
-fi
+for f in "$ZIP" "$AIM_SRC" "$PING_SRC" "$LOADER"; do
+  [[ -f "$f" ]] || { echo "Нет файла: $f" >&2; exit 1; }
+done
 
 readarray -t CFG < <(python3 -c "
 import json, sys
@@ -114,13 +111,15 @@ for i in 1 2; do
   INST="$RUNDIR/instance${i}_${nick}"
   mkdir -p "$INST"
   unzip -q -o "$ZIP" -d "$INST"
-  mkdir -p "$INST/scripts"
-  cp -f "$MERGED" "$INST/scripts/lite_merged_fixes.lua"
+  mkdir -p "$INST/scripts/forum"
+  cp -f "$AIM_SRC" "$INST/scripts/forum/aim_fix_updated.lua"
+  cp -f "$PING_SRC" "$INST/scripts/forum/send_ping_fix.lua"
+  cp -f "$LOADER" "$INST/scripts/00_blasthk_loader.lua"
   write_ini "$nick" "$INST"
-  echo "Инстанс $i: $INST nick=$nick -> $IP_PORT"
+  echo "Инстанс $i: $INST (forum/*.lua + 00_blasthk_loader.lua)"
 done
 
-echo "Запуск wine (консоль Lite=1, логи в терминале) ..."
+echo "Запуск wine ..."
 (
   cd "$RUNDIR/instance1_${NICK1}"
   nohup wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite1.log" 2>&1 &
@@ -132,7 +131,5 @@ sleep 4
   nohup wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite2.log" 2>&1 &
   echo $! >"$RUNDIR/lite2.wine.pid"
 )
-echo "PID wine wrapper: $(cat "$RUNDIR/lite1.wine.pid") $(cat "$RUNDIR/lite2.wine.pid")"
+echo "PID: $(cat "$RUNDIR/lite1.wine.pid") $(cat "$RUNDIR/lite2.wine.pid")"
 echo "Логи: $RUNDIR/lite1.log $RUNDIR/lite2.log"
-sleep 3
-tail -20 "$RUNDIR/lite1.log" 2>/dev/null || true
