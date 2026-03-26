@@ -52,6 +52,19 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 
 Много окон с **одного IP** часто режутся античитом. На форумах ([пример](https://blast.hk/threads/224746/)) обычно советуют **прокси / разные IP** или скрипты под конкретный лаунчер.
 
+## RakSAMP Lite + AimSync / send_ping (два экземпляра)
+
+В корне репозитория: **`RakSAMP Lite.zip`**, **`aim_fix_updated.lua`**, **`send_ping_fix.lua`** (как на `main`).  
+Оба Lua **нельзя** грузить раздельно: у них одинаковые колбэки — второй перезапишет первый. Склейка: **`raksamp/lite_merged_fixes.lua`**.
+
+Запуск **двух** клиентов на сервер/ники из **`raksamp/bots_manifest.json`** (первые два silly-ника или два элемента `bots[]`):
+
+```bash
+./raksamp/start_lite_two_bots.sh
+```
+
+Скрипт распакует zip в **`raksamp/lite_run/instance1_…`** и **`instance2_…`**, копирует merged Lua в **`scripts/`**, пишет **`settings/RakSAMP Lite.ini`**, стартует **Wine** из каждой папки. Логи: **`raksamp/lite_run/lite1.log`**, **`lite2.log`**.
+
 ## Скрипт одного стокового запуска
 
 ```bash
