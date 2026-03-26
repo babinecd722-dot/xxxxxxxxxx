@@ -116,8 +116,8 @@ def load_state() -> dict[str, str]:
             "password": "",
         }
     return {
-        "host": "51.75.232.67",
-        "port": "1801",
+        "host": "80.66.82.140",
+        "port": "5125",
         "nick": "Prime_Dmitriyx",
         "password": "",
     }

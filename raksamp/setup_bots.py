@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import sys
@@ -113,14 +114,38 @@ def _default_last_names() -> list[str]:
     ]
 
 
+def _sequential_nicks(count: int, prefix: str = "Us") -> list[dict]:
+    """Us_a0001 … — фамилия с буквы, цифры дальше (лимит SA-MP + validate_nick)."""
+    p = str(prefix).strip()
+    if len(p) < 2 or not re.match(r"^[A-Za-z][A-Za-z0-9]+$", p):
+        p = "Us"
+    if len(p) > 18:
+        p = p[:18]
+    letters = "abcdefghijklmnopqrstuvwxyz"
+    out: list[dict] = []
+    for i in range(1, count + 1):
+        idx0 = i - 1
+        letter = letters[(idx0 // 10000) % 26]
+        num = (idx0 % 10000) + 1
+        nick = f"{p}_{letter}{num:04d}"
+        validate_nick(nick)
+        out.append({"nick": nick, "class_id": idx0 % 10})
+    return out
+
+
 def bots_from_manifest(data: dict) -> list[dict]:
-    """Список слотов: либо data['bots'], либо generate_bot_count × уникальные First_Last."""
+    """Список слотов: bots[], либо nick_mode sequential, либо комбинации имён."""
     raw = data.get("bots")
     if isinstance(raw, list) and len(raw) > 0:
         return raw
     count = int(data.get("generate_bot_count", 0))
     if count <= 0:
         raise ValueError("Укажите непустой bots[] или generate_bot_count > 0 в bots_manifest.json")
+    mode = str(data.get("nick_mode", "names")).lower().strip()
+    if mode in ("sequential", "seq", "bulk"):
+        prefix = str(data.get("sequential_prefix", "Us"))
+        return _sequential_nicks(count, prefix)
+
     first = data.get("nick_first_names")
     last = data.get("nick_last_names")
     if not isinstance(first, list) or not first:
@@ -147,11 +172,27 @@ def bots_from_manifest(data: dict) -> list[dict]:
             if len(out) >= count:
                 return out[:count]
     if len(out) < count:
-        raise ValueError(
-            f"Не хватило уникальных ников: есть {len(out)}, нужно {count}. "
-            "Добавьте строк в nick_first_names / nick_last_names."
-        )
+        prefix = str(data.get("sequential_prefix", "Us"))
+        for item in _sequential_nicks(count * 3, prefix):
+            if item["nick"] in seen:
+                continue
+            seen.add(item["nick"])
+            out.append(item)
+            if len(out) >= count:
+                break
+    if len(out) < count:
+        raise ValueError(f"Не удалось набрать {count} уникальных ников (сейчас {len(out)}).")
     return out[:count]
+
+
+def _install_exe(dest: Path) -> None:
+    """Один inode на все слоты (hardlink); при ошибке — копия."""
+    try:
+        if dest.exists():
+            dest.unlink()
+        os.link(EXE_SRC, dest)
+    except OSError:
+        shutil.copy2(EXE_SRC, dest)
 
 
 def main() -> int:
@@ -185,19 +226,21 @@ def main() -> int:
         encoding="utf-8",
     )
 
+    width = max(5, len(str(len(bots))))
     for i, b in enumerate(bots, start=1):
         nick = str(b["nick"])
         validate_nick(nick)
         cid = int(b.get("class_id", 0))
         safe = sanitize_dir_name(nick)
-        d = BOTS_ROOT / f"bot{i:02d}_{safe}"
+        d = BOTS_ROOT / f"bot{i:0{width}d}_{safe}"
         d.mkdir(parents=True, exist_ok=True)
         xml = build_stock_xml(nick=nick, class_id=cid, host=host, port=port, rcon=rcon, console=console)
         (d / "RakSAMPClient.xml").write_text(xml, encoding="utf-8")
         (d / ".nick").write_text(nick + "\n", encoding="utf-8")
         (d / ".class_id").write_text(str(cid) + "\n", encoding="utf-8")
-        shutil.copy2(EXE_SRC, d / "RakSAMPClient.exe")
-        print(d)
+        _install_exe(d / "RakSAMPClient.exe")
+        if i == 1 or i == len(bots) or i % 200 == 0:
+            print(d)
     return 0
 
 

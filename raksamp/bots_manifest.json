@@ -1,12 +1,14 @@
 {
-  "server_host": "51.75.232.67",
-  "server_port": 1801,
+  "server_host": "80.66.82.140",
+  "server_port": 5125,
   "rcon_password": "",
-  "stagger_seconds": 120,
+  "stagger_seconds": 3,
   "start_only_first": 0,
-  "console": 1,
-  "generate_bot_count": 80,
-  "comment": "Сток RakSAMP: manual_spawn, find=0. Ники генерирует setup_bots.py (generate_bot_count). Игроков на сервере с этой машины не кикнуть — локально: «Остановить всех ботов»; на хостe — админка/RCON.",
+  "console": 0,
+  "generate_bot_count": 2000,
+  "nick_mode": "sequential",
+  "sequential_prefix": "Us",
+  "comment": "2000 слотов, ники Us_a0001+… (лимит SA-MP). console=0 — без GUI на каждое окно. stagger_seconds: антифлуд коннекта. Прошлые серверы: останови wine локально (stop_all_bots) — клиенты отвалятся сами. Один хост с 2000 процессами Wine — обычно не влезает в RAM; нужен кластер или снизить число.",
 
   "nick_first_names": [
     "Alexander", "Dmitry", "Maxim", "Kirill", "Artem", "Ivan", "Sergey",
