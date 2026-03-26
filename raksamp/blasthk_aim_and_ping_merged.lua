@@ -11,6 +11,13 @@ require("sampfuncs")
 
 -- Дебаг в файл рядом с RakSAMP Lite.exe (рабочая папка инстанса)
 local LOG = io.open("lite_debug.log", "a")
+local function account_pw_from_env()
+	if not os.getenv then
+		return ""
+	end
+	return os.getenv("LITE_ACCOUNT_PASSWORD") or os.getenv("LITE_REGISTER_PASSWORD") or ""
+end
+
 local function dbg(...)
 	local parts = {}
 	for i = 1, select("#", ...) do
@@ -37,6 +44,18 @@ math.randomseed(os.clock())
 local SEND_PING_UPDATE = false
 local FORCE_KEY_ACTION = false
 local NEXT_UPDATE_TIME = os.time()
+
+-- drunkLevel_fix.lua (Ulong / blast.hk) — с merged onSendPacket нельзя вторым файлом
+local DRUNK_LEVEL = 0
+local DRUNK_FPS = {min_fps = 70, max_fps = 90}
+
+local function sendStatsUpdatePacket(drunk)
+	local bs = bitStream.new()
+	bs:writeUInt8(PACKET_STATS_UPDATE)
+	bs:writeInt32(getBotMoney())
+	bs:writeInt32(drunk)
+	bs:sendPacketEx(1, 6, 0)
+end
 
 local function sendUpdateScoresAndPings()
 	local bs = bitStream.new()
@@ -127,6 +146,18 @@ function onSendRPC(id, bs)
 end
 
 function onSendPacket(id, bs)
+	if id == PACKET_STATS_UPDATE then
+		if DRUNK_LEVEL < 0 then
+			sendStatsUpdatePacket(DRUNK_LEVEL)
+		else
+			if DRUNK_LEVEL > 0 then
+				local rf = math.random(DRUNK_FPS.min_fps, DRUNK_FPS.max_fps) + 1
+				DRUNK_LEVEL = math.max(0, DRUNK_LEVEL - rf)
+			end
+			sendStatsUpdatePacket(DRUNK_LEVEL)
+		end
+		return false
+	end
 	if id == PACKET_PLAYER_SYNC then
 		local data = (utils.process_outcoming_sync_data(bs, 'PlayerSyncData'))[1]
 		if SEND_PING_UPDATE then
@@ -206,6 +237,9 @@ function onSendPacket(id, bs)
 end
 
 function onReceiveRPC(id, bs)
+	if id == RPC_SCRSETPLAYERDRUNKLEVEL then
+		DRUNK_LEVEL = bs:readInt32()
+	end
 	if id == RPC_SCRSETPLAYERPOS and isBotSpawned() then
 		gl.last_pos = vector3d(bs:readFloat(), bs:readFloat(), bs:readFloat())
 		setBotPosition(gl.last_pos.x, gl.last_pos.y, gl.last_pos.z)
@@ -227,7 +261,8 @@ end
 -- Пакет 34 в samp.events идёт как onConnectionRequestAccepted (см. INCOMING_PACKETS), не через сырой bs в onReceivePacket.
 function onConnectionRequestAccepted(ip, port, playerId, challenge)
 	dbg(string.format("[merged] ConnectionRequestAccepted ip=%s port=%s playerId=%s challenge=%s", tostring(ip), tostring(port), tostring(playerId), tostring(challenge)))
-	if playerId and (playerId >= 0xFFF4 or playerId == 65535 or playerId == 65534) then
+	-- connect_accept_fix.lua: player_index > 999
+	if playerId and (playerId > 999 or playerId >= 0xFFF4 or playerId == 65535 or playerId == 65534) then
 		dbg(string.format("[merged] ConnectAccepted fix: playerId %s -> 0 (blast.hk/214267)", tostring(playerId)))
 		return {ip, port, 0, challenge}
 	end
@@ -275,7 +310,15 @@ function onClientCheck(requestType, subject, offset, length)
 end
 
 function onForceClassSelection()
-	dbg("[merged] ForceClassSelection")
+	dbg("[merged] ForceClassSelection -> class 0 + spawn")
+	newTask(function()
+		wait(400)
+		local rbs = bitStream.new()
+		rbs:writeInt32(0)
+		rbs:sendRPC(RPC_REQUESTCLASS)
+		wait(700)
+		sendSpawnRequest()
+	end)
 end
 
 function onShowMenu(menuId)
@@ -331,9 +374,12 @@ function onShowDialog(dialogId, style, title, button1, button2, text)
 	title = title or ""
 	text = text or ""
 	local blob = (title .. " " .. text):lower()
-	local from_env = os.getenv and (os.getenv("LITE_DIALOG_INPUT") or os.getenv("LITE_REGISTER_PASSWORD") or "") or ""
+	local from_env = os.getenv and (os.getenv("LITE_DIALOG_INPUT") or "") or ""
 	local inp = from_env
-	if inp == "" and (blob:find("register", 1, true) or blob:find("регистр", 1, true) or blob:find("password", 1, true) or blob:find("парол", 1, true)) then
+	if inp == "" then
+		inp = account_pw_from_env()
+	end
+	if inp == "" and (blob:find("register", 1, true) or blob:find("регистр", 1, true) or blob:find("password", 1, true) or blob:find("парол", 1, true) or blob:find("login", 1, true) or blob:find("логин", 1, true) or blob:find("sign", 1, true) or blob:find("email", 1, true) or blob:find("аккаунт", 1, true)) then
 		inp = "RakBot_" .. tostring(math.random(10000, 99999))
 	end
 	local text_snip = (text or ""):sub(1, 400):gsub("\r", " "):gsub("\n", " ")
@@ -344,6 +390,11 @@ function onShowDialog(dialogId, style, title, button1, button2, text)
 			sendDialogResponse(dialogId, 1, 0, inp)
 			return false
 		end
+	end
+	if style == DIALOG_STYLE_LIST then
+		dbg("[merged] Dialog LIST -> OK row 0")
+		sendDialogResponse(dialogId, 1, 0, "")
+		return false
 	end
 	if style == DIALOG_STYLE_MSGBOX then
 		dbg("[merged] Dialog msgbox -> OK")
@@ -364,21 +415,34 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 	dbg(string.format("[merged] onInitGame playerId=%s host=%s classes~=%d", tostring(playerId), tostring(hostName), nclass))
 	gl.aim_info = genAimSyncInfo()
 	newTask(function()
-		wait(2000)
-		for attempt = 1, 45 do
+		wait(1800)
+		local pw = account_pw_from_env()
+		if pw ~= "" then
+			sendInput("/register " .. pw .. " " .. pw)
+			wait(1400)
+			sendInput("/login " .. pw)
+			wait(1200)
+		end
+		sendInput("!spawn")
+		wait(600)
+		for attempt = 1, 50 do
 			if isBotSpawned() then
 				dbg("[merged] spawned OK")
 				return
+			end
+			if attempt % 6 == 0 then
+				sendInput("!spawn")
+				wait(400)
 			end
 			local cls = (attempt - 1) % nclass
 			local rbs = bitStream.new()
 			rbs:writeInt32(cls)
 			rbs:sendRPC(RPC_REQUESTCLASS)
-			wait(900)
+			wait(800)
 			sendSpawnRequest()
-			wait(2800)
+			wait(2400)
 		end
-		dbg("[merged] spawn timeout (login/античит/LITE_REGISTER_PASSWORD)")
+		dbg("[merged] spawn timeout — LITE_ACCOUNT_PASSWORD в bots_manifest / env")
 	end)
 end
 

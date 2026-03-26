@@ -2,6 +2,7 @@
   "server_host": "51.75.232.67",
   "server_port": 1801,
   "rcon_password": "",
+  "lite_account_password": "RakLiteBot_2026",
   "stagger_seconds": 15,
   "start_only_first": 0,
   "console": 0,

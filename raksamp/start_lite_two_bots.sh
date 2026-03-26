@@ -6,6 +6,8 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 ZIP="${LITE_ZIP:-$REPO_ROOT/RakSAMP Lite.zip}"
 MERGED="${BLASTHK_MERGED:-$ROOT/blasthk_aim_and_ping_merged.lua}"
+BUNDLE="${FORUM_BUNDLE:-$ROOT/00_forum_bundle.lua}"
+FORUM_DIR="${FORUM_LUA_DIR:-$ROOT/forum_lua_blasthk}"
 PATCH_PY="${LITE_POOL_PATCH:-$ROOT/patch_lite_playerpool.py}"
 RUNDIR="${LITE_RUNDIR:-$ROOT/lite_run}"
 export DISPLAY="${DISPLAY:-:1}"
@@ -15,6 +17,8 @@ export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 for f in "$ZIP" "$MERGED" "$PATCH_PY"; do
   [[ -f "$f" ]] || { echo "Нет файла: $f" >&2; exit 1; }
 done
+[[ -f "$BUNDLE" ]] || { echo "Нет $BUNDLE" >&2; exit 1; }
+[[ -d "$FORUM_DIR" ]] || { echo "Нет каталога $FORUM_DIR" >&2; exit 1; }
 
 readarray -t CFG < <(python3 -c "
 import json, sys
@@ -49,11 +53,15 @@ print(host)
 print(port)
 print(n1)
 print(n2)
+pw = d.get('lite_account_password') or d.get('lite_register_password') or ''
+print(pw)
 ")
 HOST="${CFG[0]}"
 PORT="${CFG[1]}"
 NICK1="${CFG[2]}"
 NICK2="${CFG[3]}"
+LITE_ACCOUNT_PASSWORD="${CFG[4]}"
+export LITE_ACCOUNT_PASSWORD
 IP_PORT="${HOST}:${PORT}"
 
 write_ini() {
@@ -112,21 +120,24 @@ for i in 1 2; do
   unzip -q -o "$ZIP" -d "$INST"
   python3 "$PATCH_PY" "$INST/RakSAMP Lite.exe" || true
   mkdir -p "$INST/scripts"
+  cp -f "$BUNDLE" "$INST/scripts/00_forum_bundle.lua"
+  rm -rf "$INST/scripts/forum_lua_blasthk"
+  cp -a "$FORUM_DIR" "$INST/scripts/forum_lua_blasthk"
   cp -f "$MERGED" "$INST/scripts/blasthk_aim_and_ping_merged.lua"
   write_ini "$nick" "$INST"
-  echo "Инстанс $i: blasthk_aim_and_ping_merged.lua (aim+ping+connect34+class/spawn)"
+  echo "Инстанс $i: 00_forum_bundle + forum_lua_blasthk + merged"
 done
 
-echo "Запуск wine ..."
+echo "Запуск wine (LITE_ACCOUNT_PASSWORD ${#LITE_ACCOUNT_PASSWORD} символов из манифеста) ..."
 (
   cd "$RUNDIR/instance1_${NICK1}"
-  nohup wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite1.log" 2>&1 &
+  nohup env LITE_ACCOUNT_PASSWORD="$LITE_ACCOUNT_PASSWORD" wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite1.log" 2>&1 &
   echo $! >"$RUNDIR/lite1.wine.pid"
 )
 sleep 4
 (
   cd "$RUNDIR/instance2_${NICK2}"
-  nohup wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite2.log" 2>&1 &
+  nohup env LITE_ACCOUNT_PASSWORD="$LITE_ACCOUNT_PASSWORD" wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite2.log" 2>&1 &
   echo $! >"$RUNDIR/lite2.wine.pid"
 )
 echo "PID: $(cat "$RUNDIR/lite1.wine.pid") $(cat "$RUNDIR/lite2.wine.pid")"

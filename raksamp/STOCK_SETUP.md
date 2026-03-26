@@ -74,6 +74,12 @@ export LITE_REGISTER_PASSWORD='твой_пароль_если_диалог'   # 
 ./raksamp/start_lite_two_bots.sh
 ```
 
+Только **окно RakSAMP Lite** (без нашего Tk и без CMD):
+
+```bash
+./raksamp/run_lite_gui.sh
+```
+
 Каталоги: **`raksamp/lite_run/instance1_…`**, **`instance2_…`**. Логи: **`lite1.log`**, **`lite2.log`** (часто пустые под Wine — смотри консоль Lite, **`console=1`** в ini).
 
 **Дебаг «какое окно / где застряло»:** в каждом инстансе **`blasthk_aim_and_ping_merged.lua`** пишет **`lite_debug.log`** (рядом с `RakSAMP Lite.exe`) — `ShowDialog`, `InitMenu`, `onInitGame`, входящие пакеты (первые ~120 id). Быстрый прогон одного клиента ~90 с:
