@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RakSAMP Prime
+Comment=RakSAMP: окно подключения (IP, порт, ник, пароль), затем Wine
+Exec=/workspace/raksamp/raksamp-launcher.sh
+Path=/workspace/raksamp
+Icon=applications-wine
+Categories=Network;Game;
+StartupNotify=true
+Terminal=false
