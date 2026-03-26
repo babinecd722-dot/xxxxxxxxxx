@@ -48,6 +48,52 @@ def validate_nick(nick: str, *, permissive: bool = False) -> None:
             raise ValueError(f"Подозрительно: {bad!r} в {nick!r}")
 
 
+DEFAULT_INTERVALS: dict[str, int] = {
+    "spam": 150,
+    "fakekill": 35,
+    "lag": 20,
+    "joinflood": 50,
+    "chatflood": 20,
+    "classflood": 30,
+    "bulletflood": 25,
+}
+
+# Реже пакеты/действия — меньше шанс сработать антифлуд на join/class (не гарантия).
+GENTLE_INTERVALS: dict[str, int] = {
+    "spam": 450,
+    "fakekill": 90,
+    "lag": 55,
+    "joinflood": 280,
+    "chatflood": 200,
+    "classflood": 200,
+    "bulletflood": 90,
+}
+
+
+def _intervals_for_manifest(data: dict) -> dict[str, int]:
+    out = dict(DEFAULT_INTERVALS)
+    if data.get("gentle_antikick"):
+        out.update(GENTLE_INTERVALS)
+    raw = data.get("intervals")
+    if isinstance(raw, dict):
+        for k, v in raw.items():
+            ks = str(k).strip()
+            if ks in out:
+                try:
+                    out[ks] = int(v)
+                except (TypeError, ValueError):
+                    pass
+    return out
+
+
+def _intervals_xml(attrs: dict[str, int]) -> str:
+    return (
+        f'\t<intervals spam="{attrs["spam"]}" fakekill="{attrs["fakekill"]}" lag="{attrs["lag"]}" '
+        f'joinflood="{attrs["joinflood"]}" chatflood="{attrs["chatflood"]}" '
+        f'classflood="{attrs["classflood"]}" bulletflood="{attrs["bulletflood"]}" />'
+    )
+
+
 def _autorun_block(commands: list[str]) -> str:
     if not commands:
         return ""
@@ -70,16 +116,25 @@ def build_stock_xml(
     console: int,
     manual_spawn: int = 1,
     autorun_commands: list[str] | None = None,
+    runmode: int = 3,
+    intervals: dict[str, int] | None = None,
+    clientversion: str = "0.3.7",
 ) -> str:
     """Параметры как в оригинале samiirWasHere/raksamp client/RakSAMPClient.xml."""
     nick_a, host_esc, rcon_a = map(esc_attr, (nick, host, rcon))
     port_s = str(int(port))
+    cv = esc_attr(str(clientversion).strip() or "0.3.7")
     cmds = list(autorun_commands or [])
     ar = 1 if cmds else 0
     autorun_xml = _autorun_block(cmds)
     ms = 1 if int(manual_spawn) != 0 else 0
+    rm = int(runmode)
+    if rm < 0 or rm > 5:
+        rm = 3
+    iv = intervals if intervals is not None else dict(DEFAULT_INTERVALS)
+    intervals_line = _intervals_xml(iv)
     return f"""<!--
-	RakSAMP 0.3.7: manual_spawn={ms}, select_classid — выбор спавна без чата (если ms=0).
+	RakSAMP 0.3.7: manual_spawn={ms}, runmode={rm}.
 -->
 <!--
 Avalable runmodes:
@@ -91,15 +146,15 @@ Avalable runmodes:
 	5 = Follows a player with a vehicle
 -->
 
-<RakSAMPClient console="{console}" runmode="3" autorun="{ar}" find="0" select_classid="{class_id}" manual_spawn="{ms}"
+<RakSAMPClient console="{console}" runmode="{rm}" autorun="{ar}" find="0" select_classid="{class_id}" manual_spawn="{ms}"
 			   print_timestamps="0" chatcolor_rgb="0 0 130" clientmsg_rgb="0 130 0" cpalert_rgb="170 0 0"
 			   followplayer="" followplayerwithvehicleid="295" followXOffset="3.0" followYOffset="0.0" followZOffset="0.0"
-			   updatestats="1" minfps="20" maxfps="90" clientversion="0.3.7">
+			   updatestats="1" minfps="20" maxfps="90" clientversion="{cv}">
 
 	<server nickname="{nick_a}" password="{rcon_a}">{host_esc}:{port_s}</server>
 {autorun_xml}
 
-	<intervals spam="150" fakekill="35" lag="20" joinflood="50" chatflood="20" classflood="30" bulletflood="25" />
+{intervals_line}
 	<log objects="0" pickups="0" textlabels="0" textdraws="0" />
 	<sendrates force="0" onfoot="40" incar="40" firing="40" multiplier="1" />
 
@@ -381,6 +436,16 @@ def main() -> int:
     if not EXE_SRC.is_file():
         print(f"Нет {EXE_SRC}", file=sys.stderr)
         return 1
+    gentle = bool(data.get("gentle_antikick"))
+    if "runmode" in data:
+        runmode_i = int(data["runmode"])
+    elif gentle:
+        runmode_i = 2
+    else:
+        runmode_i = 3
+    intervals_attrs = _intervals_for_manifest(data)
+    clientversion = str(data.get("clientversion", "0.3.7")).strip() or "0.3.7"
+
     mode_l = str(data.get("nick_mode", "names")).lower().strip()
     permissive = str(data.get("nick_validation", "")).lower() == "permissive" or mode_l in (
         "cursor_ranks",
@@ -433,6 +498,9 @@ def main() -> int:
             console=console,
             manual_spawn=manual_spawn_flag,
             autorun_commands=autorun_cmds if autorun_cmds else None,
+            runmode=runmode_i,
+            intervals=intervals_attrs,
+            clientversion=clientversion,
         )
         (d / "RakSAMPClient.xml").write_text(xml, encoding="utf-8")
         (d / ".nick").write_text(nick + "\n", encoding="utf-8")
