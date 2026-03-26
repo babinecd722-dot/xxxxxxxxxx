@@ -1,0 +1,14 @@
+# Extracted from decompiled_launcher.zip (source of truth is the zip)
+rage_russia_launcher/
+
+raksamp/*.log
+raksamp/__pycache__/
+raksamp/lite_instances/
+raksamp/lite_upload/
+raksamp/lite_unpack/
+raksamp/bots/
+
+# RakSAMP Lite (Windows build from blast.hk — положить вручную)
+raksamp/lite/*.exe
+raksamp/lite/*.zip
+raksamp/lite/*.dll

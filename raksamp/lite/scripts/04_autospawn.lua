@@ -1,0 +1,15 @@
+--[[ After class/spawn selection, send !spawn like stock RakSAMP manual_spawn (blast.hk Rei API). ]]
+require("addon")
+local sampev = require("samp.events")
+
+function onLoad()
+	setRate(RATE_LUA, 200)
+end
+
+function sampev.onSendSpawn()
+	newTask(function()
+		-- не шлём !spawn в одну миллисекунду с сервером — меньше шанс антифлуда
+		wait(math.random(2800, 5500))
+		runCommand("!spawn")
+	end)
+end

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RakSAMP Lite (Wine)
+Comment=RakSAMP Lite + blast.hk Lua; папка raksamp/lite/
+Exec=/workspace/raksamp/run_lite_wine.sh
+Path=/workspace/raksamp/lite
+Icon=applications-wine
+Categories=Network;Game;
+StartupNotify=true
+Terminal=false
