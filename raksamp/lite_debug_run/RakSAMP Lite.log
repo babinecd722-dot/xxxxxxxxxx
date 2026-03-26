@@ -1,0 +1,558 @@
+[14:37:36]  
+[14:37:36] * ===================================================== *
+[14:37:36]   RakSAMP Lite initialized on 26/03/2026 14:37:36
+[14:37:36]   Authors: jlfm, bartekdvd, P3ti, Rei
+[14:37:36]   Visit t.me/reiscripts
+[14:37:36] * ===================================================== *
+[14:37:36]  
+[14:37:36] [LUA] Loading scripts...
+[14:37:36] [LUA] Z:\workspace\raksamp\lite_debug_run\scripts\blasthk_aim_and_ping_merged.lua loaded
+[14:37:36] [LUA] ========== blasthk_aim_and_ping_merged onLoad ==========
+[14:37:36] [LUA] [merged] aim_fix + send_ping_fix + PRIME RUSSIA GUI handler
+[14:37:36] [LUA] [merged] GUI packets: in=251/252 out=251
+[14:37:36] [LUA] [merged] pw_len=15
+[14:37:36] [LUA] [merged] samp.events callbacks registered via MODULE
+[14:37:36] [NET] Connecting to 51.75.232.67:1801...
+[14:37:37] [LUA] [pkt in] id=39
+[14:37:37] [LUA] [pkt in] id=12
+[14:37:37] [LUA] [pkt in] id=34
+[14:37:37] [LUA] [merged] ConnectionRequestAccepted ip=-764354301 port=54763 playerId=1
+[14:37:37] [NET] Connected. Joining the game...
+[14:37:37] [LUA] [pkt in] id=41
+[14:37:37] [LUA] [RPC in] id=60
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:37] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:37] [MSG]  
+[14:37:37] [LUA] [RPC in] id=93
+[14:37:38] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:38] [MSG]  
+[14:37:38] [LUA] [RPC in] id=93
+[14:37:38] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| ..... .......... .. {E24B4B}PRIME RUSSIA{FFFFFF}, ...... ." hex=7B 46 46 46 46 46 46 7D 7C 20 C4 EE E1 F0 EE 20 EF EE E6 E0 EB EE E2 E0 F2 FC 20 ED E0 20 7B 45 32 34 42 34 42 7D 50 52 49 4D 45 20 52 55 53 53 49 41 7B 46 46 46 46 46 46 7D 2C 20 F1 E5 F0 E2 E5 F0 20 97 
+[14:37:38] [MSG] {FFFFFF}| Добро пожаловать на {E24B4B}PRIME RUSSIA{FFFFFF}, сервер —
+[14:37:38] [LUA] [RPC in] id=93
+[14:37:38] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| . {E24B4B}RED" hex=7B 46 46 46 46 46 46 7D 7C 20 97 20 7B 45 32 34 42 34 42 7D 52 45 44 
+[14:37:38] [MSG] {FFFFFF}| — {E24B4B}RED
+[14:37:38] [LUA] [RPC in] id=93
+[14:37:38] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| . ..... ...... ........ {E24B4B}t.me/primee_dev{FFFFFF} ...." hex=7B 46 46 46 46 46 46 7D 7C 20 C2 20 ED E0 F8 E5 EC 20 EA E0 ED E0 EB E5 20 D2 E5 EB E5 E3 F0 E0 EC 20 7B 45 32 34 42 34 42 7D 74 2E 6D 65 2F 70 72 69 6D 65 65 5F 64 65 76 7B 46 46 46 46 46 46 7D 20 E8 E4 B8 F2 
+[14:37:38] [MSG] {FFFFFF}| В нашем канале Телеграм {E24B4B}t.me/primee_dev{FFFFFF} идёт
+[14:37:38] [LUA] [RPC in] id=93
+[14:37:38] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| . ....... ........" hex=7B 46 46 46 46 46 46 7D 7C 20 97 20 F0 E0 E7 E4 E0 F7 E0 20 EF EE E4 E0 F0 EA EE E2 
+[14:37:38] [MSG] {FFFFFF}| — раздача подарков
+[14:37:38] [LUA] [RPC in] id=93
+[14:37:38] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| ... ....... ..... ........ . .. ...... ......." hex=7B 46 46 46 46 46 46 7D 7C 20 C4 EB FF 20 F3 F7 E0 F1 F2 E8 FF 20 ED F3 E6 ED EE 20 ED E0 EF E8 F1 E0 F2 FC 20 E2 20 CB D1 20 E3 F0 F3 EF EF FB 20 EA EE E4 EE E2 EE E5 
+[14:37:38] [MSG] {FFFFFF}| Для участия нужно написать в ЛС группы кодовое
+[14:37:38] [LUA] [RPC in] id=93
+[14:37:38] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| . ..... {E24B4B}#...." hex=7B 46 46 46 46 46 46 7D 7C 20 97 20 F1 EB EE E2 EE 20 7B 45 32 34 42 34 42 7D 23 D5 CE D7 D3 
+[14:37:38] [MSG] {FFFFFF}| — слово {E24B4B}#ХОЧУ
+[14:37:38] [LUA] [RPC in] id=93
+[14:37:38] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
+[14:37:38] [MSG]  
+[14:37:38] [LUA] [RPC in] id=29
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=168
+[14:37:38] [LUA] [RPC in] id=168
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=168
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=168
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=168
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=108
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:38] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:39] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=44
+[14:37:40] [LUA] [RPC in] id=139
+[14:37:40] [LUA] [merged] onInitGame playerId=1 host=PRIME RUSSIA classes=1
+[14:37:40] [LUA] [merged] onInitGame: waiting for JSON GUI flow (screen 38/50)
+[14:37:40] [NET] Connected to PRIME RUSSIA
+[14:37:40] [RPC] >> Class 0 requested
+[14:37:40] [LUA] [RPC in] id=151
+[14:37:40] [LUA] [RPC in] id=157
+[14:37:40] [LUA] [RPC in] id=158
+[14:37:40] [LUA] [pkt in] id=252
+[14:37:40] [LUA] [PR-IN] pkt=252 unread_bits=160
+[14:37:40] [LUA] [PR-IN] screen=38 json_len=13 remaining=15
+[14:37:40] [LUA] [PR-IN] trimming 2 leading bytes before JSON
+[14:37:40] [LUA] [PR-IN] screen=38 json={"o":1,"r":0}
+[14:37:40] [LUA] [PR-IN] screen=38 json={"o":1,"r":0}
+[14:37:40] [LUA] [PR] GUI38 OPEN: REGISTRATION mode
+[14:37:40] [LUA] [RPC in] id=151
+[14:37:40] [LUA] [RPC in] id=151
+[14:37:40] [LUA] [RPC in] id=41
+[14:37:40] [AUDIO] 
+[14:37:40] [LUA] [RPC in] id=168
+[14:37:40] [LUA] [pkt in] id=251
+[14:37:40] [LUA] [PR-IN] pkt=251 unread_bits=432
+[14:37:40] [LUA] [PR-IN] screen=5 json_len=0 remaining=49
+[14:37:40] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+[14:37:40] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+[14:37:40] [LUA] [pkt in] id=251
+[14:37:40] [LUA] [PR-IN] pkt=251 unread_bits=432
+[14:37:40] [LUA] [PR-IN] screen=5 json_len=0 remaining=49
+[14:37:40] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+[14:37:40] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+[14:37:40] [LUA] [RPC in] id=128
+[14:37:40] [LUA] [merged] RequestClassResponse canSpawn=true skin=0
+[14:37:40] [LUA] [PR] REGISTER attempt=1 nick=Mikhail_Sokolov pw_len=15
+[14:37:40] [LUA] [PR-SEND mode=3C] screen=38 len=51 json={"t":1,"s":"Mikhail_Sokolov","p":"RakLiteBot_2026"}
+[14:37:40] [LUA] [RPC in] id=151
+[14:37:41] [LUA] [RPC in] id=151
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=47
+[14:37:42] [LUA] [RPC in] id=44
+[14:37:42] [LUA] [RPC in] id=151
+[14:37:43] [LUA] [RPC in] id=151
+[14:37:44] [LUA] [RPC in] id=151
+[14:37:45] [LUA] [RPC in] id=60
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:45] [LUA] [RPC in] id=47
+[14:37:45] [LUA] [RPC in] id=44
+[14:37:46] [LUA] [RPC in] id=151
+[14:37:46] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:58] [LUA] [RPC in] id=151
+[14:37:59] [LUA] [RPC in] id=151
+[14:38:00] [LUA] [RPC in] id=94
+[14:38:00] [LUA] [RPC in] id=29
+[14:38:00] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=47
+[14:38:17] [LUA] [RPC in] id=44
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=60
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:17] [LUA] [RPC in] id=151
+[14:38:18] [LUA] [RPC in] id=151
+[14:38:19] [LUA] [RPC in] id=151
+[14:38:20] [LUA] [RPC in] id=151
+[14:38:21] [LUA] [RPC in] id=151
+[14:38:22] [LUA] [RPC in] id=151
+[14:38:23] [LUA] [RPC in] id=151
+[14:38:24] [LUA] [RPC in] id=151
+[14:38:25] [LUA] [RPC in] id=151
+[14:38:26] [LUA] [RPC in] id=151
+[14:38:27] [LUA] [RPC in] id=151
+[14:38:28] [LUA] [RPC in] id=151
+[14:38:29] [LUA] [RPC in] id=151
