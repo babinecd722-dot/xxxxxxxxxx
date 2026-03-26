@@ -126,8 +126,12 @@ def main() -> None:
         host = h_e.get().strip()
         port = p_e.get().strip()
         n1, n2 = n1_e.get().strip(), n2_e.get().strip()
-        on_prepare()
-        log_box_append(log, "start_lite_test.sh …")
+        if not host or not port.isdigit() or not n1 or not n2:
+            messagebox.showwarning("Поля", "Заполните IP, порт и оба ника.")
+            return
+        save_state({"host": host, "port": port, "nick1": n1, "nick2": n2})
+        # start_lite_test.sh сам вызывает prepare_lite_test.py — второй раз не дублируем
+        log_box_append(log, "start_lite_test.sh (внутри prepare + 2× Wine) …")
         root.update_idletasks()
         r = subprocess.run(
             ["/bin/bash", str(START), host, port, n1, n2],
@@ -135,9 +139,13 @@ def main() -> None:
             env=wine_env(),
             capture_output=True,
             text=True,
-            timeout=180,
+            timeout=420,
         )
         log_box_append(log, (r.stdout or "") + (r.stderr or "") + f"\nexit={r.returncode}")
+        log_box_append(
+            log,
+            "Проверка: lite_instances/bot1/raksamp_lite.log — onLoad, onConnect, после спавна — строка про !spawn.",
+        )
 
     def on_stop() -> None:
         subprocess.run(["/bin/bash", str(STOP)], cwd=str(ROOT), capture_output=True)

@@ -19,10 +19,11 @@
 
 В **`lite/scripts/`** (порядок по имени):
 
-- **`00_autoconnect.lua`** — также **`onRequestConnect`**: первые секунды коннект блокируется (exe перезаписывает `ini` на localhost до загрузки Lua); у **bot2** добавляется случайная задержка 55–110 с (антифлуд с одного IP).
-- **`02_send_ping_fix.lua`** — Ulong SendPing (с **main** репо).
-- **`03_aim_fix_updated.lua`** — Ulong AimSync; если Lua без **`ffi`**, скрипт сам пишет в лог и не падает.
-- **`04_autospawn.lua`** — **`!spawn`** после спавна (с случайной паузой).
+- **`00_autoconnect.lua`** — в **`lite_instances`** (генерит `prepare`): адрес/ник, **`onRequestConnect`**, лог **`raksamp_lite.log`** (относительный путь от cwd инстанса), у **bot2** — +55–110 с.
+- **`02_send_ping_fix.lua`** — по умолчанию **не попадает** в инстанс (глобальный **`onSendRPC`** ломает **samp.events** с **`00`**). Включить: **`python3 prepare_lite_test.py … --with-send-ping`**.
+- **`03_aim_fix_updated.lua`**, **`04_autospawn.lua`** — Ulong AimSync и автоспавн **`!spawn`**.
+
+Проверка: `cat lite_instances/bot1/raksamp_lite.log` — **`scripts loaded`**, **`onLoad`**, **`onConnect OK`**; после выбора класса **`04_autospawn`** шлёт **`!spawn`**.
 
 Файл **`lite/settings/RakSAMP Lite.ini`** — рейты **`connect` / `reconnect`** и т.д.; при подготовке двух ботов **`prepare_lite_test.py`** подставляет **ip** и **nick** каждого слота.
 
