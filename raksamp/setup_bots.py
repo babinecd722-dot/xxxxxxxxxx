@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Готовит каталоги bots/bot_* с RakSAMPClient.xml и копирует exe.
 
-- find=1 + <find> с /register и /login — подсказки на пароль аккаунта (не RCON).
-- RCON всегда только в server password="" в XML (пустой если не нужен); не передавайте пустой -z в wine.
-- Экспорт write_slot_xml() для bot_supervisor.py.
+- По умолчанию find=0 — без авто-чата (/register, /login), иначе часто ловишь антифлуд.
+- Если bots_manifest.json: \"enable_chat_autologin\": true — только узкие триггеры (без \"парол\", \"/login\" в тексте).
+- stagger_seconds пишется в bots/.launch.env для start_all_bots.sh
 """
 
 from __future__ import annotations
@@ -49,20 +49,15 @@ def rand_account_pass() -> str:
     return secrets.token_urlsafe(9).replace("-", "m")[:11]
 
 
-def build_find_block(account_pass: str) -> str:
+def build_find_block_safe(account_pass: str) -> str:
+    """Минимум триггеров: короткие общие слова = спам командами в чат."""
     p = esc_attr(account_pass)
-    lines = [
-        f'\t<find text="регистр" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        f'\t<find text="Регистр" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        f'\t<find text="/register" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        f'\t<find text="авториз" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        f'\t<find text="Авториз" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        f'\t<find text="войдите" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        f'\t<find text="/login" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        f'\t<find text="неверн" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        f'\t<find text="парол" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
-    ]
-    return "\n".join(lines)
+    return "\n".join(
+        [
+            f'\t<find text="зарегистрируйтесь на сервере" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
+            f'\t<find text="авторизуйтесь для продолжения" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
+        ]
+    )
 
 
 def build_xml(
@@ -82,10 +77,10 @@ def build_xml(
     nick_a = esc_attr(nick)
     rcon_a = esc_attr(rcon)
     find_flag = 1 if enable_find else 0
-    find_block = build_find_block(account_pass) if enable_find else ""
+    find_block = build_find_block_safe(account_pass) if enable_find else ""
     find_nl = f"\n{find_block}\n" if find_block else "\n"
     return f"""<!--
-	NORMAL sync. find={find_flag} — автоответы /register /login с паролем из supervisor.
+	find={find_flag} — только если enable_chat_autologin в манифесте (иначе антифлуд на авто-чат).
 -->
 <RakSAMPClient console="{console}" runmode="3" autorun="0" find="{find_flag}" select_classid="{class_id}" manual_spawn="{manual_spawn}"
 			   print_timestamps="0" chatcolor_rgb="0 0 130" clientmsg_rgb="0 130 0" cpalert_rgb="170 0 0"
@@ -94,7 +89,7 @@ def build_xml(
 
 	<server nickname="{nick_a}" password="{rcon_a}">{host_esc}:{port_s}</server>
 
-	<intervals spam="800" fakekill="200" lag="120" joinflood="200" chatflood="200" classflood="120" bulletflood="120" />
+	<intervals spam="2000" fakekill="600" lag="300" joinflood="600" chatflood="600" classflood="300" bulletflood="300" />
 	<log objects="0" pickups="0" textlabels="0" textdraws="0" />
 	<sendrates force="0" onfoot="40" incar="40" firing="40" multiplier="1" />
 
@@ -127,7 +122,7 @@ def write_slot_xml(
     account_pass: str,
     manual_spawn: int,
     console: int,
-    enable_find: bool = True,
+    enable_find: bool = False,
 ) -> None:
     validate_nick(nick)
     xml = build_xml(
@@ -155,6 +150,8 @@ def main() -> int:
     host = str(data["server_host"])
     port = int(data["server_port"])
     rcon = str(data.get("rcon_password", ""))
+    stagger = int(data.get("stagger_seconds", 200))
+    chat_auto = bool(data.get("enable_chat_autologin", False))
     bots = data["bots"]
     if not isinstance(bots, list) or not bots:
         print("bots_manifest.json: пустой список bots", file=sys.stderr)
@@ -169,18 +166,24 @@ def main() -> int:
             shutil.rmtree(old, ignore_errors=True)
 
     launch_env = BOTS_ROOT / ".launch.env"
+    start_first = int(data.get("start_only_first", 0))
     launch_env.write_text(
-        f'RAK_HOST="{host}"\nRAK_PORT="{port}"\nRAK_PASS="{rcon}"\n',
+        f'RAK_HOST="{host}"\nRAK_PORT="{port}"\nRAK_PASS="{rcon}"\n'
+        f'STAGGER_SEC="{stagger}"\nSTART_ONLY_FIRST="{start_first}"\n',
         encoding="utf-8",
     )
 
     n = len(bots)
     half = (n + 1) // 2
+    force_auto = bool(data.get("all_auto_spawn", False))
     for i, b in enumerate(bots, start=1):
         nick = str(b["nick"])
         validate_nick(nick)
         cid = int(b.get("class_id", 0))
-        use_manual = bool(b.get("manual_spawn")) if "manual_spawn" in b else (i > half)
+        if force_auto:
+            use_manual = bool(b.get("manual_spawn")) if b.get("manual_spawn") is True else False
+        else:
+            use_manual = bool(b.get("manual_spawn")) if "manual_spawn" in b else (i > half)
         if use_manual:
             ms, con, mode = 1, 1, "manual_spawn"
         else:
@@ -199,13 +202,14 @@ def main() -> int:
             account_pass=acc,
             manual_spawn=ms,
             console=con,
-            enable_find=True,
+            enable_find=chat_auto,
         )
         (d / ".nick").write_text(nick + "\n", encoding="utf-8")
         (d / ".class_id").write_text(str(cid) + "\n", encoding="utf-8")
         (d / ".spawn_mode").write_text(mode + "\n", encoding="utf-8")
         (d / ".account_pass").write_text(acc + "\n", encoding="utf-8")
-        print(f"{d}\t{mode}\tpass=***")
+        (d / ".chat_autologin").write_text("1\n" if chat_auto else "0\n", encoding="utf-8")
+        print(f"{d}\t{mode}\tfind={int(chat_auto)}")
     return 0
 
 
