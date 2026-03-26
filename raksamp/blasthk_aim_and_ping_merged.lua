@@ -39,7 +39,8 @@
 
   screenId=50 — SpawnLocation
     Входящий: {"o":1, "t":N, "m":[...]}
-    Ответ:    {"t":0}  → первая локация
+    Ответ:    {"t":1}  → Вокзал (сервер вычитает 1 → SPAWN_TYPE_VOKZAL=0)
+              1=Вокзал, 2=последнее место, 3=фракция, 4=дом, 5=гость, 6=семья
 
   Мужские скины: [78,79,134,136,230,246,159,71,256]
   Женские скины: [77,135,188,212,239,218]
@@ -338,9 +339,10 @@ end
 local function pr_do_spawn_location()
 	if PR.spawn_loc_sent then return end
 	PR.spawn_loc_sent = true
-	dbg("[PR] SPAWN_LOCATION: first slot (t=0)")
-	-- {"t":0} — первая локация
-	pr_send_json(50, {t=0})
+	dbg("[PR] SPAWN_LOCATION: Вокзал (t=1, сервер вычитает 1 → SPAWN_TYPE_VOKZAL=0)")
+	-- {"t":1} — Вокзал; сервер вычитает 1, получается SPAWN_TYPE_VOKZAL=0
+	-- 1=Вокзал, 2=последнее место, 3=фракция, 4=дом, 5=гость, 6=семья
+	pr_send_json(50, {t=1})
 end
 
 -- ================================================================
@@ -411,20 +413,22 @@ local function handle_pr_packet(screen_id, json_str)
 				-- t=0 = OK, следующий шаг
 				dbg("[PR] GUI38 t=0 (OK)")
 				if PR.is_registration then
+					-- Нормальный путь: t=3 → пол (sex_sent=true) → t=0 → инвайт → t=0 → скин
+					-- Если t=0 пришёл раньше t=3 (сервер нестандартный) — отправим пол сейчас
 					if not PR.sex_sent then
-						-- Пол ещё не отправлен (запасной путь)
+						-- Резервный путь: пол ещё не отправлен (обычно пол отправляется по t=3)
 						newTask(function()
 							wait(400)
 							pr_do_sex()
 						end)
 					elseif not PR.invite_sent then
-						-- Пол отправлен → отправить инвайт-скип
+						-- Пол уже отправлен (по t=3) → шаг 3: инвайт-скип
 						newTask(function()
 							wait(400)
 							pr_do_invite_skip()
 						end)
 					elseif not PR.skin_sent then
-						-- Инвайт отправлен → отправить скин
+						-- Инвайт отправлен → шаг 4: выбор скина
 						newTask(function()
 							wait(400)
 							pr_do_skin()

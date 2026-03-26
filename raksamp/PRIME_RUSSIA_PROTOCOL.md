@@ -62,6 +62,16 @@ if json["c"] == 1  → closingScreen(screenId, json)   // закрыть GUI
 Входящий: `{"o":1, "t":N, "m":[...locations...], "s":N}`  
 Исходящий: `{"t": <locationId>}` → sendJsonData(50, ...)
 
+Значения `t` (locationId):
+- `1` = Вокзал (сервер вычитает 1, получается `SPAWN_TYPE_VOKZAL = 0`)
+- `2` = Последнее место
+- `3` = Фракция
+- `4` = Дом
+- `5` = Гость
+- `6` = Семья
+
+Бот всегда отправляет `{"t": 1}` → Вокзал.
+
 ### screenId=25 — GUIPlayersList (табличка игроков)
 
 Через `onTabEvent`: `{"o":1, "t":event, "data":[{"id":N,"nick":"...","level":N,"ping":N}...]}`
@@ -115,7 +125,7 @@ if json["c"] == 1  → closingScreen(screenId, json)   // закрыть GUI
 4. Получить {"t":0} → отправить {"t":4, "s":""} на guiid 38
 5. Получить {"t":0} → отправить {"t":5, "r":<skinId>} на guiid 38
 6. Получить {"t":-1} → регистрация завершена
-7. Спавн → получить GUI 50 → отправить {"t":0} на guiid 50
+7. Спавн → получить GUI 50 → отправить {"t":1} на guiid 50
 ```
 
 Мужские скины: `[78, 79, 134, 136, 230, 246, 159, 71, 256]`  
@@ -210,7 +220,7 @@ if json["c"] == 1  → closingScreen(screenId, json)   // закрыть GUI
 11. Сервер: {"t":-1}  → регистрация завершена
 
 12. SpawnLocation (screenId=50): {"o":1, "t":N, "m":[...locations...]}
-    КЛИЕНТ: {"t":0}  → первая локация → sendJsonData(50, ...)
+    КЛИЕНТ: {"t":1}  → Вокзал (сервер вычитает 1, SPAWN_TYPE_VOKZAL=0) → sendJsonData(50, ...)
 
 13. Спавн → isBotSpawned() = true
 ```
@@ -229,7 +239,7 @@ if json["c"] == 1  → closingScreen(screenId, json)   // закрыть GUI
 
 5. Сервер: {"t":0}  → OK → onSpawn() → HUD
 
-6. SpawnLocation (screenId=50): {"t":0}
+6. SpawnLocation (screenId=50): {"t":1}  → Вокзал
 
 7. Спавн
 ```
