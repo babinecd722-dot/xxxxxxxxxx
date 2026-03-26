@@ -1,7 +1,12 @@
 # Lua scripts (RakSAMP Lite)
 
-- **`10_send_ping_style_fix.lua`** — по смыслу темы [SendPing Fix](https://www.blast.hk/threads/214264/): перед разрешённой отправкой `UPDATESCORESPINGSIPS` один раз выставляется `KEY_ACTION` в исходящем sync пешком / в авто / пассажир (как в примере детекта с форума). Интервал между обновлениями скора ограничивается **10–120 с** (случайно, как в описании темы).
+Порядок загрузки — по префиксу в имени (`00_`, `02_`, …):
 
-При конфликте порядка пакетов на конкретном сервере ставь **оригинальный** `send_ping_fix.lua` из вложения blast.hk (переименуй в `09_send_ping_fix.lua` и отключи `10_`).
+| Файл | Назначение |
+|------|------------|
+| `00_autoconnect.lua` | только в **`lite_instances/bot*`** (генерит `prepare_lite_test.py`): `setServerAddress` / `setBotNick` |
+| `02_send_ping_fix.lua` | Ulong — SendPing Fix (репо **main**) |
+| `03_aim_fix_updated.lua` | Ulong — AimSync FIX (репо **main**), нужен **`ffi`** в Lua движке Lite |
+| `04_autospawn.lua` | после выбора класса шлёт **`!spawn`** (команда клиента Rei) |
 
-- Остальные фиксы (**AimSync**, **WeaponFix** и т.д.) — скачивай из тем и клади сюда же, см. `../BLAST_LITE_SETUP.md`.
+Полная распаковка Lite: [raw zip](https://github.com/babinecd722-dot/xxxxxxxxxx/raw/main/RakSAMP%20Lite.zip).
