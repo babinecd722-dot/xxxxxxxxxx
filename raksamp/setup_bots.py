@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Готовит каталоги bots/bot_* с RakSAMPClient.xml и копирует exe.
 
-- По умолчанию find=0 — без авто-чата (/register, /login), иначе часто ловишь антифлуд.
-- Если bots_manifest.json: \"enable_chat_autologin\": true — только узкие триггеры (без \"парол\", \"/login\" в тексте).
+- enable_chat_autologin: узкие <find> на типичные подсказки /register /login (без слова «парол» — ложные срабатывания).
 - stagger_seconds пишется в bots/.launch.env для start_all_bots.sh
 """
 
@@ -49,15 +48,39 @@ def rand_account_pass() -> str:
     return secrets.token_urlsafe(9).replace("-", "m")[:11]
 
 
-def build_find_block_safe(account_pass: str) -> str:
-    """Минимум триггеров: короткие общие слова = спам командами в чат."""
+def build_find_block_safe(account_pass: str, extra_phrases: list[str] | None = None) -> str:
+    """Только длинные / редкие подстроки — меньше ложных /login в чат."""
     p = esc_attr(account_pass)
-    return "\n".join(
-        [
-            f'\t<find text="зарегистрируйтесь на сервере" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
-            f'\t<find text="авторизуйтесь для продолжения" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
-        ]
-    )
+    lines: list[str] = [
+        f'\t<find text="зарегистрируйтесь на сервере" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
+        f'\t<find text="авторизуйтесь для продолжения" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
+        f'\t<find text="используйте /register" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
+        f'\t<find text="используйте /login" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
+        f'\t<find text="введите /register" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
+        f'\t<find text="введите /login" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />',
+        f'\t<find text="зарегистрируйтесь, используя" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />',
+    ]
+    for phrase in extra_phrases or []:
+        phrase = str(phrase).strip()
+        if len(phrase) < 8:
+            continue
+        low = phrase.lower()
+        if "/register" in low or "регистр" in low:
+            lines.append(
+                f'\t<find text="{esc_attr(phrase)}" say="/register {p}" bk_color="255 255 255" text_color="0 0 0" />'
+            )
+        elif "/login" in low or "авториз" in low:
+            lines.append(
+                f'\t<find text="{esc_attr(phrase)}" say="/login {p}" bk_color="255 255 255" text_color="0 0 0" />'
+            )
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for ln in lines:
+        if ln in seen:
+            continue
+        seen.add(ln)
+        uniq.append(ln)
+    return "\n".join(uniq)
 
 
 def build_xml(
@@ -71,13 +94,14 @@ def build_xml(
     console: int,
     account_pass: str,
     enable_find: bool,
+    autologin_extra: list[str] | None = None,
 ) -> str:
     host_esc = esc_attr(host)
     port_s = str(int(port))
     nick_a = esc_attr(nick)
     rcon_a = esc_attr(rcon)
     find_flag = 1 if enable_find else 0
-    find_block = build_find_block_safe(account_pass) if enable_find else ""
+    find_block = build_find_block_safe(account_pass, autologin_extra) if enable_find else ""
     find_nl = f"\n{find_block}\n" if find_block else "\n"
     return f"""<!--
 	find={find_flag} — только если enable_chat_autologin в манифесте (иначе антифлуд на авто-чат).
@@ -123,6 +147,7 @@ def write_slot_xml(
     manual_spawn: int,
     console: int,
     enable_find: bool = False,
+    autologin_extra: list[str] | None = None,
 ) -> None:
     validate_nick(nick)
     xml = build_xml(
@@ -135,6 +160,7 @@ def write_slot_xml(
         console=console,
         account_pass=account_pass,
         enable_find=enable_find,
+        autologin_extra=autologin_extra,
     )
     slot_dir.mkdir(parents=True, exist_ok=True)
     (slot_dir / "RakSAMPClient.xml").write_text(xml, encoding="utf-8")
@@ -151,7 +177,9 @@ def main() -> int:
     port = int(data["server_port"])
     rcon = str(data.get("rcon_password", ""))
     stagger = int(data.get("stagger_seconds", 200))
-    chat_auto = bool(data.get("enable_chat_autologin", False))
+    chat_auto = bool(data.get("enable_chat_autologin", True))
+    extra = data.get("autologin_extra_phrases")
+    autologin_extra = [str(x) for x in extra] if isinstance(extra, list) else []
     bots = data["bots"]
     if not isinstance(bots, list) or not bots:
         print("bots_manifest.json: пустой список bots", file=sys.stderr)
@@ -203,6 +231,7 @@ def main() -> int:
             manual_spawn=ms,
             console=con,
             enable_find=chat_auto,
+            autologin_extra=autologin_extra,
         )
         (d / ".nick").write_text(nick + "\n", encoding="utf-8")
         (d / ".class_id").write_text(str(cid) + "\n", encoding="utf-8")

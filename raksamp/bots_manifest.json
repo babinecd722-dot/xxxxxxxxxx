@@ -3,10 +3,11 @@
   "server_port": 7777,
   "rcon_password": "",
   "stagger_seconds": 200,
-  "enable_chat_autologin": false,
+  "enable_chat_autologin": true,
+  "autologin_extra_phrases": [],
   "start_only_first": 0,
   "all_auto_spawn": true,
-  "comment": "stagger_seconds — секунд между стартами с одного IP. enable_chat_autologin: узкие <find> для /register /login (false = меньше антифлуда в чате). start_only_first: если >0 — поднять только bot01..botNN (если сервер режет много коннектов с одного IP).",
+  "comment": "enable_chat_autologin: узкие фразы /register /login в <find>. autologin_extra_phrases: свои подстроки из чата сервера (длинные). start_only_first — лимит ботов с одного IP.",
   "bots": [
     {"nick": "Alexander_Volkov", "class_id": 0},
     {"nick": "Dmitry_Sokolov", "class_id": 1},

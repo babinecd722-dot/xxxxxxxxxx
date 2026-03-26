@@ -173,7 +173,9 @@ def main() -> int:
     host = str(manifest["server_host"])
     port = int(manifest["server_port"])
     rcon = str(manifest.get("rcon_password", ""))
-    chat_auto = bool(manifest.get("enable_chat_autologin", False))
+    chat_auto = bool(manifest.get("enable_chat_autologin", True))
+    extra = manifest.get("autologin_extra_phrases")
+    autologin_extra = [str(x) for x in extra] if isinstance(extra, list) else []
 
     slots = sorted([p for p in BOTS.glob("bot[0-9]*") if p.is_dir()], key=lambda p: p.name)
     slots = slots[: len(manifest.get("bots", []))]
@@ -209,6 +211,7 @@ def main() -> int:
                 manual_spawn=0,
                 console=0,
                 enable_find=chat_auto,
+                autologin_extra=autologin_extra,
             )
             (slot / ".account_pass").write_text(acc_pass + "\n", encoding="utf-8")
             shutil.copy2(EXE, slot / "RakSAMPClient.exe")
