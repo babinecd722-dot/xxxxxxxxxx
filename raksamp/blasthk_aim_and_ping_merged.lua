@@ -182,18 +182,30 @@ local function json_encode(t)
 	return "{" .. table.concat(parts, ",") .. "}"
 end
 
--- Отправить JSON-пакет серверу (эмуляция sendJsonData нативного клиента)
--- Входящий формат: [pkt_id uint8][screen_id uint16][json_len uint16][2 bytes??][json]
--- Исходящий (пробуем с теми же 2 байтами padding = 0x00 0x00):
+-- Отправить JSON-пакет серверу.
+-- RakSAMP Lite имеет два варианта sendPacketEx:
+-- 3 args: bs:sendPacketEx(priority, reliability, channel)  → первый байт bs = packet_id
+-- 5 args: bs:sendPacketEx(packetId, priority, reliability, channel, broadcast)  → явный packet_id
+-- Используем 5-аргументный вариант: packet_id = 0xFB, данные = screen_id + json_len + json
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
-	bs:writeUInt8(PKT_GUI_OUT)        -- 0xFB = 251
-	bs:writeUInt16(screen_id)         -- uint16 screen_id
-	bs:writeUInt16(#json_str)         -- uint16 json length
-	bs:writeUInt8(0)                  -- 2 bytes padding (зеркало входящего формата)
-	bs:writeUInt8(0)
-	bs:writeString(json_str)          -- JSON bytes
-	bs:sendPacketEx(1, 9, 0)
+	bs:writeUInt16(screen_id)         -- uint16 screen_id LE
+	bs:writeUInt16(#json_str)         -- uint16 json_len LE
+	bs:writeString(json_str)          -- JSON bytes (windows-1251)
+	-- sendPacketEx(packetId, priority, reliability, channel, broadcast)
+	local ok, err = pcall(function()
+		bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false)
+	end)
+	if not ok then
+		-- Fallback: 3-arg вариант с первым байтом = packet_id
+		local bs2 = bitStream.new()
+		bs2:writeUInt8(PKT_GUI_OUT)
+		bs2:writeUInt16(screen_id)
+		bs2:writeUInt16(#json_str)
+		bs2:writeString(json_str)
+		bs2:sendPacketEx(1, 9, 0)
+		dbg("[PR-SEND] fallback 3-arg: " .. tostring(err))
+	end
 	dbg(string.format("[PR-SEND] screen=%d len=%d json=%s", screen_id, #json_str, json_str:sub(1, 200)))
 end
 
