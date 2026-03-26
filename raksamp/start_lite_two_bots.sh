@@ -55,12 +55,16 @@ print(n1)
 print(n2)
 pw = d.get('lite_account_password') or d.get('lite_register_password') or ''
 print(pw)
+print(str(d.get('rcon_password', '')))
+print(str(d.get('clientversion', '0.3.7')))
 ")
 HOST="${CFG[0]}"
 PORT="${CFG[1]}"
 NICK1="${CFG[2]}"
 NICK2="${CFG[3]}"
 LITE_ACCOUNT_PASSWORD="${CFG[4]}"
+RCON="${CFG[5]:-}"
+CLIENTVER="${CFG[6]:-0.3.7}"
 export LITE_ACCOUNT_PASSWORD
 IP_PORT="${HOST}:${PORT}"
 
@@ -82,8 +86,8 @@ version=04.02.23
 [Server]
 nick=${nick}
 ip=${IP_PORT}
-pass=
-clientversion=0.3.7
+pass=${RCON}
+clientversion=${CLIENTVER}
 ping=0
 [Ingame]
 class=0
