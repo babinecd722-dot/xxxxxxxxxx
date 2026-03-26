@@ -41,14 +41,12 @@ for d in "$ROOT/bots"/bot[0-9]*; do
     continue
   fi
   nick="$(tr -d '\r\n' <"$d/.nick")"
-  echo "Starting $(basename "$d") nick=$nick ..."
+  echo "Starting $(basename "$d") nick=$nick (сток, только XML) ..."
   (
     cd "$d"
     : >>"bot.log"
-    # RakSAMP: пустой -z ломает парсинг командной строки → ложный Invalid password на коннекте.
-    WINE_ARGS=(./RakSAMPClient.exe -n "$nick" -h "$RAK_HOST" -p "$RAK_PORT")
-    [[ -n "${RAK_PASS:-}" ]] && WINE_ARGS+=(-z "$RAK_PASS")
-    nohup wine "${WINE_ARGS[@]}" >>"bot.log" 2>&1 &
+    # Сток: адрес и ник в RakSAMPClient.xml, без аргументов wine.
+    nohup wine ./RakSAMPClient.exe >>"bot.log" 2>&1 &
     echo $! >"bot.pid"
   )
   sleep "$STAGGER"

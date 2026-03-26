@@ -37,3 +37,12 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 ```
 
 Читает **`RakSAMPClient.xml`** как в стоке (ник и сервер уже в XML). Доп. аргументы: `./run_stock.sh -n Ник -h IP -p PORT` (без пустого `-z`).
+
+## Несколько окон (bots/)
+
+```bash
+python3 setup_bots.py    # чистый сток в каждом bots/botXX_*, без find/autologin/autospawn
+./start_all_bots.sh      # wine только из папки слота, без -n/-h/-p
+```
+
+В **каждом** окне вручную: `/register` или `/login`, затем **`!spawn`** (если `manual_spawn=1`).
