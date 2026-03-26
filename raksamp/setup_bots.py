@@ -94,6 +94,66 @@ def sanitize_dir_name(nick: str) -> str:
     return s[:24] or "bot"
 
 
+def _default_first_names() -> list[str]:
+    return [
+        "Alexander", "Dmitry", "Maxim", "Kirill", "Artem", "Ivan", "Sergey",
+        "Andrey", "Nikita", "Pavel", "Roman", "Vladimir", "Igor", "Oleg",
+        "Stanislav", "Gleb", "Denis", "Anton", "Viktor", "Stepan", "Yegor",
+        "Timofey", "Fedor", "Alexey", "Mikhail", "Konstantin", "Grigory",
+    ]
+
+
+def _default_last_names() -> list[str]:
+    return [
+        "Volkov", "Sokolov", "Orlov", "Zaytsev", "Morozov", "Nikitin", "Fadeyev",
+        "Lebedev", "Gromov", "Yegorov", "Kozlov", "Popov", "Smirnov", "Sidorov",
+        "Vasiliev", "Egorov", "Makarov", "Novikov", "Pavlov", "Semenov",
+        "Borisov", "Gusev", "Komarov", "Fomin", "Davydov", "Zhuravlev", "Bogdanov",
+        "Vinogradov", "Frolov", "Ignatov", "Rogov", "Kulikov", "Afanasyev",
+    ]
+
+
+def bots_from_manifest(data: dict) -> list[dict]:
+    """Список слотов: либо data['bots'], либо generate_bot_count × уникальные First_Last."""
+    raw = data.get("bots")
+    if isinstance(raw, list) and len(raw) > 0:
+        return raw
+    count = int(data.get("generate_bot_count", 0))
+    if count <= 0:
+        raise ValueError("Укажите непустой bots[] или generate_bot_count > 0 в bots_manifest.json")
+    first = data.get("nick_first_names")
+    last = data.get("nick_last_names")
+    if not isinstance(first, list) or not first:
+        first = _default_first_names()
+    if not isinstance(last, list) or not last:
+        last = _default_last_names()
+    first_s = [str(x) for x in first]
+    last_s = [str(x) for x in last]
+    out: list[dict] = []
+    seen: set[str] = set()
+    idx = 0
+    for f in first_s:
+        for l in last_s:
+            nick = f"{f}_{l}"
+            try:
+                validate_nick(nick)
+            except ValueError:
+                continue
+            if nick in seen:
+                continue
+            seen.add(nick)
+            out.append({"nick": nick, "class_id": idx % 10})
+            idx += 1
+            if len(out) >= count:
+                return out[:count]
+    if len(out) < count:
+        raise ValueError(
+            f"Не хватило уникальных ников: есть {len(out)}, нужно {count}. "
+            "Добавьте строк в nick_first_names / nick_last_names."
+        )
+    return out[:count]
+
+
 def main() -> int:
     if not MANIFEST.is_file():
         print(f"Нет {MANIFEST}", file=sys.stderr)
@@ -105,10 +165,10 @@ def main() -> int:
     stagger = int(data.get("stagger_seconds", 120))
     start_first = int(data.get("start_only_first", 0))
     console = int(data.get("console", 1))
-    bots = data["bots"]
-
-    if not isinstance(bots, list) or not bots:
-        print("bots: пустой список", file=sys.stderr)
+    try:
+        bots = bots_from_manifest(data)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
         return 1
     if not EXE_SRC.is_file():
         print(f"Нет {EXE_SRC}", file=sys.stderr)

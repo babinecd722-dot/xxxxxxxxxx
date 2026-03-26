@@ -40,6 +40,8 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 
 ## Несколько окон (bots/)
 
+**Главный запуск (форма, без CMD):** `./raksamp-launcher.sh` — вкладки «Игрок» и «Боты» (запись манифеста, пересборка `bots/`, старт/стоп).
+
 ```bash
 python3 setup_bots.py    # чистый сток в каждом bots/botXX_*, без find/autologin/autospawn
 ./start_all_bots.sh      # wine только из папки слота, без -n/-h/-p
