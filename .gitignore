@@ -4,3 +4,4 @@ raksamp/RakSAMPClient.log
 raksamp/bots/
 raksamp/*.run.log
 raksamp/lite_run/
+raksamp/lite_debug_run/
