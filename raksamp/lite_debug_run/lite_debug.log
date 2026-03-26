@@ -1,15 +1,31 @@
-2026-03-26 11:59:53 ========== blasthk_aim_and_ping_merged onLoad ==========
-2026-03-26 11:59:53 [SEND PING FIX] LOADED. Author: Ulong (merged)
-2026-03-26 11:59:53 [AimSync FIX] Loaded! Author: Ulong (version 1.2+ping-merged)
-2026-03-26 11:59:53 [merged] lite_debug.log in instance folder; Connect+Dialog+InitGame trace
-2026-03-26 11:59:53 [pkt in] id=12
-2026-03-26 11:59:54 [pkt in] id=34
-2026-03-26 11:59:54 [pkt in] id=41
-2026-03-26 11:59:54 [pkt in] id=32
-2026-03-26 11:59:54 [merged] PACKET_DISCONNECTION_NOTIFICATION
-2026-03-26 12:00:09 [pkt in] id=12
-2026-03-26 12:00:09 [pkt in] id=34
-2026-03-26 12:00:09 [pkt in] id=41
-2026-03-26 12:00:11 [pkt in] id=252
-2026-03-26 12:00:11 [pkt in] id=251
-2026-03-26 12:00:11 [pkt in] id=251
+2026-03-26 13:06:43 ========== blasthk_aim_and_ping_merged onLoad ==========
+2026-03-26 13:06:43 [merged] aim_fix + send_ping_fix + PRIME RUSSIA GUI handler
+2026-03-26 13:06:43 [merged] GUI packets: in=251/252 out=251
+2026-03-26 13:06:43 [merged] pw_len=15
+2026-03-26 13:06:43 [pkt in] id=12
+2026-03-26 13:06:43 [pkt in] id=34
+2026-03-26 13:06:43 [pkt in] id=41
+2026-03-26 13:06:43 [pkt in] id=32
+2026-03-26 13:06:43 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 13:06:59 [pkt in] id=12
+2026-03-26 13:06:59 [pkt in] id=34
+2026-03-26 13:06:59 [pkt in] id=41
+2026-03-26 13:07:01 [pkt in] id=251
+2026-03-26 13:07:01 [PR-IN] pkt=251 unread_bits=432
+2026-03-26 13:07:01 [PR-IN] screen=5 json_len=0 remaining=49
+2026-03-26 13:07:01 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:07:01 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:07:01 [pkt in] id=251
+2026-03-26 13:07:01 [PR-IN] pkt=251 unread_bits=432
+2026-03-26 13:07:01 [PR-IN] screen=5 json_len=0 remaining=49
+2026-03-26 13:07:01 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:07:01 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:07:01 [pkt in] id=252
+2026-03-26 13:07:01 [PR-IN] pkt=252 unread_bits=160
+2026-03-26 13:07:01 [PR-IN] screen=38 json_len=13 remaining=15
+2026-03-26 13:07:01 [PR-IN] trimming 2 leading bytes before JSON
+2026-03-26 13:07:01 [PR-IN] screen=38 json={"o":1,"r":0}
+2026-03-26 13:07:01 [PR-IN] screen=38 json={"o":1,"r":0}
+2026-03-26 13:07:01 [PR] GUI38 OPEN: REGISTRATION mode
+2026-03-26 13:07:02 [PR] REGISTER nick=Dmitry_Novikov pw_len=15
+2026-03-26 13:07:02 [PR-SEND] screen=38 len=50 json={"t":1,"s":"Dmitry_Novikov","p":"RakLiteBot_2026"}

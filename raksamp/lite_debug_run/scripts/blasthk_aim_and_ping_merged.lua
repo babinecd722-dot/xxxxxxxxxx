@@ -1,160 +1,495 @@
 --[[
-  Один файл = aim_fix_updated + send_ping_fix (логика как у Ulong / blast.hk).
-  Два отдельных .lua в scripts/ несовместимы: второй перезаписывает onSendPacket первого
-  → ломается синхра (в табе есть, телепорт по ID «нет игрока»).
+  Один файл = aim_fix_updated + send_ping_fix + PRIME RUSSIA GUI-protocol handler.
 
-  PRIME RUSSIA (prime-rp.online) кастомный JSON GUI-протокол:
-  screenId=38 — Регистрация/Логин
-    Логин:        {"t":6, "s":"ПАРОЛЬ", "r":0}
-    Регистрация:  {"t":1, "s":"НИК", "p":"ПАРОЛЬ"}   (но ник у нас уже есть — имя бота)
-    Выбор пола:   {"t":3, "r":0}                      (0=мужской, 1=женский)
-    Скип инвайта: {"t":4, "s":""}
-    Скин:         {"t":5, "r":78}                     (первый мужской скин)
-    Скин preview: {"t":-1,"i":78}
-  screenId=10 — SAMP-диалог ответ
-    {"r":button, "i":"input", "l":listItem}
+  ========== PRIME RUSSIA custom ENet GUI protocol (реверс PRIMERUSSIA.apk) ==========
+
+  Сервер шлёт данные GUI ботам через кастомный ENet-канал.
+  В логах RakSAMP Lite это пакеты id=251 (0xFB) и id=252 (0xFC).
+
+  Формат входящего пакета (id=251/252):
+    [1 byte] packet_id (251 или 252)
+    [4 bytes LE] screen_id (guiid)
+    [N bytes] JSON строка в windows-1251
+
+  Ответный пакет (клиент → сервер, id=251):
+    [1 byte] 251 (0xFB)
+    [4 bytes LE] screen_id
+    [N bytes] JSON строка в windows-1251
+
+  Все сообщения windows-1251. В Lua строки байтовые — всё работает напрямую.
+
+  screenId=38 — Регистрация/Логин (GUIRegistration)
+    Сервер открывает: {"o":1, "r":0/1, "f":0, "p":0}
+      r=0 → регистрация, r=1 → логин
+
+    ЛОГИН:         {"t":6, "s":"ПАРОЛЬ", "r":0}
+    РЕГИСТРАЦИЯ:   {"t":1, "s":"НИК", "p":"ПАРОЛЬ"}
+    ВЫБОР ПОЛА:    {"t":3, "r":0}  (0=муж, 1=жен)
+    СКИН PREVIEW:  {"t":-1, "i":78}
+    СКИН CONFIRM:  {"t":5, "r":78}
+    ИНВАЙТ СКИП:   {"t":4, "s":""}
+    ЗАКРЫТЬ GUI:   {"c":1}
+
+    Входящий {"t":0} → ОК, следующий шаг
+    Входящий {"t":3} → выбор скина (isMale confirmed)
+
+  screenId=10 — SAMP-диалог
+    Входящий: {"o":1, "i":style, "c":"title", "s":"text", "l":"btn1", "r":"btn2"}
+    Ответ:    {"r":button, "i":"input", "l":0}
+
   screenId=50 — SpawnLocation
-    {"t":locationId}
+    Входящий: {"o":1, "t":N, "m":[...]}
+    Ответ:    {"t":0}  → первая локация
+
+  Мужские скины: [78,79,134,136,230,246,159,71,256]
+  Женские скины: [77,135,188,212,239,218]
 ]]
 
 local utils = require("samp.events.utils")
 local vector3d = require("vector3d")
 local ffi = require("ffi")
 require("sampfuncs")
+require("addon")   -- newTask, wait, sendInput, sendSpawnRequest, sendDialogResponse
 
--- Дебаг в файл рядом с RakSAMP Lite.exe (рабочая папка инстанса)
+-- ================================================================
+-- Дебаг
+-- ================================================================
 local LOG = io.open("lite_debug.log", "a")
-local function account_pw_from_env()
-	if not os.getenv then
-		return ""
-	end
-	return os.getenv("LITE_ACCOUNT_PASSWORD") or os.getenv("LITE_REGISTER_PASSWORD") or ""
-end
-
--- =====================================================================
--- PRIME RUSSIA JSON GUI protocol (реверс APK PRIMERUSSIA.apk)
--- =====================================================================
--- Состояние регистрации — запоминаем на каком шаге находимся
-local PR = {
-	reg_step       = 0,     -- текущий шаг (0=не начато)
-	is_registration = false, -- true=регистрация, false=логин
-	sex_sent       = false,
-	invite_sent    = false,
-	skin_sent      = false,
-	-- Скины мужские (из UILayoutRegistrationPerson.mMaleIds): 78,79,134,136,230,246,159,71,256
-	male_skins     = {78, 79, 134, 136, 230, 246, 159, 71, 256},
-	-- Скины женские (из UILayoutRegistrationPerson.mFemaleIds): 77,135,188,212,239,218
-	female_skins   = {77, 135, 188, 212, 239, 218},
-}
-
--- Отправить JSON боту (эмуляция sendJsonData через sendInput в чат).
--- RakSAMP Lite не поддерживает кастомный JSON-канал нативно,
--- но мы логируем все шаги чтобы знать где застрял.
-local function pr_log(step, json_str)
-	dbg(string.format("[PR-GUI] step=%s json=%s", tostring(step), tostring(json_str)))
-end
-
--- Полная последовательность регистрации для PRIME RUSSIA:
--- 1. Сервер шлёт: screenId=38, {"o":1, "r":0/1, "f":0, "p":0}
--- 2. Если r=0 (регистрация): ввод пароля → {"t":1,"s":ник,"p":пароль}
---    Если r=1 (логин):        ввод пароль → {"t":6,"s":пароль,"r":0}
--- 3. Сервер шлёт: screenId=38, {"t":0} — OK → следующий шаг
--- 4. Если регистрация:
---    4a. Выбор пола:   {"t":3,"r":0}
---    4b. Сервер: {"t":3} → выбор скина
---    4c. Скин preview: {"t":-1,"i":78}  + подтверждение: {"t":5,"r":78}
---    4d. Сервер: {"t":0} → invite экран
---    4e. Скип инвайта: {"t":4,"s":""}
--- 5. SpawnLocation (screenId=50): {"t":0} — первая локация
-
--- Функция вызывается из onInitGame и при получении JSON-пакетов от сервера
-function pr_handle_initgame(is_registration)
-	PR.is_registration = is_registration
-	PR.reg_step = 1
-	PR.sex_sent = false
-	PR.invite_sent = false
-	PR.skin_sent = false
-	local pw = account_pw_from_env()
-	local nick = getNickname and getNickname() or "Player"
-	dbg(string.format("[PR-GUI] InitGame: is_registration=%s nick=%s pw_len=%d",
-		tostring(is_registration), tostring(nick), #pw))
-	newTask(function()
-		wait(800)
-		if is_registration then
-			-- Регистрация: {"t":1, "s":"НИК", "p":"ПАРОЛЬ"}
-			if pw == "" then
-				pw = "Prime" .. tostring(math.random(1000, 9999))
-				dbg("[PR-GUI] no password in env, generated: " .. pw)
-			end
-			pr_log("REGISTER", '{"t":1,"s":"' .. nick .. '","p":"' .. pw:sub(1,3) .. '***"}')
-			sendInput("/g pr_reg " .. nick .. " " .. pw)
-		else
-			-- Логин: {"t":6, "s":"ПАРОЛЬ", "r":0}
-			if pw ~= "" then
-				pr_log("LOGIN", '{"t":6,"s":"***","r":0}')
-				sendInput("/g pr_login " .. pw)
-			end
-		end
-	end)
-end
-
-function pr_handle_sex_step()
-	if PR.sex_sent then return end
-	PR.sex_sent = true
-	pr_log("SEX", '{"t":3,"r":0}')
-	-- Мужской пол (r=0) — отправляем через чат-команду
-	sendInput("/g pr_sex 0")
-end
-
-function pr_handle_skin_step()
-	if PR.skin_sent then return end
-	PR.skin_sent = true
-	local skin = PR.male_skins[1]  -- первый мужской скин = 78
-	pr_log("SKIN_PREVIEW", '{"t":-1,"i":' .. skin .. '}')
-	pr_log("SKIN_CONFIRM", '{"t":5,"r":' .. skin .. '}')
-	sendInput("/g pr_skin " .. skin)
-end
-
-function pr_handle_invite_step()
-	if PR.invite_sent then return end
-	PR.invite_sent = true
-	pr_log("INVITE_SKIP", '{"t":4,"s":""}')
-	sendInput("/g pr_invite_skip")
-end
-
-function pr_handle_spawn_location()
-	pr_log("SPAWN_LOCATION", '{"t":0}')
-	sendInput("/g pr_spawn_loc 0")
-end
-
 local function dbg(...)
 	local parts = {}
 	for i = 1, select("#", ...) do
 		parts[#parts + 1] = tostring(select(i, ...))
 	end
 	local line = os.date("%Y-%m-%d %H:%M:%S ") .. table.concat(parts, " ") .. "\n"
-	if LOG then
-		LOG:write(line)
-		LOG:flush()
-	end
+	if LOG then LOG:write(line); LOG:flush() end
 	print(table.concat(parts, " "))
+end
+
+local function account_pw_from_env()
+	if not os.getenv then return "" end
+	return os.getenv("LITE_ACCOUNT_PASSWORD") or os.getenv("LITE_REGISTER_PASSWORD") or ""
+end
+
+-- Читаем ник из settings/RakSAMP Lite.ini (рабочая папка = папка exe)
+local function get_bot_nick()
+	local f = io.open("settings/RakSAMP Lite.ini", "r")
+	if not f then return "" end
+	for line in f:lines() do
+		local nick = line:match("^nick%s*=%s*(.+)$")
+		if nick then
+			f:close()
+			return nick:gsub("%s+$", "")  -- trim trailing whitespace
+		end
+	end
+	f:close()
+	return ""
 end
 
 ffi.cdef[[
 	typedef unsigned long DWORD;
 	DWORD GetCurrentProcessId();
+	int MultiByteToWideChar(unsigned int cp, unsigned long flags, const char* mb, int mb_len, unsigned short* wc, int wc_len);
+	int WideCharToMultiByte(unsigned int cp, unsigned long flags, const unsigned short* wc, int wc_len, char* mb, int mb_len, const char* def, int* used);
 ]]
-
 local procID = ffi.C.GetCurrentProcessId()
 math.randomseed(procID + os.time())
-
--- send_ping_fix
 math.randomseed(os.clock())
+
+-- ================================================================
+-- PRIME RUSSIA JSON GUI ENGINE
+-- ================================================================
+-- Константы пакетов
+local PKT_GUI_IN  = 251  -- 0xFB — входящий от сервера
+local PKT_GUI_OUT = 251  -- 0xFB — исходящий к серверу (тот же)
+local PKT_GUI_IN2 = 252  -- 0xFC — тоже входящий
+
+-- Мужские/женские скины из UILayoutRegistrationPerson
+local MALE_SKINS   = {78, 79, 134, 136, 230, 246, 159, 71, 256}
+local FEMALE_SKINS = {77, 135, 188, 212, 239, 218}
+
+-- Машина состояний регистрации
+local PR = {
+	active          = false,   -- GUI протокол активен
+	screen_id       = 0,       -- текущий screen
+	is_registration = false,   -- true=рег, false=логин
+	sex_sent        = false,
+	skin_sent       = false,
+	invite_sent     = false,
+	spawn_loc_sent  = false,
+	spawn_done      = false,
+	nick            = "",
+	pw              = "",
+	login_attempts  = 0,
+}
+
+-- Простейший JSON-парсер для плоских объектов {key:value,...}
+-- Возвращает таблицу строковых/числовых значений
+local function parse_json(s)
+	if not s then return {} end
+	local t = {}
+	-- Убираем внешние {}
+	s = s:match("^%s*{(.+)}%s*$")
+	if not s then return t end
+	-- Парсим "key":value пары
+	for key, val in s:gmatch('"([^"]+)"%s*:%s*("?)([^,}"]+)"?') do
+		local quoted = val
+		local v = s:match('"' .. key .. '"%s*:%s*"([^"]*)"')
+		if v then
+			t[key] = v
+		else
+			local n = s:match('"' .. key .. '"%s*:%s*(%-?%d+[%.%d]*)')
+			if n then
+				t[key] = tonumber(n)
+			else
+				local b = s:match('"' .. key .. '"%s*:%s*(true|false)')
+				if b then
+					t[key] = (b == "true")
+				end
+			end
+		end
+	end
+	return t
+end
+
+-- Простейший JSON-сериализатор для плоских объектов
+local function json_encode(t)
+	local parts = {}
+	for k, v in pairs(t) do
+		local ks = '"' .. tostring(k) .. '"'
+		local vs
+		if type(v) == "string" then
+			vs = '"' .. v .. '"'
+		elseif type(v) == "boolean" then
+			vs = v and "true" or "false"
+		else
+			vs = tostring(v)
+		end
+		parts[#parts + 1] = ks .. ":" .. vs
+	end
+	return "{" .. table.concat(parts, ",") .. "}"
+end
+
+-- Отправить JSON-пакет серверу (эмуляция sendJsonData нативного клиента)
+-- Формат из реверса: [uint8 pkt_id=0xFB][uint16 screen_id][uint16 json_len][json bytes]
+local function pr_send(screen_id, json_str)
+	local bs = bitStream.new()
+	bs:writeUInt8(PKT_GUI_OUT)        -- 0xFB = 251
+	bs:writeUInt16(screen_id)         -- uint16 screen_id
+	bs:writeUInt16(#json_str)         -- uint16 json length
+	bs:writeString(json_str)          -- JSON bytes
+	bs:sendPacketEx(1, 9, 0)         -- HIGH_PRIORITY, RELIABLE_ORDERED, ch0
+	dbg(string.format("[PR-SEND] screen=%d len=%d json=%s", screen_id, #json_str, json_str:sub(1, 200)))
+end
+
+-- Отправить JSON объект серверу
+local function pr_send_json(screen_id, t)
+	local s = json_encode(t)
+	pr_send(screen_id, s)
+end
+
+-- Отправить через sendInput (fallback, для SA-MP команд)
+local function pr_cmd(screen_id, t)
+	local s = json_encode(t)
+	dbg(string.format("[PR-CMD] screen=%d json=%s", screen_id, s))
+	-- В RakSAMP Lite нет прямого sendJsonData, используем sendInput для команд
+	-- которые нативно поддерживаются
+end
+
+-- ================================================================
+-- Обработчики шагов GUI
+-- ================================================================
+
+local function pr_do_login()
+	local pw = PR.pw ~= "" and PR.pw or account_pw_from_env()
+	if pw == "" then
+		dbg("[PR] LOGIN: no password! Set LITE_ACCOUNT_PASSWORD in bots_manifest.json")
+		return
+	end
+	PR.pw = pw
+	PR.login_attempts = PR.login_attempts + 1
+	dbg(string.format("[PR] LOGIN attempt=%d pw_len=%d", PR.login_attempts, #pw))
+	-- {"t":6, "s":"PASSWORD", "r":0}
+	pr_send_json(38, {t=6, s=pw, r=0})
+end
+
+local function pr_do_register()
+	local pw = PR.pw ~= "" and PR.pw or account_pw_from_env()
+	if pw == "" then
+		pw = "Prime" .. tostring(math.random(1000, 9999))
+		dbg("[PR] REGISTER: no password, using generated: " .. pw)
+	end
+	PR.pw = pw
+	local nick = PR.nick
+	dbg(string.format("[PR] REGISTER nick=%s pw_len=%d", nick, #pw))
+	-- {"t":1, "s":"NICK", "p":"PASSWORD"}
+	pr_send_json(38, {t=1, s=nick, p=pw})
+end
+
+local function pr_do_sex()
+	if PR.sex_sent then return end
+	PR.sex_sent = true
+	dbg("[PR] SEX: male (r=0)")
+	-- {"t":3, "r":0} — мужской пол
+	pr_send_json(38, {t=3, r=0})
+end
+
+local function pr_do_skin()
+	if PR.skin_sent then return end
+	PR.skin_sent = true
+	local skin = MALE_SKINS[1]  -- 78 = первый мужской
+	dbg(string.format("[PR] SKIN: preview+confirm skin=%d", skin))
+	-- Сначала preview: {"t":-1, "i":78}
+	pr_send_json(38, {t=-1, i=skin})
+	-- Потом подтверждение: {"t":5, "r":78}
+	pr_send_json(38, {t=5, r=skin})
+end
+
+local function pr_do_invite_skip()
+	if PR.invite_sent then return end
+	PR.invite_sent = true
+	dbg("[PR] INVITE: skip (empty)")
+	-- {"t":4, "s":""} — пропустить инвайт
+	pr_send_json(38, {t=4, s=""})
+end
+
+local function pr_do_close_gui(screen_id)
+	dbg(string.format("[PR] CLOSE_GUI screen=%d", screen_id))
+	-- {"c":1}
+	pr_send_json(screen_id, {c=1})
+end
+
+local function pr_do_spawn_location()
+	if PR.spawn_loc_sent then return end
+	PR.spawn_loc_sent = true
+	dbg("[PR] SPAWN_LOCATION: first slot (t=0)")
+	-- {"t":0} — первая локация
+	pr_send_json(50, {t=0})
+end
+
+-- ================================================================
+-- Парсер входящих JSON-пакетов GUI (id=251, id=252)
+-- ================================================================
+-- Читаем оставшиеся байты из bitstream как строку
+local function bs_read_remaining(bs)
+	local buf = {}
+	local ok, b = pcall(function() return bs:readUInt8() end)
+	while ok and b do
+		buf[#buf + 1] = string.char(b)
+		ok, b = pcall(function() return bs:readUInt8() end)
+	end
+	return table.concat(buf)
+end
+
+local function handle_pr_packet(screen_id, json_str)
+	dbg(string.format("[PR-IN] screen=%d json=%s", screen_id, json_str:sub(1, 300)))
+
+	local t = parse_json(json_str)
+	local o = t["o"]
+	local c = t["c"]
+	local tp = t["t"]
+
+	-- ========================
+	-- screenId=38 — Регистрация/Логин
+	-- ========================
+	if screen_id == 38 then
+		-- Сервер ОТКРЫВАЕТ окно: {"o":1, "r":0/1, "f":0, "p":0}
+		if o == 1 then
+			local r = t["r"]
+			PR.active = true
+			PR.screen_id = 38
+			PR.sex_sent = false
+			PR.skin_sent = false
+			PR.invite_sent = false
+			PR.nick = get_bot_nick()
+			PR.pw = account_pw_from_env()
+
+			if r == 0 then
+				PR.is_registration = true
+				dbg("[PR] GUI38 OPEN: REGISTRATION mode")
+				newTask(function()
+					wait(600)
+					pr_do_register()
+				end)
+			else
+				PR.is_registration = false
+				dbg("[PR] GUI38 OPEN: LOGIN mode")
+				newTask(function()
+					wait(600)
+					pr_do_login()
+				end)
+			end
+			return
+		end
+
+		-- Сервер ЗАКРЫВАЕТ: {"c":1}
+		if c == 1 then
+			dbg("[PR] GUI38 CLOSED by server")
+			PR.active = false
+			return
+		end
+
+		-- Входящий step response {"t":N}
+		if tp ~= nil then
+			if tp == 0 then
+				-- t=0 = OK, следующий шаг зависит от того где мы
+				dbg("[PR] GUI38 t=0 (OK)")
+				if PR.is_registration then
+					if not PR.sex_sent then
+						newTask(function()
+							wait(400)
+							pr_do_sex()
+						end)
+					elseif not PR.skin_sent then
+						newTask(function()
+							wait(400)
+							pr_do_skin()
+						end)
+					elseif not PR.invite_sent then
+						newTask(function()
+							wait(400)
+							pr_do_invite_skip()
+						end)
+					else
+						-- Регистрация завершена
+						dbg("[PR] GUI38: registration complete!")
+						PR.active = false
+					end
+				else
+					-- Логин завершён
+					dbg("[PR] GUI38: login OK!")
+					PR.active = false
+				end
+
+			elseif tp == 3 then
+				-- t=3 = пол принят, теперь выбор скина
+				dbg("[PR] GUI38 t=3: sex accepted, choose skin")
+				newTask(function()
+					wait(400)
+					pr_do_skin()
+				end)
+
+			elseif tp == 1 then
+				-- Пин/код (редко)
+				dbg("[PR] GUI38 t=1: PIN step (не реализовано)")
+
+			elseif tp == 2 then
+				-- Ошибка — неверный пароль или пин
+				dbg("[PR] GUI38 t=2: error/bad password step")
+				if not PR.is_registration and PR.login_attempts < 3 then
+					newTask(function()
+						wait(1000)
+						pr_do_login()
+					end)
+				end
+
+			elseif tp == 4 then
+				-- Восстановление пароля — игнорируем / скипаем
+				dbg("[PR] GUI38 t=4: restore step, ignore")
+
+			else
+				dbg(string.format("[PR] GUI38 t=%s: unhandled", tostring(tp)))
+			end
+		end
+
+	-- ========================
+	-- screenId=10 — SAMP-диалог
+	-- ========================
+	elseif screen_id == 10 then
+		if o == 1 then
+			local style = t["i"] or t["style"] or 0
+			local title = t["c"] or ""
+			local text  = t["s"] or ""
+			local btn1  = t["l"] or ""
+			local btn2  = t["r"] or ""
+			dbg(string.format("[PR] DIALOG style=%s title=%s text=%s",
+				tostring(style), tostring(title), tostring(text):sub(1,80)))
+
+			local pw = account_pw_from_env()
+			local blob = (tostring(title) .. " " .. tostring(text)):lower()
+
+			-- Инвайт — скипаем
+			if blob:find("пригласил", 1, true) or blob:find("invite", 1, true) then
+				dbg("[PR] DIALOG: invite skip")
+				pr_send_json(10, {r=0, i="", l=0})
+				return
+			end
+
+			-- Выбор пола
+			if blob:find("пол", 1, true) and (blob:find("выбер", 1, true) or blob:find("мужск", 1, true)) then
+				dbg("[PR] DIALOG: sex -> male (row 0)")
+				pr_send_json(10, {r=1, i="", l=0})
+				return
+			end
+
+			-- Место спавна
+			if blob:find("спавн", 1, true) or blob:find("spawn", 1, true) or blob:find("место", 1, true) then
+				dbg("[PR] DIALOG: spawn location -> row 0")
+				pr_send_json(10, {r=1, i="", l=0})
+				pr_do_spawn_location()
+				return
+			end
+
+			-- Пароль/логин
+			if blob:find("парол", 1, true) or blob:find("password", 1, true) or blob:find("логин", 1, true) then
+				if pw ~= "" then
+					dbg("[PR] DIALOG: password -> OK with pw")
+					pr_send_json(10, {r=1, i=pw, l=0})
+				else
+					pr_send_json(10, {r=1, i="", l=0})
+				end
+				return
+			end
+
+			-- По умолчанию — OK пустым
+			dbg("[PR] DIALOG: default OK")
+			pr_send_json(10, {r=1, i=pw, l=0})
+		end
+
+	-- ========================
+	-- screenId=50 — SpawnLocation
+	-- ========================
+	elseif screen_id == 50 then
+		if o == 1 then
+			dbg("[PR] SPAWN_LOCATION: server opened, choosing first slot")
+			newTask(function()
+				wait(300)
+				pr_do_spawn_location()
+			end)
+		elseif c == 1 then
+			dbg("[PR] SPAWN_LOCATION: closed")
+		else
+			-- Уведомление о спавне
+			dbg(string.format("[PR] SPAWN_LOCATION update t=%s", tostring(tp)))
+		end
+
+	-- ========================
+	-- screenId=100 — Profile ID (userId)
+	-- ========================
+	elseif screen_id == 100 then
+		local uid = t["id"] or t["userId"] or 0
+		dbg(string.format("[PR] PROFILE userId=%s", tostring(uid)))
+
+	-- ========================
+	-- Другие screenId
+	-- ========================
+	else
+		-- Для неизвестных GUI — просто закрываем если сервер открыл
+		if o == 1 then
+			dbg(string.format("[PR] unknown GUI screen=%d open, auto-close", screen_id))
+			newTask(function()
+				wait(200)
+				pr_do_close_gui(screen_id)
+			end)
+		end
+	end
+end
+
+-- ================================================================
+-- send_ping_fix
+-- ================================================================
 local SEND_PING_UPDATE = false
 local FORCE_KEY_ACTION = false
 local NEXT_UPDATE_TIME = os.time()
-
--- drunkLevel_fix.lua (Ulong / blast.hk) — с merged onSendPacket нельзя вторым файлом
 local DRUNK_LEVEL = 0
 local DRUNK_FPS = {min_fps = 70, max_fps = 90}
 
@@ -171,9 +506,10 @@ local function sendUpdateScoresAndPings()
 	bs:sendRPC(RPC_UPDATESCORESPINGSIPS)
 end
 
+-- ================================================================
 -- aim_fix_updated
-local CREDITS = {AUTHOR = "Ulong", SCRIPT_VERSION = "1.2+ping-merged"}
-
+-- ================================================================
+local CREDITS = {AUTHOR = "Ulong", SCRIPT_VERSION = "1.2+ping+prGUI"}
 local AIM_SYNC_RATE = 8
 local SPEC_SYNC_RATE = 5
 
@@ -184,7 +520,7 @@ local gl = {
 	aim_info = {},
 	is_regular_pos = false,
 	cam_pos_offset = vector3d(0, 0, 0),
-	pkt_log_left = 120,
+	pkt_log_left = 200,
 	custom_spec = {
 		pos = vector3d(-1, -1, -1),
 		front = vector3d(-1, -1, -1)
@@ -192,48 +528,33 @@ local gl = {
 }
 
 function genAimSyncInfo(is_static)
-
 	local function getRandomVector(lower, greater)
-		local function randomSign()
-			return math.random(0, 1) == 0 and -1 or 1
-		end
-
-		local function randomFloat(lower, greater)
-			return lower + math.random() * (greater - lower)
-		end
+		local function randomSign() return math.random(0, 1) == 0 and -1 or 1 end
+		local function randomFloat(l, g) return l + math.random() * (g - l) end
 		return vector3d(
 			randomFloat(lower, greater) * randomSign(),
 			randomFloat(lower, greater) * randomSign(),
 			randomFloat(lower, greater) * randomSign()
 		)
 	end
-
 	local function getCameraFrontVec(botPos, camPos, useRandom, randValue)
 		local vec = botPos - camPos
-		if useRandom then
-			vec = vec +  getRandomVector(randValue.min, randValue.max)
-		end
+		if useRandom then vec = vec + getRandomVector(randValue.min, randValue.max) end
 		vec:normalize()
 		return vec
 	end
-
 	local function getBotCameraPos(botRot, botPos)
 		local angle = -botRot * math.pi / 180
 		return vector3d(botPos.x + (-2 * math.sin(angle)), botPos.y + (-2 * math.cos(angle)), botPos.z + 1)
 	end
-
 	local currBotPos = vector3d(getBotPosition())
-
 	if not is_static then
 		gl.cam_pos_offset = getRandomVector(0.5, 3.0)
 	end
-
 	local resultCamera = getBotCameraPos(getBotRotation(), currBotPos)
 	resultCamera = resultCamera + gl.cam_pos_offset
-
 	local resultFront = getCameraFrontVec(currBotPos, resultCamera, true, {min = 0.1, max = 0.3})
-
-	local result = {
+	return {
 		camMode = getBotVehicle() ~= 0 and 18 or 4,
 		camFront = is_static and gl.aim_info.camFront or resultFront,
 		camPos = resultCamera,
@@ -242,8 +563,11 @@ function genAimSyncInfo(is_static)
 		weaponState = 0,
 		aspectRatio = 85
 	}
-	return result
 end
+
+-- ================================================================
+-- SA-MP event handlers
+-- ================================================================
 
 function onSendRPC(id, bs)
 	if id == RPC_UPDATESCORESPINGSIPS then
@@ -310,26 +634,22 @@ function onSendPacket(id, bs)
 		bs:sendPacketEx(HIGH_PRIORITY, UNRELIABLE, 0)
 		return false
 	end
-
 	if id == PACKET_AIM_SYNC then
 		if not gl.bot_move then
 			if gl.last_rate_time < os.time() then
 				local aim_data = (utils.process_outcoming_sync_data(bs, 'AimSyncData'))[1]
 				local isSpectateEnabled = gl.last_rate_time == -1
-
 				aim_data.camFront = gl.aim_info.camFront
 				aim_data.camPos = isSpectateEnabled and vector3d(getBotPosition()) or gl.aim_info.camPos
 				aim_data.camMode = isSpectateEnabled and 15 or gl.aim_info.camMode
-
 				if isSpectateEnabled then
-					if gl.custom_spec.front.x ~= -1 and gl.custom_spec.front.y ~= -1 and gl.custom_spec.front.z ~= -1 then
+					if gl.custom_spec.front.x ~= -1 then
 						aim_data.camFront = gl.custom_spec.front
 					end
-					if gl.custom_spec.pos.x ~= -1 and gl.custom_spec.pos.y ~= -1 and gl.custom_spec.pos.z ~= -1 then
+					if gl.custom_spec.pos.x ~= -1 then
 						aim_data.camPos = gl.custom_spec.pos
 					end
 				end
-
 				aim_data.aimZ = gl.aim_info.aimZ
 				aim_data.camExtZoom = gl.aim_info.camExtZoom
 				aim_data.weaponState = gl.aim_info.weaponState
@@ -344,6 +664,123 @@ function onSendPacket(id, bs)
 		end
 	end
 end
+
+-- ================================================================
+-- Incoming packets — перехват GUI-пакетов PRIME RUSSIA
+-- ================================================================
+
+function onReceivePacket(id, bs)
+	-- Логируем первые 200 пакетов для дебага
+	if gl.pkt_log_left and gl.pkt_log_left > 0 then
+		gl.pkt_log_left = gl.pkt_log_left - 1
+		dbg("[pkt in] id=" .. tostring(id))
+	end
+
+	-- Стандартные SA-MP disconnect пакеты
+	if id == PACKET_DISCONNECTION_NOTIFICATION then
+		dbg("[merged] PACKET_DISCONNECTION_NOTIFICATION")
+		gl.is_regular_pos = false
+		gl.bot_move = false
+		gl.cam_pos_offset = vector3d(0, 0, 0)
+		PR.active = false
+		PR.sex_sent = false
+		PR.skin_sent = false
+		PR.invite_sent = false
+		PR.spawn_loc_sent = false
+		PR.login_attempts = 0
+	elseif id == PACKET_CONNECTION_LOST then
+		dbg("[merged] PACKET_CONNECTION_LOST")
+		gl.is_regular_pos = false
+		gl.bot_move = false
+		gl.cam_pos_offset = vector3d(0, 0, 0)
+		PR.active = false
+	elseif id == PACKET_CONNECTION_BANNED then
+		dbg("[merged] PACKET_CONNECTION_BANNED")
+	elseif id == PACKET_INVALID_PASSWORD then
+		dbg("[merged] PACKET_INVALID_PASSWORD")
+	end
+
+	-- ============================================================
+	-- PRIME RUSSIA кастомные GUI пакеты: 0xFB=251, 0xFC=252
+	-- ============================================================
+	if id == PKT_GUI_IN or id == PKT_GUI_IN2 then
+		local unread_bits = bs:getNumberOfUnreadBits()
+		dbg(string.format("[PR-IN] pkt=%d unread_bits=%d", id, unread_bits))
+		-- Минимум: 1(pkt_id) + 2(screen_id) + 2(json_len) = 40 bits
+		if unread_bits < 40 then return end
+
+		-- Формат пакета (из реверса): [uint8 pkt_id][uint16 screen_id][uint16 json_len][json bytes]
+		-- (ignoreBits(8) не применяется к неизвестным id — битстрим начинается с pkt_id)
+		bs:readUInt8()   -- пропускаем packet_id (0xFB/0xFC)
+
+		-- screen_id = uint16
+		local screen_id = bs:readUInt16()
+
+		-- json_len = uint16
+		local json_len = bs:readUInt16()
+
+		local remaining_bytes = math.floor(bs:getNumberOfUnreadBits() / 8)
+		dbg(string.format("[PR-IN] screen=%d json_len=%d remaining=%d", screen_id, json_len, remaining_bytes))
+
+		-- json_len указывает размер JSON, но перед ним могут быть ещё байты.
+		-- Используем remaining_bytes (все остатки) и потом найдём { в строке.
+		-- Если json_len > 0 и корректен используем его как ориентир но читаем всё.
+		-- (анализ пакета: 2 доп. байта перед { — возможно padding или доп. поле)
+
+		if remaining_bytes <= 0 then
+			dbg("[PR-IN] no json data")
+			return
+		end
+
+		-- Используем readBuffer через ffi для безопасного чтения
+		local buf = ffi.new("uint8_t[?]", remaining_bytes + 1)
+		local rb_ok, rb_err = pcall(function()
+			bs:readBuffer(tonumber(ffi.cast("intptr_t", buf)), remaining_bytes)
+		end)
+		if not rb_ok then
+			dbg("[PR-IN] readBuffer fail: " .. tostring(rb_err))
+			-- Fallback: читаем побайтово только нужное количество
+			local json_bytes = {}
+			for i = 1, remaining_bytes do
+				local b_ok, b = pcall(function() return bs:readUInt8() end)
+				if not b_ok then break end
+				json_bytes[i] = string.char(b)
+			end
+			local json_str = table.concat(json_bytes)
+			if json_str ~= "" then
+				local ok2, err = pcall(handle_pr_packet, screen_id, json_str)
+				if not ok2 then dbg("[PR-IN] handle error: " .. tostring(err)) end
+			end
+			return false
+		end
+
+		buf[remaining_bytes] = 0
+		local json_str = ffi.string(buf, remaining_bytes)
+
+		if json_str == "" or json_str == "\0" then
+			dbg("[PR-IN] empty json")
+			return
+		end
+
+		-- Находим начало JSON объекта (ищем первый '{' или '[')
+		local json_start = json_str:find("[{%[]")
+		if json_start and json_start > 1 then
+			dbg(string.format("[PR-IN] trimming %d leading bytes before JSON", json_start - 1))
+			json_str = json_str:sub(json_start)
+		end
+
+		dbg(string.format("[PR-IN] screen=%d json=%s", screen_id, json_str:sub(1, 300)))
+		local ok2, err = pcall(handle_pr_packet, screen_id, json_str)
+		if not ok2 then
+			dbg("[PR-IN] handle error: " .. tostring(err))
+		end
+		return false  -- consume packet
+	end
+end
+
+-- ================================================================
+-- RPC handlers
+-- ================================================================
 
 function onReceiveRPC(id, bs)
 	if id == RPC_SCRSETPLAYERDRUNKLEVEL then
@@ -367,12 +804,10 @@ function onReceiveRPC(id, bs)
 	end
 end
 
--- Пакет 34 в samp.events идёт как onConnectionRequestAccepted (см. INCOMING_PACKETS), не через сырой bs в onReceivePacket.
 function onConnectionRequestAccepted(ip, port, playerId, challenge)
-	dbg(string.format("[merged] ConnectionRequestAccepted ip=%s port=%s playerId=%s challenge=%s", tostring(ip), tostring(port), tostring(playerId), tostring(challenge)))
-	-- connect_accept_fix.lua: player_index > 999
+	dbg(string.format("[merged] ConnectionRequestAccepted ip=%s port=%s playerId=%s", tostring(ip), tostring(port), tostring(playerId)))
 	if playerId and (playerId > 999 or playerId >= 0xFFF4 or playerId == 65535 or playerId == 65534) then
-		dbg(string.format("[merged] ConnectAccepted fix: playerId %s -> 0 (blast.hk/214267)", tostring(playerId)))
+		dbg(string.format("[merged] ConnectAccepted fix: playerId %s -> 0", tostring(playerId)))
 		return {ip, port, 0, challenge}
 	end
 end
@@ -383,64 +818,42 @@ end
 
 function onConnectionLost()
 	dbg("[merged] ConnectionLost")
+	PR.active = false
+	PR.login_attempts = 0
 end
 
-function onConnectionBanned()
-	dbg("[merged] ConnectionBanned")
-end
-
-function onConnectionAttemptFailed()
-	dbg("[merged] ConnectionAttemptFailed")
-end
-
-function onConnectionNoFreeSlot()
-	dbg("[merged] ConnectionNoFreeSlot")
-end
-
-function onConnectionPasswordInvalid()
-	dbg("[merged] ConnectionPasswordInvalid")
-end
+function onConnectionBanned()    dbg("[merged] ConnectionBanned") end
+function onConnectionAttemptFailed() dbg("[merged] ConnectionAttemptFailed") end
+function onConnectionNoFreeSlot() dbg("[merged] ConnectionNoFreeSlot") end
+function onConnectionPasswordInvalid() dbg("[merged] ConnectionPasswordInvalid") end
 
 function onConnectionClosed()
-	dbg("[merged] ConnectionClosed / DISCONNECT")
+	dbg("[merged] DISCONNECT")
 	gl.is_regular_pos = false
 	gl.bot_move = false
 	gl.cam_pos_offset = vector3d(0, 0, 0)
+	PR.active = false
+	PR.sex_sent = false
+	PR.skin_sent = false
+	PR.invite_sent = false
+	PR.spawn_loc_sent = false
+	PR.login_attempts = 0
 end
 
 function onServerMessage(color, text)
 	text = text or ""
 	local short = text:sub(1, 300)
-	dbg(string.format("[merged] ServerMessage color=%08X text=%s", tostring(color), short))
-	local low = short:lower()
-
-	-- Попытка определить шаг регистрации по сообщениям сервера
-	if low:find("зарегистрир", 1, true) or low:find("register", 1, true) then
-		dbg("[PR-GUI] ServerMsg: registration detected")
-		pr_handle_initgame(true)
-	elseif low:find("авторизац", 1, true) or low:find("добро пожаловать", 1, true) or low:find("welcome", 1, true) then
-		dbg("[PR-GUI] ServerMsg: login/welcome detected")
-	elseif low:find("пол", 1, true) and (low:find("выбер", 1, true) or low:find("выбор", 1, true)) then
-		dbg("[PR-GUI] ServerMsg: sex selection detected")
-		newTask(function() wait(500); pr_handle_sex_step() end)
-	elseif low:find("персонаж", 1, true) or low:find("скин", 1, true) or low:find("выбери внешн", 1, true) then
-		dbg("[PR-GUI] ServerMsg: skin selection detected")
-		newTask(function() wait(500); pr_handle_skin_step() end)
-	elseif low:find("пригласил", 1, true) or low:find("инвайт", 1, true) or low:find("invite", 1, true) or low:find("тебя пригласил", 1, true) then
-		dbg("[PR-GUI] ServerMsg: invite screen detected")
-		newTask(function() wait(500); pr_handle_invite_step() end)
-	elseif low:find("место спавна", 1, true) or low:find("spawn location", 1, true) or low:find("выбери место", 1, true) then
-		dbg("[PR-GUI] ServerMsg: spawn location detected")
-		newTask(function() wait(500); pr_handle_spawn_location() end)
-	end
+	dbg(string.format("[merged] ServerMsg color=%08X text=%s", color or 0, short))
+	-- Логируем все сообщения — может помочь увидеть что требует сервер
 end
 
 function onClientCheck(requestType, subject, offset, length)
-	dbg(string.format("[merged] ClientCheck type=%s subject=%s off=%s len=%s", tostring(requestType), tostring(subject), tostring(offset), tostring(length)))
+	dbg(string.format("[merged] ClientCheck type=%s sub=%s off=%s len=%s",
+		tostring(requestType), tostring(subject), tostring(offset), tostring(length)))
 end
 
 function onForceClassSelection()
-	dbg("[merged] ForceClassSelection -> class 0 + spawn")
+	dbg("[merged] ForceClassSelection")
 	newTask(function()
 		wait(400)
 		local rbs = bitStream.new()
@@ -451,185 +864,26 @@ function onForceClassSelection()
 	end)
 end
 
-function onShowMenu(menuId)
-	dbg("[merged] ShowMenu menuId=" .. tostring(menuId))
-end
-
-function onHideMenu(menuId)
-	dbg("[merged] HideMenu menuId=" .. tostring(menuId))
-end
-
+function onShowMenu(menuId)   dbg("[merged] ShowMenu menuId=" .. tostring(menuId)) end
+function onHideMenu(menuId)   dbg("[merged] HideMenu menuId=" .. tostring(menuId)) end
 function onInitMenu(menuId, menuTitle, x, y, twoColumns, columns, rows, menu)
-	local title = menuTitle or ""
-	dbg(string.format("[merged] InitMenu id=%s title=%q menu=%s", tostring(menuId), title, tostring(menu)))
+	dbg(string.format("[merged] InitMenu id=%s title=%q", tostring(menuId), tostring(menuTitle)))
 end
-
 function onGamemodeRestart()
 	dbg("[merged] GamemodeRestart")
 end
 
-function onReceivePacket(id, bs)
-	if gl.pkt_log_left and gl.pkt_log_left > 0 then
-		gl.pkt_log_left = gl.pkt_log_left - 1
-		dbg("[pkt in] id=" .. tostring(id))
-	end
-	-- Только явные обрывы (не путать с другими id=32 в разных сборках)
-	if id == PACKET_DISCONNECTION_NOTIFICATION then
-		dbg("[merged] PACKET_DISCONNECTION_NOTIFICATION")
-		gl.is_regular_pos = false
-		gl.bot_move = false
-		gl.cam_pos_offset = vector3d(0, 0, 0)
-	elseif id == PACKET_CONNECTION_LOST then
-		dbg("[merged] PACKET_CONNECTION_LOST")
-		gl.is_regular_pos = false
-		gl.bot_move = false
-		gl.cam_pos_offset = vector3d(0, 0, 0)
-	elseif id == PACKET_CONNECTION_BANNED then
-		dbg("[merged] PACKET_CONNECTION_BANNED")
-	elseif id == PACKET_INVALID_PASSWORD then
-		dbg("[merged] PACKET_INVALID_PASSWORD")
-	end
-end
-
 function onRequestClassResponse(canSpawn, team, skin)
-	dbg(string.format("[merged] RequestClassResponse canSpawn=%s team=%s skin=%s", tostring(canSpawn), tostring(team), tostring(skin)))
+	dbg(string.format("[merged] RequestClassResponse canSpawn=%s skin=%s", tostring(canSpawn), tostring(skin)))
 end
 
 function onRequestSpawnResponse(response)
 	dbg(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
 end
 
--- =====================================================================
--- PRIME RUSSIA: обработка входящих RPC пакетов от сервера
--- screenId=38 входящий: {"t":N} — шаги регистрации
--- =====================================================================
-function onReceiveRPC_PR(id, bs)
-	-- RPC_SCRSHOWDIALOG = 61 — сервер шлёт через этот RPC кастомный JSON GUI
-	-- Но PRIME RUSSIA использует свой отдельный канал onJsonDataIncoming
-	-- который RakSAMP Lite не понимает нативно.
-	-- Здесь мы реагируем на стандартные SA-MP диалоги если они есть.
-end
-
--- Регистрация/логин через диалог
-function onShowDialog(dialogId, style, title, button1, button2, text)
-	title = title or ""
-	text = text or ""
-	local blob = (title .. " " .. text):lower()
-	local pw = account_pw_from_env()
-	local from_env = os.getenv and (os.getenv("LITE_DIALOG_INPUT") or "") or ""
-	-- Приоритет: LITE_DIALOG_INPUT > LITE_ACCOUNT_PASSWORD > сгенерированный
-	local inp = from_env ~= "" and from_env or pw
-	local text_snip = text:sub(1, 300):gsub("\r", " "):gsub("\n", " ")
-	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q b1=%q text=%q",
-		dialogId, style, title, button1 or "", text_snip))
-
-	-- ============================================================
-	-- Определяем тип диалога по содержимому
-	-- ============================================================
-
-	-- 1. Логин/пароль — любой диалог с вводом пароля
-	local wants_password = blob:find("парол", 1, true) or blob:find("password", 1, true)
-		or blob:find("введите пароль", 1, true) or blob:find("enter password", 1, true)
-		or blob:find("авторизац", 1, true) or blob:find("логин", 1, true) or blob:find("login", 1, true)
-
-	-- 2. Регистрация
-	local wants_register = blob:find("регистр", 1, true) or blob:find("register", 1, true)
-		or blob:find("создать аккаунт", 1, true) or blob:find("придумайте пароль", 1, true)
-
-	-- 3. Выбор пола — скипаем через OK (мужской = первый вариант)
-	local wants_sex = blob:find("пол", 1, true) and (blob:find("выбер", 1, true) or blob:find("мужск", 1, true) or blob:find("женск", 1, true))
-
-	-- 4. Инвайт — нажимаем "Пропустить" (button2) или OK с пустым
-	local wants_invite = blob:find("пригласил", 1, true) or blob:find("инвайт", 1, true)
-		or blob:find("invite", 1, true) or blob:find("тебя пригласил", 1, true)
-		or blob:find("введи никнейм пригласившего", 1, true) or blob:find("пригласившего", 1, true)
-
-	-- 5. Выбор скина/персонажа
-	local wants_skin = blob:find("персонаж", 1, true) or blob:find("скин", 1, true)
-		or blob:find("внешн", 1, true) or blob:find("выбери стиль", 1, true)
-
-	-- 6. Место спавна
-	local wants_spawn_loc = blob:find("место спавна", 1, true) or blob:find("spawn location", 1, true)
-		or blob:find("выбери место", 1, true) or blob:find("спавн", 1, true)
-
-	-- Генерация пароля если нет
-	if inp == "" and (wants_password or wants_register) then
-		inp = "Prime" .. tostring(math.random(1000, 9999))
-		dbg("[merged] Dialog: no password, generated: " .. inp)
-	end
-
-	-- ============================================================
-	-- Обработка по типу диалога
-	-- ============================================================
-
-	-- ИНВАЙТ: всегда скипаем (кнопка "Пропустить" = button2 = кнопка 0 в диалоге)
-	if wants_invite then
-		dbg("[PR-GUI] Dialog: INVITE SKIP -> button2 (Пропустить), empty input")
-		-- button2 = 0 (правая кнопка), listitem=0, input=""
-		sendDialogResponse(dialogId, 0, 0, "")
-		pr_handle_invite_step()
-		return false
-	end
-
-	-- ПОЛ: выбираем мужской (первый вариант в списке)
-	if wants_sex then
-		dbg("[PR-GUI] Dialog: SEX -> row 0 (male)")
-		sendDialogResponse(dialogId, 1, 0, "")
-		pr_handle_sex_step()
-		return false
-	end
-
-	-- СКИН: подтверждаем первый скин
-	if wants_skin then
-		dbg("[PR-GUI] Dialog: SKIN -> OK, first skin=78")
-		pr_handle_skin_step()
-		sendDialogResponse(dialogId, 1, 0, "78")
-		return false
-	end
-
-	-- МЕСТО СПАВНА: выбираем первое
-	if wants_spawn_loc then
-		dbg("[PR-GUI] Dialog: SPAWN LOCATION -> row 0")
-		sendDialogResponse(dialogId, 1, 0, "")
-		pr_handle_spawn_location()
-		return false
-	end
-
-	-- INPUT / PASSWORD — пароль
-	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD then
-		dbg("[merged] Dialog INPUT/PASSWORD -> OK inp=" .. (inp ~= "" and inp:sub(1,3) .. "***" or "(empty)"))
-		sendDialogResponse(dialogId, 1, 0, inp)
-		return false
-	end
-
-	-- LIST / TABLIST — первый пункт, с паролем если нужен
-	if style == DIALOG_STYLE_LIST or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
-		if (wants_password or wants_register) and inp ~= "" then
-			dbg("[merged] Dialog LIST/TABLIST (auth) -> row 0 inp=" .. inp:sub(1,3) .. "***")
-			sendDialogResponse(dialogId, 1, 0, inp)
-		else
-			dbg("[merged] Dialog LIST/TABLIST -> row 0 (empty)")
-			sendDialogResponse(dialogId, 1, 0, "")
-		end
-		return false
-	end
-
-	-- MSGBOX — всегда OK
-	if style == DIALOG_STYLE_MSGBOX then
-		dbg("[merged] Dialog MSGBOX -> OK")
-		sendDialogResponse(dialogId, 1, 0, "")
-		return false
-	end
-
-	-- Любой другой стиль
-	dbg(string.format("[merged] Dialog style=%d -> OK inp_len=%d", style, #inp))
-	sendDialogResponse(dialogId, 1, 0, inp)
-	return false
-end
-
--- Вызывается когда сервер выдаёт spawn info — немедленно спавним
+-- SetSpawnInfo — немедленный спавн
 function onSetSpawnInfo(team, skin, unused, position, rotation, weapons, ammo)
-	dbg(string.format("[merged] onSetSpawnInfo skin=%s pos=%s,%s,%s", tostring(skin), tostring(position and position.x), tostring(position and position.y), tostring(position and position.z)))
+	dbg(string.format("[merged] onSetSpawnInfo skin=%s", tostring(skin)))
 	if not isBotSpawned() then
 		newTask(function()
 			wait(200)
@@ -641,39 +895,98 @@ function onSetSpawnInfo(team, skin, unused, position, rotation, weapons, ammo)
 	end
 end
 
--- InitGame = сервер реально пустил в игру; до этого RequestClass/Spawn часто игнорируются
+-- SA-MP диалог (стандартный, не PRIME RUSSIA)
+function onShowDialog(dialogId, style, title, button1, button2, text)
+	title = title or ""
+	text = text or ""
+	local blob = (title .. " " .. text):lower()
+	local pw = account_pw_from_env()
+	local inp = pw
+	local text_snip = text:sub(1, 200):gsub("\r", " "):gsub("\n", " ")
+	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q text=%q",
+		dialogId, style, title, text_snip))
+
+	-- Инвайт
+	if blob:find("пригласил", 1, true) or blob:find("invite", 1, true) then
+		dbg("[PR-DIALOG] invite skip")
+		sendDialogResponse(dialogId, 0, 0, "")
+		return false
+	end
+	-- Пол
+	if blob:find("пол", 1, true) and (blob:find("выбер", 1, true) or blob:find("мужск", 1, true)) then
+		dbg("[PR-DIALOG] sex male")
+		sendDialogResponse(dialogId, 1, 0, "")
+		return false
+	end
+	-- Место спавна
+	if blob:find("спавн", 1, true) or blob:find("spawn location", 1, true) then
+		dbg("[PR-DIALOG] spawn location row 0")
+		sendDialogResponse(dialogId, 1, 0, "")
+		pr_do_spawn_location()
+		return false
+	end
+	-- Скин
+	if blob:find("персонаж", 1, true) or blob:find("скин", 1, true) or blob:find("внешн", 1, true) then
+		dbg("[PR-DIALOG] skin confirm 78")
+		sendDialogResponse(dialogId, 1, 0, "78")
+		return false
+	end
+
+	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD then
+		if inp == "" then inp = "RakBot_" .. tostring(math.random(10000, 99999)) end
+		dbg("[merged] Dialog INPUT/PASSWORD -> OK pw=" .. inp:sub(1,3) .. "***")
+		sendDialogResponse(dialogId, 1, 0, inp)
+		return false
+	end
+	if style == DIALOG_STYLE_LIST or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
+		dbg("[merged] Dialog LIST/TABLIST -> row 0")
+		sendDialogResponse(dialogId, 1, 0, (inp ~= "" and inp or ""))
+		return false
+	end
+	if style == DIALOG_STYLE_MSGBOX then
+		dbg("[merged] Dialog MSGBOX -> OK")
+		sendDialogResponse(dialogId, 1, 0, "")
+		return false
+	end
+	dbg(string.format("[merged] Dialog style=%d -> OK", style))
+	sendDialogResponse(dialogId, 1, 0, inp)
+	return false
+end
+
+-- InitGame
 function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendlyFire)
 	local nclass = 10
 	if type(settings) == "table" and settings.classesAvailable then
 		local c = tonumber(settings.classesAvailable) or 0
-		if c > 0 then
-			nclass = math.min(c, 10)
-		end
+		if c > 0 then nclass = math.min(c, 10) end
 	end
 	dbg(string.format("[merged] onInitGame playerId=%s host=%s classes=%d", tostring(playerId), tostring(hostName), nclass))
 	gl.aim_info = genAimSyncInfo()
 
-	-- Сбрасываем состояние PR-регистрации при каждом InitGame
-	PR.reg_step = 0
+	-- Сброс состояния
+	PR.active = false
 	PR.sex_sent = false
-	PR.invite_sent = false
 	PR.skin_sent = false
+	PR.invite_sent = false
+	PR.spawn_loc_sent = false
+	PR.login_attempts = 0
+	PR.nick = ""
+	PR.pw = account_pw_from_env()
 
 	newTask(function()
-		-- Ждём диалогов логина/регистрации (приходят сразу после InitGame)
 		wait(1200)
 		local pw = account_pw_from_env()
 
-		-- Шаг 1: SA-MP /login или /register команды (для обычных серверов)
+		-- /register и /login (стандартные SA-MP команды)
 		if pw ~= "" then
-			dbg("[merged] onInitGame: /register + /login pw_len=" .. #pw)
+			dbg("[merged] onInitGame: /register + /login")
 			sendInput("/register " .. pw .. " " .. pw)
 			wait(1500)
 			sendInput("/login " .. pw)
 			wait(1500)
 		end
 
-		-- Шаг 2: !spawn + RequestClass/Spawn цикл
+		-- !spawn + RequestClass/Spawn цикл
 		local function tryRequestClass(cls)
 			local rbs = bitStream.new()
 			rbs:writeInt32(cls)
@@ -687,7 +1000,6 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 		sendSpawnRequest()
 		wait(800)
 
-		-- Основной цикл спавна — 80 попыток (~3.5 минуты)
 		for attempt = 1, 80 do
 			if isBotSpawned() then
 				dbg("[merged] spawned OK at attempt " .. attempt)
@@ -696,13 +1008,10 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 			local cls = (attempt - 1) % nclass
 			dbg(string.format("[merged] spawn attempt %d cls=%d", attempt, cls))
 
-			-- Каждые 3 попытки — повторяем /login (диалог мог прийти позже)
 			if pw ~= "" and attempt % 3 == 0 and attempt <= 15 then
 				sendInput("/login " .. pw)
 				wait(500)
 			end
-
-			-- Каждые 5 попыток — !spawn для ручного спавна
 			if attempt % 5 == 0 then
 				sendInput("!spawn")
 				wait(300)
@@ -713,15 +1022,15 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 			sendSpawnRequest()
 			wait(2000)
 		end
-		dbg("[merged] spawn timeout. LITE_ACCOUNT_PASSWORD=" .. tostring(#pw) .. "chars")
+		dbg("[merged] spawn timeout. pw_len=" .. #pw)
 	end)
 end
 
 function onLoad()
 	dbg("========== blasthk_aim_and_ping_merged onLoad ==========")
-	dbg("[SEND PING FIX] LOADED. Author: Ulong (merged)")
-	dbg(string.format("[AimSync FIX] Loaded! Author: %s (version %s)", CREDITS.AUTHOR, CREDITS.SCRIPT_VERSION))
-	dbg("[merged] lite_debug.log in instance folder; Connect+Dialog+InitGame trace")
+	dbg("[merged] aim_fix + send_ping_fix + PRIME RUSSIA GUI handler")
+	dbg(string.format("[merged] GUI packets: in=251/252 out=251"))
+	dbg(string.format("[merged] pw_len=%d", #account_pw_from_env()))
 	gl.aim_info = genAimSyncInfo()
 	setRate(AIM_SYNC_RATE, 1000)
 	setRate(SPEC_SYNC_RATE, 100)

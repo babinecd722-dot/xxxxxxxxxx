@@ -1,70 +1,82 @@
-[11:59:53]  
-[11:59:53] * ===================================================== *
-[11:59:53]   RakSAMP Lite initialized on 26/03/2026 11:59:53
-[11:59:53]   Authors: jlfm, bartekdvd, P3ti, Rei
-[11:59:53]   Visit t.me/reiscripts
-[11:59:53] * ===================================================== *
-[11:59:53]  
-[11:59:53] [LUA] Loading scripts...
-[11:59:53] [LUA] Z:\workspace\raksamp\lite_debug_run\scripts\blasthk_aim_and_ping_merged.lua loaded
-[11:59:53] [LUA] ========== blasthk_aim_and_ping_merged onLoad ==========
-[11:59:53] [LUA] [SEND PING FIX] LOADED. Author: Ulong (merged)
-[11:59:53] [LUA] [AimSync FIX] Loaded! Author: Ulong (version 1.2+ping-merged)
-[11:59:53] [LUA] [merged] lite_debug.log in instance folder; Connect+Dialog+InitGame trace
-[11:59:53] [NET] Connecting to 51.75.232.67:1801...
-[11:59:53] [LUA] [pkt in] id=12
-[11:59:54] [LUA] [pkt in] id=34
-[11:59:54] [NET] Connected. Joining the game...
-[11:59:54] [LUA] [pkt in] id=41
-[11:59:54] [NET] Bad nickname
-[11:59:54] [LUA] [pkt in] id=32
-[11:59:54] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:59:54] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[12:00:09] [NET] Connecting to 51.75.232.67:1801...
-[12:00:09] [LUA] [pkt in] id=12
-[12:00:09] [LUA] [pkt in] id=34
-[12:00:09] [NET] Connected. Joining the game...
-[12:00:09] [LUA] [pkt in] id=41
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG]  
-[12:00:09] [MSG] {FFFFFF}| Добро пожаловать на {E24B4B}PRIME RUSSIA{FFFFFF}, сервер —
-[12:00:09] [MSG] {FFFFFF}| — {E24B4B}RED
-[12:00:09] [MSG] {FFFFFF}| В нашем канале Телеграм {E24B4B}t.me/primee_dev{FFFFFF} идёт
-[12:00:09] [MSG] {FFFFFF}| — раздача подарков
-[12:00:10] [MSG] {FFFFFF}| Для участия нужно написать в ЛС группы кодовое
-[12:00:10] [MSG] {FFFFFF}| — слово {E24B4B}#ХОЧУ
-[12:00:10] [MSG]  
-[12:00:10] [NET] Connected to PRIME RUSSIA
-[12:00:11] [RPC] >> Class 0 requested
-[12:00:11] [LUA] [pkt in] id=252
-[12:00:11] [AUDIO] 
-[12:00:11] [LUA] [pkt in] id=251
-[12:00:11] [LUA] [pkt in] id=251
-[12:01:00] [MSG] 
-[12:01:00] [MSG]    ВРЕМЯ ВЫПЛАТЫ
-[12:25:33] [MSG] {ffff00}[Контейнера] {ffffff}Через {ffff00}10{ffffff} минут начнутся торги за контейнеры!
-[12:25:33] [MSG] {ffff00}[Контейнера] {ffffff}Местоположение: {ffff00}/gps - Развлечения > Битва за контейнеры
+[13:06:43]  
+[13:06:43] * ===================================================== *
+[13:06:43]   RakSAMP Lite initialized on 26/03/2026 13:06:43
+[13:06:43]   Authors: jlfm, bartekdvd, P3ti, Rei
+[13:06:43]   Visit t.me/reiscripts
+[13:06:43] * ===================================================== *
+[13:06:43]  
+[13:06:43] [LUA] Loading scripts...
+[13:06:43] [LUA] Z:\workspace\raksamp\lite_debug_run\scripts\blasthk_aim_and_ping_merged.lua loaded
+[13:06:43] [LUA] ========== blasthk_aim_and_ping_merged onLoad ==========
+[13:06:43] [LUA] [merged] aim_fix + send_ping_fix + PRIME RUSSIA GUI handler
+[13:06:43] [LUA] [merged] GUI packets: in=251/252 out=251
+[13:06:43] [LUA] [merged] pw_len=15
+[13:06:43] [NET] Connecting to 51.75.232.67:1801...
+[13:06:43] [LUA] [pkt in] id=12
+[13:06:43] [LUA] [pkt in] id=34
+[13:06:43] [NET] Connected. Joining the game...
+[13:06:43] [LUA] [pkt in] id=41
+[13:06:43] [NET] Bad nickname
+[13:06:43] [LUA] [pkt in] id=32
+[13:06:43] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
+[13:06:43] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
+[13:06:58] [NET] Connecting to 51.75.232.67:1801...
+[13:06:59] [LUA] [pkt in] id=12
+[13:06:59] [LUA] [pkt in] id=34
+[13:06:59] [NET] Connected. Joining the game...
+[13:06:59] [LUA] [pkt in] id=41
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG]  
+[13:06:59] [MSG] {FFFFFF}| Добро пожаловать на {E24B4B}PRIME RUSSIA{FFFFFF}, сервер —
+[13:06:59] [MSG] {FFFFFF}| — {E24B4B}RED
+[13:06:59] [MSG] {FFFFFF}| В нашем канале Телеграм {E24B4B}t.me/primee_dev{FFFFFF} идёт
+[13:06:59] [MSG] {FFFFFF}| — раздача подарков
+[13:06:59] [MSG] {FFFFFF}| Для участия нужно написать в ЛС группы кодовое
+[13:06:59] [MSG] {FFFFFF}| — слово {E24B4B}#ХОЧУ
+[13:06:59] [MSG]  
+[13:07:01] [AUDIO] 
+[13:07:01] [LUA] [pkt in] id=251
+[13:07:01] [LUA] [PR-IN] pkt=251 unread_bits=432
+[13:07:01] [LUA] [PR-IN] screen=5 json_len=0 remaining=49
+[13:07:01] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+[13:07:01] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+[13:07:01] [LUA] [pkt in] id=251
+[13:07:01] [LUA] [PR-IN] pkt=251 unread_bits=432
+[13:07:01] [LUA] [PR-IN] screen=5 json_len=0 remaining=49
+[13:07:01] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+[13:07:01] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+[13:07:01] [NET] Connected to PRIME RUSSIA
+[13:07:01] [RPC] >> Class 0 requested
+[13:07:01] [LUA] [pkt in] id=252
+[13:07:01] [LUA] [PR-IN] pkt=252 unread_bits=160
+[13:07:01] [LUA] [PR-IN] screen=38 json_len=13 remaining=15
+[13:07:01] [LUA] [PR-IN] trimming 2 leading bytes before JSON
+[13:07:01] [LUA] [PR-IN] screen=38 json={"o":1,"r":0}
+[13:07:01] [LUA] [PR-IN] screen=38 json={"o":1,"r":0}
+[13:07:01] [LUA] [PR] GUI38 OPEN: REGISTRATION mode
+[13:07:02] [LUA] [PR] REGISTER nick=Dmitry_Novikov pw_len=15
+[13:07:02] [LUA] [PR-SEND] screen=38 len=50 json={"t":1,"s":"Dmitry_Novikov","p":"RakLiteBot_2026"}
