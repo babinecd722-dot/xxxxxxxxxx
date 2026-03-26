@@ -1,0 +1,24 @@
+{
+  "server_host": "51.75.232.67",
+  "server_port": 1801,
+  "rcon_password": "",
+  "lite_account_password": "RakLiteBot_2026",
+  "stagger_seconds": 15,
+  "start_only_first": 0,
+  "console": 0,
+  "auto_spawn": true,
+  "auto_spawn_chat_spawn": false,
+  "gentle_antikick": true,
+  "generate_bot_count": 2,
+  "nick_mode": "silly",
+  "sequential_prefix": "Us",
+  "comment": "gentle_antikick: runmode 2 (still at spawn), редкие intervals, stagger 15s. 51.75.232.67:1801.",
+
+  "nick_silly_first": ["Rame", "Danya"],
+  "nick_silly_last": ["Kakashko", "Rashko"],
+
+  "nick_first_names": [],
+  "nick_last_names": [],
+
+  "bots": []
+}

@@ -1,0 +1,74 @@
+2026-03-26 11:15:03 ========== blasthk_aim_and_ping_merged onLoad ==========
+2026-03-26 11:15:03 [SEND PING FIX] LOADED. Author: Ulong (merged)
+2026-03-26 11:15:03 [AimSync FIX] Loaded! Author: Ulong (version 1.2+ping-merged)
+2026-03-26 11:15:03 [merged] lite_debug.log in instance folder; Connect+Dialog+InitGame trace
+2026-03-26 11:15:03 [pkt in] id=12
+2026-03-26 11:15:03 [pkt in] id=34
+2026-03-26 11:15:03 [pkt in] id=41
+2026-03-26 11:15:03 [pkt in] id=32
+2026-03-26 11:15:03 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:15:19 [pkt in] id=12
+2026-03-26 11:15:19 [pkt in] id=34
+2026-03-26 11:15:19 [pkt in] id=41
+2026-03-26 11:15:19 [pkt in] id=32
+2026-03-26 11:15:19 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:15:35 [pkt in] id=12
+2026-03-26 11:15:35 [pkt in] id=34
+2026-03-26 11:15:35 [pkt in] id=41
+2026-03-26 11:15:35 [pkt in] id=32
+2026-03-26 11:15:35 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:15:50 [pkt in] id=12
+2026-03-26 11:15:50 [pkt in] id=34
+2026-03-26 11:15:51 [pkt in] id=41
+2026-03-26 11:15:51 [pkt in] id=32
+2026-03-26 11:15:51 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:16:06 [pkt in] id=12
+2026-03-26 11:16:06 [pkt in] id=34
+2026-03-26 11:16:06 [pkt in] id=41
+2026-03-26 11:16:06 [pkt in] id=32
+2026-03-26 11:16:06 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:16:22 [pkt in] id=12
+2026-03-26 11:16:22 [pkt in] id=34
+2026-03-26 11:16:22 [pkt in] id=41
+2026-03-26 11:16:22 [pkt in] id=32
+2026-03-26 11:16:22 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:16:38 [pkt in] id=12
+2026-03-26 11:16:38 [pkt in] id=34
+2026-03-26 11:16:38 [pkt in] id=41
+2026-03-26 11:16:38 [pkt in] id=32
+2026-03-26 11:16:38 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:16:53 [pkt in] id=12
+2026-03-26 11:16:54 [pkt in] id=34
+2026-03-26 11:16:54 [pkt in] id=41
+2026-03-26 11:16:54 [pkt in] id=32
+2026-03-26 11:16:54 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:17:09 [pkt in] id=12
+2026-03-26 11:17:09 [pkt in] id=34
+2026-03-26 11:17:09 [pkt in] id=41
+2026-03-26 11:17:09 [pkt in] id=32
+2026-03-26 11:17:09 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:17:25 [pkt in] id=12
+2026-03-26 11:17:25 [pkt in] id=34
+2026-03-26 11:17:25 [pkt in] id=41
+2026-03-26 11:17:25 [pkt in] id=32
+2026-03-26 11:17:25 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:17:41 [pkt in] id=12
+2026-03-26 11:17:41 [pkt in] id=34
+2026-03-26 11:17:41 [pkt in] id=41
+2026-03-26 11:17:41 [pkt in] id=32
+2026-03-26 11:17:41 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:17:57 [pkt in] id=12
+2026-03-26 11:17:57 [pkt in] id=34
+2026-03-26 11:17:57 [pkt in] id=41
+2026-03-26 11:17:57 [pkt in] id=32
+2026-03-26 11:17:57 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:18:12 [pkt in] id=12
+2026-03-26 11:18:12 [pkt in] id=34
+2026-03-26 11:18:13 [pkt in] id=41
+2026-03-26 11:18:13 [pkt in] id=32
+2026-03-26 11:18:13 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 11:18:28 [pkt in] id=12
+2026-03-26 11:18:28 [pkt in] id=34
+2026-03-26 11:18:28 [pkt in] id=41
+2026-03-26 11:18:28 [pkt in] id=32
+2026-03-26 11:18:28 [merged] PACKET_DISCONNECTION_NOTIFICATION
