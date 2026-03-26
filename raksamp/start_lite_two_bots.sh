@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Два RakSAMP Lite (Wine). Два lua с blast.hk лежат в корне репо — копируются в scripts/forum/
-# без автозагрузки; подключает 00_blasthk_loader.lua (имя с 00 — грузится первым).
+# Два RakSAMP Lite: только два lua в scripts/ как есть (без лоадеров).
+# Порядок загрузки Lite — по имени: сначала send_ping_fix.lua, потом z_aim_fix_updated.lua
+# (копия aim_fix_updated.lua под именем z_* чтобы aim шёл после ping и переопределил onSendPacket).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 ZIP="${LITE_ZIP:-$REPO_ROOT/RakSAMP Lite.zip}"
 AIM_SRC="${AIM_FIX_LUA:-$REPO_ROOT/aim_fix_updated.lua}"
 PING_SRC="${PING_FIX_LUA:-$REPO_ROOT/send_ping_fix.lua}"
-LOADER="${BLASTHK_LOADER:-$ROOT/00_blasthk_loader.lua}"
 RUNDIR="${LITE_RUNDIR:-$ROOT/lite_run}"
 export DISPLAY="${DISPLAY:-:1}"
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 
-for f in "$ZIP" "$AIM_SRC" "$PING_SRC" "$LOADER"; do
+for f in "$ZIP" "$AIM_SRC" "$PING_SRC"; do
   [[ -f "$f" ]] || { echo "Нет файла: $f" >&2; exit 1; }
 done
 
@@ -111,12 +111,11 @@ for i in 1 2; do
   INST="$RUNDIR/instance${i}_${nick}"
   mkdir -p "$INST"
   unzip -q -o "$ZIP" -d "$INST"
-  mkdir -p "$INST/scripts/forum"
-  cp -f "$AIM_SRC" "$INST/scripts/forum/aim_fix_updated.lua"
-  cp -f "$PING_SRC" "$INST/scripts/forum/send_ping_fix.lua"
-  cp -f "$LOADER" "$INST/scripts/00_blasthk_loader.lua"
+  mkdir -p "$INST/scripts"
+  cp -f "$PING_SRC" "$INST/scripts/send_ping_fix.lua"
+  cp -f "$AIM_SRC" "$INST/scripts/z_aim_fix_updated.lua"
   write_ini "$nick" "$INST"
-  echo "Инстанс $i: $INST (forum/*.lua + 00_blasthk_loader.lua)"
+  echo "Инстанс $i: scripts/send_ping_fix.lua + scripts/z_aim_fix_updated.lua (как aim_fix_updated.lua)"
 done
 
 echo "Запуск wine ..."

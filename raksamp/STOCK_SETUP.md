@@ -54,14 +54,14 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 
 ## RakSAMP Lite + два lua с blast.hk (два экземпляра)
 
-В корне: **`RakSAMP Lite.zip`**, **`aim_fix_updated.lua`**, **`send_ping_fix.lua`**.  
-Если положить оба в **`scripts/*.lua`**, второй перезапишет **`onSendPacket`** первого. Поэтому:
+В корне: **`RakSAMP Lite.zip`**, **`aim_fix_updated.lua`**, **`send_ping_fix.lua`**.
 
-- оригиналы кладутся в **`scripts/forum/`** (автозагрузка только верхнего уровня `scripts/*.lua`);
-- **`raksamp/00_blasthk_loader.lua`** копируется как **`scripts/00_blasthk_loader.lua`** — грузится первым и через **`setfenv`** подключает оба файла, вызывая **send_ping → aim_fix** на общих пакетах (один проход по BitStream);
-- после задержки вызывается **`sendSpawnRequest()`** (RPC из `addon.lua`); повтор через 5 с, если ещё не заспавнен.
+**`start_lite_two_bots.sh`** копирует в каждый инстанс только:
 
-Запуск двух клиентов (сервер/ники из **`bots_manifest.json`**):
+- **`scripts/send_ping_fix.lua`** — как в репо;
+- **`scripts/z_aim_fix_updated.lua`** — это **тот же файл**, что **`aim_fix_updated.lua`**, только имя с префиксом **`z_`**, чтобы Lite загрузил его **после** send_ping (иначе алфавитный порядок: `aim_*` раньше `send_*`, и ping-фикс перезапишет aim).
+
+Запуск:
 
 ```bash
 ./raksamp/start_lite_two_bots.sh
