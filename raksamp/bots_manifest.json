@@ -6,10 +6,11 @@
   "start_only_first": 0,
   "console": 0,
   "auto_spawn": true,
+  "auto_spawn_chat_spawn": false,
   "generate_bot_count": 450,
   "nick_mode": "silly",
   "sequential_prefix": "Us",
-  "comment": "auto_spawn=true: manual_spawn=0 + autorun !spawn после коннекта (без консоли). 450 ботов, 185.189.255.97:2183.",
+  "comment": "auto_spawn: manual_spawn=0, class spawn via select_classid (no !spawn chat). Set auto_spawn_chat_spawn true for old autorun !spawn. 185.189.255.97:2183.",
 
   "nick_silly_first": [
     "Rame", "Danya", "Vova", "Petya", "Kostya", "Sanya", "Misha", "Grisha",

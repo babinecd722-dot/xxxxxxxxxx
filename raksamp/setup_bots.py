@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Создаёт bots/botXX_Name/ — стоковый RakSAMPClient.xml (как в client.zip).
 
-По умолчанию manual_spawn=1. В bots_manifest.json: auto_spawn=true — manual_spawn=0 и
-<autorun>!spawn</autorun> после коннекта (без консоли). Или manual_spawn / autorun_commands вручную.
+По умолчанию manual_spawn=1. auto_spawn=true — manual_spawn=0, без чата: спавн через select_classid
+(как выбор класса). !spawn в чат только если auto_spawn_chat_spawn=true или задан autorun_commands.
 Ник и сервер только в XML; start_all_bots.sh запускает wine без -n/-h/-p.
 """
 
@@ -79,7 +79,7 @@ def build_stock_xml(
     autorun_xml = _autorun_block(cmds)
     ms = 1 if int(manual_spawn) != 0 else 0
     return f"""<!--
-	RakSAMP 0.3.7: manual_spawn={ms}, find=0. autorun после успешного коннекта.
+	RakSAMP 0.3.7: manual_spawn={ms}, select_classid — выбор спавна без чата (если ms=0).
 -->
 <!--
 Avalable runmodes:
@@ -396,7 +396,7 @@ def main() -> int:
         autorun_cmds = [str(x).strip() for x in raw_ar if str(x).strip()]
     if data.get("auto_spawn", False):
         manual_spawn_flag = 0
-        if not autorun_cmds:
+        if not autorun_cmds and data.get("auto_spawn_chat_spawn", False):
             autorun_cmds = ["!spawn"]
     elif "manual_spawn" in data:
         manual_spawn_flag = int(data["manual_spawn"])
