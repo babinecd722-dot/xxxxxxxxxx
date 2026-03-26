@@ -3,14 +3,16 @@
 Полный архив с оригинальным `RakSAMPClient.exe` + XML: **`raksamp_stock_client.zip`**  
 (источник: [samiirWasHere/raksamp](https://github.com/samiirWasHere/raksamp) → `client.zip`).
 
-## Обновить exe/xml с нуля
+## Обновить exe с нуля (с GitHub)
 
 ```bash
 cd raksamp
+curl -fSL -o raksamp_stock_client.zip "https://raw.githubusercontent.com/samiirWasHere/raksamp/master/client.zip"
 unzip -o raksamp_stock_client.zip -d /tmp/rak_extract
 cp /tmp/rak_extract/client/RakSAMPClient.exe .
-# при необходимости верни свой RakSAMPClient.xml или отредактируй скопированный
 ```
+
+Другие сборки под **0.3.DL**: [KevY007/RakSAMP-0.8.6-DL releases](https://github.com/KevY007/RakSAMP-0.8.6-DL/releases). Сводные гайды по сценарию «несколько окон / прокачка»: поиск «RakSAMP FAQ» на [blast.hk](https://blast.hk/) (например темы про RakSAMP Lite и лимиты с одного IP).
 
 ## Настройка (кратко, как обычно пишут в гайдах)
 
@@ -33,3 +35,5 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 ```bash
 ./run_stock.sh
 ```
+
+Читает **`RakSAMPClient.xml`** как в стоке (ник и сервер уже в XML). Доп. аргументы: `./run_stock.sh -n Ник -h IP -p PORT` (без пустого `-z`).

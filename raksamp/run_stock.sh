@@ -8,4 +8,5 @@ export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 export WINEDEBUG="${WINEDEBUG:--all}"
 cd "$DIR"
 [[ -f ./RakSAMPClient.exe ]] || { echo "Нет RakSAMPClient.exe. Распакуй raksamp_stock_client.zip или git pull." >&2; exit 1; }
-exec wine ./RakSAMPClient.exe -n "Prime_Dmitriyx" -h "138.124.14.39" -p "7777"
+# Чисто из RakSAMPClient.xml (ник/сервер в файле). Опционально: -n -h -p без пустого -z.
+exec wine ./RakSAMPClient.exe "$@"
