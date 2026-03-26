@@ -21,18 +21,19 @@ if [[ -f "$DBGDIR_PREV/lite.wine.pid" ]]; then
 fi
 
 python3 -c "
-import json
+import json, random
 from pathlib import Path
 p = Path('$ROOT') / 'bots_manifest.json'
 d = json.loads(p.read_text(encoding='utf-8')) if p.is_file() else {}
 host = str(d.get('server_host', '51.75.232.67'))
 port = int(d.get('server_port', 1801))
-f = d.get('nick_silly_first') or ['Test']
-l = d.get('nick_silly_last') or ['Bot']
-nick = f'{f[0]}_{l[0]}'
 pw = str(d.get('lite_account_password') or d.get('lite_register_password') or '')
 rcon = str(d.get('rcon_password') or '')
 ver = str(d.get('clientversion', '0.3.7'))
+# Генерируем уникальный ник формата Name_Surname для каждого запуска
+FIRST=['Ivan','Pavel','Maxim','Artem','Denis','Roman','Vitaly','Oleg','Kirill','Dmitry','Alexey','Andrey','Sergey','Anton','Nikita','Vladislav','Timur','Ruslan','Mikhail','Evgeny']
+LAST=['Volkov','Petrov','Smirnov','Novikov','Morozov','Frolov','Kozlov','Popov','Lebedev','Sokolov','Orlov','Zaycev','Kuznecov','Sidorov','Gromov','Stepanov','Nikitin','Fedorov','Makarov','Titov']
+nick = random.choice(FIRST) + '_' + random.choice(LAST)
 print(host)
 print(port)
 print(nick)

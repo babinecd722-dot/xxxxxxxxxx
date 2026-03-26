@@ -91,16 +91,7 @@ local function get_bot_nick()
 end
 
 -- Генерировать уникальный ник для регистрации (чтобы не конфликтовать)
-local function gen_unique_nick()
-	-- Берём базовый ник из ini и добавляем случайный суффикс
-	local base = get_bot_nick()
-	if base == "" then base = "Bot" end
-	-- Убираем суффиксы если уже есть
-	base = base:gsub("_%d+$", "")
-	-- Добавляем 4-значный random суффикс
-	local suffix = tostring(math.random(1000, 9999))
-	return base .. "_" .. suffix
-end
+-- gen_unique_nick удалена — используем gen_rp_nick (определяется ниже)
 
 ffi.cdef[[
 	typedef unsigned long DWORD;
@@ -198,7 +189,10 @@ end
 -- Confirmed format from traffic analysis:
 -- incoming: [pkt_id][screen uint16][json_len uint16][json_len uint16 DUPLICATE][json]
 -- The "2 extra bytes" are a SECOND copy of json_len (both = len of json string)
-local PR_SEND_MODE = "3C"  -- 3C = 3-arg with pkt_id in bs, double json_len
+-- "3C" = [pkt_id][screen uint16][json_len uint16][json_len uint16 DUP][json]
+-- "3D" = [pkt_id][screen uint16][json] — NO length prefix at all
+-- Пробуем 3D — минимальный формат
+local PR_SEND_MODE = "3E"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
@@ -227,6 +221,27 @@ local function pr_send(screen_id, json_str)
 		bs:writeUInt16(screen_id)
 		bs:writeUInt16(#json_str)    -- json_len первый раз
 		bs:writeUInt16(#json_str)    -- json_len второй раз (дублирование)
+		bs:writeString(json_str)
+		bs:sendPacketEx(1, 9, 0)
+	elseif PR_SEND_MODE == "3E" then
+		-- Через sendRPCEx(rpcId=251, priority=1)
+		-- данные: [screen uint16][json bytes]
+		bs:writeUInt16(screen_id)
+		bs:writeString(json_str)
+		local ok, err = pcall(function() bs:sendRPCEx(PKT_GUI_OUT, 1) end)
+		if not ok then
+			dbg("[PR] sendRPCEx failed: " .. tostring(err))
+			-- fallback
+			bs = bitStream.new()
+			bs:writeUInt8(PKT_GUI_OUT)
+			bs:writeUInt16(screen_id)
+			bs:writeString(json_str)
+			bs:sendPacketEx(1, 9, 0)
+		end
+	elseif PR_SEND_MODE == "3D" then
+		-- Минимальный формат: [pkt_id][screen uint16][json bytes] — без length поля
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
 		bs:writeString(json_str)
 		bs:sendPacketEx(1, 9, 0)
 	else -- "3B"
@@ -296,11 +311,11 @@ local function pr_do_register()
 	end
 	PR.pw = pw
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	-- Генерируем ник формата Name_Surname каждый раз новый
-	PR.nick = gen_rp_nick()
-	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d", PR.reg_attempt, PR.nick, #pw))
-	-- {"t":1, "s":"Name_Surname", "p":"PASSWORD"}
-	pr_send_json(38, {t=1, s=PR.nick, p=pw})
+	-- Шаг 1: {"t":1, "p":"пароль", "s":""} — s = email (пустой)
+	-- Ник задаётся именем подключения (settings/RakSAMP Lite.ini nick=)
+	-- НЕ передаём ник в "s" — это email поле
+	dbg(string.format("[PR] REGISTER step1 attempt=%d pw_len=%d", PR.reg_attempt, #pw))
+	pr_send_json(38, {t=1, p=pw, s=""})
 end
 
 local function pr_do_sex()
@@ -314,11 +329,9 @@ end
 local function pr_do_skin()
 	if PR.skin_sent then return end
 	PR.skin_sent = true
-	local skin = MALE_SKINS[1]  -- 78 = первый мужской
-	dbg(string.format("[PR] SKIN: preview+confirm skin=%d", skin))
-	-- Сначала preview: {"t":-1, "i":78}
-	pr_send_json(38, {t=-1, i=skin})
-	-- Потом подтверждение: {"t":5, "r":78}
+	local skin = MALE_SKINS[1]  -- 78 = первый мужской (gameId скина)
+	dbg(string.format("[PR] SKIN: confirm skin=%d", skin))
+	-- Шаг 4: {"t":5, "r":skinId} — выбор скина, r = gameId скина
 	pr_send_json(38, {t=5, r=skin})
 end
 
@@ -339,9 +352,11 @@ end
 local function pr_do_spawn_location()
 	if PR.spawn_loc_sent then return end
 	PR.spawn_loc_sent = true
-	dbg("[PR] SPAWN_LOCATION: first slot (t=0)")
-	-- {"t":0} — первая локация
-	pr_send_json(50, {t=0})
+	-- GUI 50: {"t":0} = Вокзал (сервер вычитает 1, получается SPAWN_TYPE_VOKZAL=0)
+	-- t:1=Вокзал, t:2=последнее место, t:3=фракция, t:4=дом, t:5=гость, t:6=семья
+	-- Мы шлём t=1 что означает Вокзал (как на скриншоте)
+	dbg("[PR] SPAWN_LOCATION: Vokzal (t=1)")
+	pr_send_json(50, {t=1})
 end
 
 -- ================================================================
@@ -406,59 +421,66 @@ local function handle_pr_packet(screen_id, json_str)
 			return
 		end
 
-		-- Входящий step response {"t":N}
+		-- ================================================
+		-- Входящий step response {"t":N} — строго по протоколу:
+		--
+		-- РЕГИСТРАЦИЯ:
+		--   send {t:1, p:pw, s:""}
+		--   recv {t:3}  → send {t:3, r:0} (пол мужской)
+		--   recv {t:0}  → send {t:4, s:""} (инвайт пропустить)
+		--   recv {t:0}  → send {t:5, r:skinId} (скин)
+		--   recv {t:-1} → регистрация завершена
+		--
+		-- ЛОГИН:
+		--   send {t:6, s:pw, r:0}
+		--   recv {t:0}  → логин ОК
+		--   recv {t:2}  → ошибка (неверный пароль)
+		-- ================================================
 		if tp ~= nil then
-			if tp == 0 then
-				-- t=0 = OK, следующий шаг зависит от того где мы
-				dbg("[PR] GUI38 t=0 (OK)")
+			if tp == 3 then
+				-- После {t:1} сервер отвечает {t:3} → выбор пола
+				dbg("[PR] GUI38 t=3: server ready for sex selection → send male")
+				newTask(function()
+					wait(400)
+					pr_do_sex()
+				end)
+
+			elseif tp == 0 then
+				-- t=0 = OK/next step
+				dbg("[PR] GUI38 t=0 (OK/next)")
 				if PR.is_registration then
-					if not PR.sex_sent then
+					-- Порядок: пол уже отправлен → инвайт → скин
+					if not PR.invite_sent then
 						newTask(function()
 							wait(400)
-							pr_do_sex()
+							pr_do_invite_skip()
 						end)
 					elseif not PR.skin_sent then
 						newTask(function()
 							wait(400)
 							pr_do_skin()
 						end)
-					elseif not PR.invite_sent then
-						newTask(function()
-							wait(400)
-							pr_do_invite_skip()
-						end)
 					else
-						-- Регистрация завершена
-						dbg("[PR] GUI38: registration complete!")
-						PR.active = false
+						dbg("[PR] GUI38 t=0: registration steps complete, waiting t=-1")
 					end
 				else
-					-- Логин завершён
+					-- Логин: t=0 = успешно вошли
 					dbg("[PR] GUI38: login OK!")
 					PR.active = false
 				end
 
-			elseif tp == 3 then
-				-- t=3 = пол принят, теперь выбор скина
-				dbg("[PR] GUI38 t=3: sex accepted, choose skin")
-				newTask(function()
-					wait(400)
-					pr_do_skin()
-				end)
-
-			elseif tp == 1 then
-				-- Пин/код (редко)
-				dbg("[PR] GUI38 t=1: PIN step (не реализовано)")
+			elseif tp == -1 then
+				-- t=-1 = сервер завершил регистрацию
+				dbg("[PR] GUI38 t=-1: REGISTRATION COMPLETE!")
+				PR.active = false
 
 			elseif tp == 2 then
-				-- Ошибка — неверный пароль, ник занят или пин
-				dbg("[PR] GUI38 t=2: error (bad pw / nick taken)")
+				-- Ошибка — неверный пароль или другая проблема
+				dbg("[PR] GUI38 t=2: error/bad password")
 				if PR.is_registration then
-					-- Ник занят — пробуем новый уникальный ник
+					-- Пробуем снова с новым ником
 					newTask(function()
 						wait(800)
-						PR.nick = gen_unique_nick()
-						dbg("[PR] GUI38 t=2: retrying with new nick: " .. PR.nick)
 						pr_do_register()
 					end)
 				elseif PR.login_attempts < 3 then
@@ -468,9 +490,11 @@ local function handle_pr_packet(screen_id, json_str)
 					end)
 				end
 
+			elseif tp == 1 then
+				dbg("[PR] GUI38 t=1: step (ignored)")
+
 			elseif tp == 4 then
-				-- Восстановление пароля — игнорируем / скипаем
-				dbg("[PR] GUI38 t=4: restore step, ignore")
+				dbg("[PR] GUI38 t=4: step (ignored)")
 
 			else
 				dbg(string.format("[PR] GUI38 t=%s: unhandled", tostring(tp)))
