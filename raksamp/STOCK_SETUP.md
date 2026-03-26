@@ -63,6 +63,12 @@ cp /tmp/rak_extract/client/RakSAMPClient.exe .
 
 **`start_lite_two_bots.sh`** копирует **`blasthk_aim_and_ping_merged.lua`** + **`zzz_spawn_after_join.lua`**.
 
+### В табе есть, в мире нет / !players кривой — player pool (blast.hk)
+
+Тема **[RakSAMP Lite player pool fix](https://blast.hk/threads/233740/)**: баг Rei — **`RPC_PlayerJoin` до `RPC_InitGame`** ломает пул игроков. Решения на форуме: **пропатченный `RakSAMP Lite.exe`** или Lua **NOP 13 байт по VA `0x459253`**.
+
+В репозитории **`raksamp/patch_lite_playerpool.py`** применяет NOP к **`RakSAMP Lite.exe` из твоего zip** (проверяет байты на смещении **0x58653** для версии из архива). Скрипт **`start_lite_two_bots.sh`** вызывает патч после `unzip`. Если выводит *«bytes differ»* — у тебя **другая сборка exe**: скачай патч/бинарь из темы **233740** или обнови офсет вручную.
+
 Запуск:
 
 ```bash
