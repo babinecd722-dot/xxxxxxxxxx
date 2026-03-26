@@ -78,11 +78,23 @@ local function get_bot_nick()
 		local nick = line:match("^nick%s*=%s*(.+)$")
 		if nick then
 			f:close()
-			return nick:gsub("%s+$", "")  -- trim trailing whitespace
+			return nick:gsub("%s+$", "")
 		end
 	end
 	f:close()
 	return ""
+end
+
+-- Генерировать уникальный ник для регистрации (чтобы не конфликтовать)
+local function gen_unique_nick()
+	-- Берём базовый ник из ini и добавляем случайный суффикс
+	local base = get_bot_nick()
+	if base == "" then base = "Bot" end
+	-- Убираем суффиксы если уже есть
+	base = base:gsub("_%d+$", "")
+	-- Добавляем 4-значный random суффикс
+	local suffix = tostring(math.random(1000, 9999))
+	return base .. "_" .. suffix
 end
 
 ffi.cdef[[
@@ -109,9 +121,9 @@ local FEMALE_SKINS = {77, 135, 188, 212, 239, 218}
 
 -- Машина состояний регистрации
 local PR = {
-	active          = false,   -- GUI протокол активен
-	screen_id       = 0,       -- текущий screen
-	is_registration = false,   -- true=рег, false=логин
+	active          = false,
+	screen_id       = 0,
+	is_registration = false,
 	sex_sent        = false,
 	skin_sent       = false,
 	invite_sent     = false,
@@ -120,6 +132,7 @@ local PR = {
 	nick            = "",
 	pw              = "",
 	login_attempts  = 0,
+	reg_attempt     = 0,
 }
 
 -- Простейший JSON-парсер для плоских объектов {key:value,...}
@@ -169,15 +182,30 @@ local function json_encode(t)
 	return "{" .. table.concat(parts, ",") .. "}"
 end
 
--- Отправить JSON-пакет серверу (эмуляция sendJsonData нативного клиента)
--- Формат из реверса: [uint8 pkt_id=0xFB][uint16 screen_id][uint16 json_len][json bytes]
+-- Отправить JSON-пакет серверу.
+-- RakSAMP Lite имеет два варианта sendPacketEx:
+-- 3 args: bs:sendPacketEx(priority, reliability, channel)  → первый байт bs = packet_id
+-- 5 args: bs:sendPacketEx(packetId, priority, reliability, channel, broadcast)  → явный packet_id
+-- Используем 5-аргументный вариант: packet_id = 0xFB, данные = screen_id + json_len + json
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
-	bs:writeUInt8(PKT_GUI_OUT)        -- 0xFB = 251
-	bs:writeUInt16(screen_id)         -- uint16 screen_id
-	bs:writeUInt16(#json_str)         -- uint16 json length
-	bs:writeString(json_str)          -- JSON bytes
-	bs:sendPacketEx(1, 9, 0)         -- HIGH_PRIORITY, RELIABLE_ORDERED, ch0
+	bs:writeUInt16(screen_id)         -- uint16 screen_id LE
+	bs:writeUInt16(#json_str)         -- uint16 json_len LE
+	bs:writeString(json_str)          -- JSON bytes (windows-1251)
+	-- sendPacketEx(packetId, priority, reliability, channel, broadcast)
+	local ok, err = pcall(function()
+		bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false)
+	end)
+	if not ok then
+		-- Fallback: 3-arg вариант с первым байтом = packet_id
+		local bs2 = bitStream.new()
+		bs2:writeUInt8(PKT_GUI_OUT)
+		bs2:writeUInt16(screen_id)
+		bs2:writeUInt16(#json_str)
+		bs2:writeString(json_str)
+		bs2:sendPacketEx(1, 9, 0)
+		dbg("[PR-SEND] fallback 3-arg: " .. tostring(err))
+	end
 	dbg(string.format("[PR-SEND] screen=%d len=%d json=%s", screen_id, #json_str, json_str:sub(1, 200)))
 end
 
@@ -219,10 +247,16 @@ local function pr_do_register()
 		dbg("[PR] REGISTER: no password, using generated: " .. pw)
 	end
 	PR.pw = pw
-	local nick = PR.nick
-	dbg(string.format("[PR] REGISTER nick=%s pw_len=%d", nick, #pw))
+	-- При каждой попытке регистрации генерируем уникальный ник
+	if PR.reg_attempt == 0 then
+		-- Первая попытка — используем базовый ник
+		PR.nick = get_bot_nick()
+		if PR.nick == "" then PR.nick = "Bot" .. tostring(math.random(1000,9999)) end
+	end
+	PR.reg_attempt = (PR.reg_attempt or 0) + 1
+	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d", PR.reg_attempt, PR.nick, #pw))
 	-- {"t":1, "s":"NICK", "p":"PASSWORD"}
-	pr_send_json(38, {t=1, s=nick, p=pw})
+	pr_send_json(38, {t=1, s=PR.nick, p=pw})
 end
 
 local function pr_do_sex()
@@ -373,9 +407,17 @@ local function handle_pr_packet(screen_id, json_str)
 				dbg("[PR] GUI38 t=1: PIN step (не реализовано)")
 
 			elseif tp == 2 then
-				-- Ошибка — неверный пароль или пин
-				dbg("[PR] GUI38 t=2: error/bad password step")
-				if not PR.is_registration and PR.login_attempts < 3 then
+				-- Ошибка — неверный пароль, ник занят или пин
+				dbg("[PR] GUI38 t=2: error (bad pw / nick taken)")
+				if PR.is_registration then
+					-- Ник занят — пробуем новый уникальный ник
+					newTask(function()
+						wait(800)
+						PR.nick = gen_unique_nick()
+						dbg("[PR] GUI38 t=2: retrying with new nick: " .. PR.nick)
+						pr_do_register()
+					end)
+				elseif PR.login_attempts < 3 then
 					newTask(function()
 						wait(1000)
 						pr_do_login()
@@ -670,9 +712,12 @@ end
 -- ================================================================
 
 function onReceivePacket(id, bs)
-	-- Логируем первые 200 пакетов для дебага
+	-- Логируем все пакеты (первые 200 подробно, потом только неизвестные)
 	if gl.pkt_log_left and gl.pkt_log_left > 0 then
 		gl.pkt_log_left = gl.pkt_log_left - 1
+		dbg("[pkt in] id=" .. tostring(id))
+	elseif id ~= PACKET_PLAYER_SYNC and id ~= PACKET_VEHICLE_SYNC and id ~= PACKET_AIM_SYNC
+		and id ~= PACKET_MARKERS_SYNC and id ~= PACKET_STATS_UPDATE then
 		dbg("[pkt in] id=" .. tostring(id))
 	end
 
@@ -970,6 +1015,7 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 	PR.invite_sent = false
 	PR.spawn_loc_sent = false
 	PR.login_attempts = 0
+	PR.reg_attempt = 0
 	PR.nick = ""
 	PR.pw = account_pw_from_env()
 

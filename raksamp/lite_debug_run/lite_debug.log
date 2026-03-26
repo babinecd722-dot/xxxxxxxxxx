@@ -1,31 +1,55 @@
-2026-03-26 13:06:43 ========== blasthk_aim_and_ping_merged onLoad ==========
-2026-03-26 13:06:43 [merged] aim_fix + send_ping_fix + PRIME RUSSIA GUI handler
-2026-03-26 13:06:43 [merged] GUI packets: in=251/252 out=251
-2026-03-26 13:06:43 [merged] pw_len=15
-2026-03-26 13:06:43 [pkt in] id=12
-2026-03-26 13:06:43 [pkt in] id=34
-2026-03-26 13:06:43 [pkt in] id=41
-2026-03-26 13:06:43 [pkt in] id=32
-2026-03-26 13:06:43 [merged] PACKET_DISCONNECTION_NOTIFICATION
-2026-03-26 13:06:59 [pkt in] id=12
-2026-03-26 13:06:59 [pkt in] id=34
-2026-03-26 13:06:59 [pkt in] id=41
-2026-03-26 13:07:01 [pkt in] id=251
-2026-03-26 13:07:01 [PR-IN] pkt=251 unread_bits=432
-2026-03-26 13:07:01 [PR-IN] screen=5 json_len=0 remaining=49
-2026-03-26 13:07:01 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
-2026-03-26 13:07:01 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
-2026-03-26 13:07:01 [pkt in] id=251
-2026-03-26 13:07:01 [PR-IN] pkt=251 unread_bits=432
-2026-03-26 13:07:01 [PR-IN] screen=5 json_len=0 remaining=49
-2026-03-26 13:07:01 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
-2026-03-26 13:07:01 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
-2026-03-26 13:07:01 [pkt in] id=252
-2026-03-26 13:07:01 [PR-IN] pkt=252 unread_bits=160
-2026-03-26 13:07:01 [PR-IN] screen=38 json_len=13 remaining=15
-2026-03-26 13:07:01 [PR-IN] trimming 2 leading bytes before JSON
-2026-03-26 13:07:01 [PR-IN] screen=38 json={"o":1,"r":0}
-2026-03-26 13:07:01 [PR-IN] screen=38 json={"o":1,"r":0}
-2026-03-26 13:07:01 [PR] GUI38 OPEN: REGISTRATION mode
-2026-03-26 13:07:02 [PR] REGISTER nick=Dmitry_Novikov pw_len=15
-2026-03-26 13:07:02 [PR-SEND] screen=38 len=50 json={"t":1,"s":"Dmitry_Novikov","p":"RakLiteBot_2026"}
+2026-03-26 13:27:45 ========== blasthk_aim_and_ping_merged onLoad ==========
+2026-03-26 13:27:45 [merged] aim_fix + send_ping_fix + PRIME RUSSIA GUI handler
+2026-03-26 13:27:45 [merged] GUI packets: in=251/252 out=251
+2026-03-26 13:27:45 [merged] pw_len=15
+2026-03-26 13:27:45 [pkt in] id=12
+2026-03-26 13:27:45 [pkt in] id=34
+2026-03-26 13:27:46 [pkt in] id=41
+2026-03-26 13:27:46 [pkt in] id=32
+2026-03-26 13:27:46 [merged] PACKET_DISCONNECTION_NOTIFICATION
+2026-03-26 13:28:01 [pkt in] id=12
+2026-03-26 13:28:01 [pkt in] id=34
+2026-03-26 13:28:01 [pkt in] id=41
+2026-03-26 13:28:03 [pkt in] id=251
+2026-03-26 13:28:03 [PR-IN] pkt=251 unread_bits=432
+2026-03-26 13:28:03 [PR-IN] screen=5 json_len=0 remaining=49
+2026-03-26 13:28:03 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:28:03 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:28:03 [pkt in] id=251
+2026-03-26 13:28:03 [PR-IN] pkt=251 unread_bits=432
+2026-03-26 13:28:03 [PR-IN] screen=5 json_len=0 remaining=49
+2026-03-26 13:28:03 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:28:03 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:28:03 [pkt in] id=252
+2026-03-26 13:28:03 [PR-IN] pkt=252 unread_bits=160
+2026-03-26 13:28:03 [PR-IN] screen=38 json_len=13 remaining=15
+2026-03-26 13:28:03 [PR-IN] trimming 2 leading bytes before JSON
+2026-03-26 13:28:03 [PR-IN] screen=38 json={"o":1,"r":0}
+2026-03-26 13:28:03 [PR-IN] screen=38 json={"o":1,"r":0}
+2026-03-26 13:28:03 [PR] GUI38 OPEN: REGISTRATION mode
+2026-03-26 13:28:04 [PR] REGISTER attempt=1 nick=Sergey_Volkov pw_len=15
+2026-03-26 13:28:04 [PR-SEND] screen=38 len=49 json={"t":1,"s":"Sergey_Volkov","p":"RakLiteBot_2026"}
+2026-03-26 13:29:48 [pkt in] id=33
+2026-03-26 13:29:48 [merged] PACKET_CONNECTION_LOST
+2026-03-26 13:30:04 [pkt in] id=12
+2026-03-26 13:30:04 [pkt in] id=34
+2026-03-26 13:30:04 [pkt in] id=41
+2026-03-26 13:30:05 [pkt in] id=252
+2026-03-26 13:30:05 [PR-IN] pkt=252 unread_bits=160
+2026-03-26 13:30:05 [PR-IN] screen=38 json_len=13 remaining=15
+2026-03-26 13:30:05 [PR-IN] trimming 2 leading bytes before JSON
+2026-03-26 13:30:05 [PR-IN] screen=38 json={"o":1,"r":0}
+2026-03-26 13:30:05 [PR-IN] screen=38 json={"o":1,"r":0}
+2026-03-26 13:30:05 [PR] GUI38 OPEN: REGISTRATION mode
+2026-03-26 13:30:05 [pkt in] id=251
+2026-03-26 13:30:05 [PR-IN] pkt=251 unread_bits=432
+2026-03-26 13:30:05 [PR-IN] screen=5 json_len=0 remaining=49
+2026-03-26 13:30:05 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:30:05 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:30:05 [pkt in] id=251
+2026-03-26 13:30:05 [PR-IN] pkt=251 unread_bits=432
+2026-03-26 13:30:05 [PR-IN] screen=5 json_len=0 remaining=49
+2026-03-26 13:30:05 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:30:05 [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
+2026-03-26 13:30:06 [PR] REGISTER attempt=2 nick=Sergey_Volkov pw_len=15
+2026-03-26 13:30:06 [PR-SEND] screen=38 len=49 json={"t":1,"s":"Sergey_Volkov","p":"RakLiteBot_2026"}
