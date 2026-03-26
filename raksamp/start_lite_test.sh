@@ -12,17 +12,18 @@ export DISPLAY="${DISPLAY:-:1}"
 
 python3 "$ROOT/prepare_lite_test.py" --host "$HOST" --port "$PORT" --nick1 "$N1" --nick2 "$N2"
 
+: >"$ROOT/lite_instances/bot1/wine.log"
+: >"$ROOT/lite_instances/bot2/wine.log"
+
 (
   cd "$ROOT"
-  export LITE_INSTANCE=bot1
-  nohup bash "$ROOT/run_lite_wine.sh" >>"$ROOT/lite_instances/bot1/wine.log" 2>&1 &
+  nohup bash "$ROOT/run_lite_instance_nohup.sh" bot1 &
   echo $! >"$ROOT/lite_instances/bot1/nohup.pid"
 )
 sleep "${LITE_STAGGER:-4}"
 (
   cd "$ROOT"
-  export LITE_INSTANCE=bot2
-  nohup bash "$ROOT/run_lite_wine.sh" >>"$ROOT/lite_instances/bot2/wine.log" 2>&1 &
+  nohup bash "$ROOT/run_lite_instance_nohup.sh" bot2 &
   echo $! >"$ROOT/lite_instances/bot2/nohup.pid"
 )
 echo "Запущены 2× Wine Lite → $HOST:$PORT"
