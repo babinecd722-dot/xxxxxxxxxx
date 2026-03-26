@@ -706,10 +706,10 @@ function onReceivePacket(id, bs)
 		local remaining_bytes = math.floor(bs:getNumberOfUnreadBits() / 8)
 		dbg(string.format("[PR-IN] screen=%d json_len=%d remaining=%d", screen_id, json_len, remaining_bytes))
 
-		-- Используем json_len если корректен, иначе remaining
-		if json_len > 0 and json_len <= remaining_bytes then
-			remaining_bytes = json_len
-		end
+		-- json_len указывает размер JSON, но перед ним могут быть ещё байты.
+		-- Используем remaining_bytes (все остатки) и потом найдём { в строке.
+		-- Если json_len > 0 и корректен используем его как ориентир но читаем всё.
+		-- (анализ пакета: 2 доп. байта перед { — возможно padding или доп. поле)
 
 		if remaining_bytes <= 0 then
 			dbg("[PR-IN] no json data")
@@ -746,7 +746,14 @@ function onReceivePacket(id, bs)
 			return
 		end
 
-		dbg(string.format("[PR-IN] screen=%d json=%s", screen_id, json_str:sub(1, 200)))
+		-- Находим начало JSON объекта (ищем первый '{' или '[')
+		local json_start = json_str:find("[{%[]")
+		if json_start and json_start > 1 then
+			dbg(string.format("[PR-IN] trimming %d leading bytes before JSON", json_start - 1))
+			json_str = json_str:sub(json_start)
+		end
+
+		dbg(string.format("[PR-IN] screen=%d json=%s", screen_id, json_str:sub(1, 300)))
 		local ok2, err = pcall(handle_pr_packet, screen_id, json_str)
 		if not ok2 then
 			dbg("[PR-IN] handle error: " .. tostring(err))
