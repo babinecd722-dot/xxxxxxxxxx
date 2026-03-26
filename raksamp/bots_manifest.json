@@ -2,13 +2,13 @@
   "server_host": "185.189.255.97",
   "server_port": 2183,
   "rcon_password": "",
-  "stagger_seconds": 0.35,
+  "stagger_seconds": 3,
   "start_only_first": 0,
   "console": 0,
   "generate_bot_count": 450,
   "nick_mode": "silly",
   "sequential_prefix": "Us",
-  "comment": "450 ботов, тупые ники. 185.189.255.97:2183. stagger_seconds 0.35 — быстрее коннект (риск флуда с одного IP).",
+  "comment": "450 ботов, тупые ники. 185.189.255.97:2183. stagger_seconds 3 — пауза между стартами.",
 
   "nick_silly_first": [
     "Rame", "Danya", "Vova", "Petya", "Kostya", "Sanya", "Misha", "Grisha",
