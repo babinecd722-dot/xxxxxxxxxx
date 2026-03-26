@@ -25,4 +25,6 @@ sleep "${LITE_STAGGER:-4}"
   nohup bash "$ROOT/run_lite_wine.sh" >>"$ROOT/lite_instances/bot2/wine.log" 2>&1 &
   echo $! >"$ROOT/lite_instances/bot2/nohup.pid"
 )
-echo "Запущены 2× Wine Lite → $HOST:$PORT (см. lite_instances/bot*/wine.log)"
+echo "Запущены 2× Wine Lite → $HOST:$PORT"
+echo "Логи: $ROOT/lite_instances/bot1/wine.log и bot2/ (при ошибке: tail -100 ...)"
+echo "Если окна нет: задай рабочий DISPLAY (:0 у себя на ПК) или будет xvfb (только фон)."

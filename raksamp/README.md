@@ -17,12 +17,19 @@
 
 ## 2. Скрипты «строго как на blast.hk»
 
-В **`lite/scripts/`**:
+В **`lite/scripts/`** (порядок по имени):
 
-- **`10_send_ping_style_fix.lua`** — по описанию [SendPing Fix](https://www.blast.hk/threads/214264/). Лучше подменить на **`send_ping_fix.lua`** из вложения той темы.
-- По списку Rei добавь в ту же папку: [AimSync FIX](https://www.blast.hk/threads/176777/), [WeaponFix](https://www.blast.hk/threads/184538/), [Connect Accepted Fix](https://www.blast.hk/threads/214267/) — файлы из тем.
+- **`02_send_ping_fix.lua`** — Ulong SendPing (с **main** репо).
+- **`03_aim_fix_updated.lua`** — Ulong AimSync; если Lua без **`ffi`**, скрипт сам пишет в лог и не падает.
+- **`04_autospawn.lua`** — **`!spawn`** после спавна.
 
-Подробнее: **`lite/BLAST_LITE_SETUP.md`**.
+Подробнее: **`lite/scripts/README_SCRIPTS.md`**, **`lite/BLAST_LITE_SETUP.md`**.
+
+### Если «нет GUI» и «нет ботов»
+
+1. **Дисплей:** RakSAMP Lite — Windows-GUI под Wine. На сервере без монитора **`run_lite_wine.sh`** при нерабочем `DISPLAY` сам уходит на **`xvfb-run`** — окно **не видно**, но процесс может быть жив. Чтобы видеть окно на своём ПК: **`export DISPLAY=:0`** (или как у твоего рабочего стола) перед запуском.
+2. **Логи:** `tail -100 raksamp/lite_instances/bot1/wine.log` — там stderr Wine.
+3. **32-bit Wine:** `WINEARCH=win32`, префикс `~/.wine-raksamp32`, пакет **`wine32`** (Ubuntu: `dpkg --add-architecture i386 && apt install wine32`).
 
 ## 3. GUI и тест «два бота»
 

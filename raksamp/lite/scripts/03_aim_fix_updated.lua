@@ -1,14 +1,19 @@
 local utils = require("samp.events.utils")
 local vector3d = require("vector3d")
-local ffi = require("ffi")
 require("sampfuncs")
 
-ffi.cdef[[
-	typedef unsigned long DWORD;
-	DWORD GetCurrentProcessId();
-]]
-
-local procID = ffi.C.GetCurrentProcessId()
+-- В некоторых сборках RakSAMP Lite нет LuaJIT/Lua-ffi — иначе клиент падает при загрузке скрипта.
+local ok_ffi, ffi = pcall(require, "ffi")
+local procID = 0
+if ok_ffi and ffi then
+	ffi.cdef[[
+		typedef unsigned long DWORD;
+		DWORD GetCurrentProcessId();
+	]]
+	procID = ffi.C.GetCurrentProcessId()
+else
+	print("[AimSync FIX] require('ffi') недоступен — seed по os.time()")
+end
 math.randomseed(procID + os.time())
 
 local CREDITS = {AUTHOR = "Ulong", SCRIPT_VERSION = "1.2"}

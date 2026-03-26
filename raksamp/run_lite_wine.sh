@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # RakSAMP Lite под Wine. LITE_INSTANCE=bot1 — cwd lite_instances/bot1; иначе raksamp/lite.
+# Если нет рабочего X11 (SSH без DISPLAY), автоматически xvfb-run (окна не видно — только процесс).
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
 if [[ -n "${LITE_INSTANCE:-}" ]]; then
@@ -28,8 +29,17 @@ fi
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 cd "$LITE_ROOT"
-if [[ -n "${DISPLAY:-}" ]]; then
-  exec wine "$EXE" "$@"
-else
-  exec xvfb-run -a wine "$EXE" "$@"
-fi
+
+_run_wine() {
+  if [[ -n "${FORCE_XVFB:-}" ]] || [[ -n "${RAKSAMP_HEADLESS:-}" ]]; then
+    exec xvfb-run -a -s "-screen 0 1024x768x24" wine "$EXE" "$@"
+  fi
+  local disp="${DISPLAY:-:0}"
+  if [[ -n "${DISPLAY:-}" ]] && command -v xdpyinfo >/dev/null 2>&1 && xdpyinfo -display "$disp" &>/dev/null; then
+    exec wine "$EXE" "$@"
+  fi
+  echo "RakSAMP Lite: нет рабочего X11 на DISPLAY=$disp — запуск через xvfb-run (GUI не виден; смотри wine.log)." >&2
+  exec xvfb-run -a -s "-screen 0 1024x768x24" wine "$EXE" "$@"
+}
+
+_run_wine "$@"
