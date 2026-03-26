@@ -1,139 +1,159 @@
-[11:15:03]  
-[11:15:03] * ===================================================== *
-[11:15:03]   RakSAMP Lite initialized on 26/03/2026 11:15:03
-[11:15:03]   Authors: jlfm, bartekdvd, P3ti, Rei
-[11:15:03]   Visit t.me/reiscripts
-[11:15:03] * ===================================================== *
-[11:15:03]  
-[11:15:03] [LUA] Loading scripts...
-[11:15:03] [LUA] Z:\workspace\raksamp\lite_debug_run\scripts\blasthk_aim_and_ping_merged.lua loaded
-[11:15:03] [LUA] ========== blasthk_aim_and_ping_merged onLoad ==========
-[11:15:03] [LUA] [SEND PING FIX] LOADED. Author: Ulong (merged)
-[11:15:03] [LUA] [AimSync FIX] Loaded! Author: Ulong (version 1.2+ping-merged)
-[11:15:03] [LUA] [merged] lite_debug.log in instance folder; Connect+Dialog+InitGame trace
-[11:15:03] [NET] Connecting to 51.75.232.67:1801...
-[11:15:03] [LUA] [pkt in] id=12
-[11:15:03] [LUA] [pkt in] id=34
-[11:15:03] [NET] Connected. Joining the game...
-[11:15:03] [LUA] [pkt in] id=41
-[11:15:03] [NET] Bad nickname
-[11:15:03] [LUA] [pkt in] id=32
-[11:15:03] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:15:03] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:15:18] [NET] Connecting to 51.75.232.67:1801...
-[11:15:19] [LUA] [pkt in] id=12
-[11:15:19] [LUA] [pkt in] id=34
-[11:15:19] [NET] Connected. Joining the game...
-[11:15:19] [LUA] [pkt in] id=41
-[11:15:19] [NET] Bad nickname
-[11:15:19] [LUA] [pkt in] id=32
-[11:15:19] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:15:19] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:15:34] [NET] Connecting to 51.75.232.67:1801...
-[11:15:35] [LUA] [pkt in] id=12
-[11:15:35] [LUA] [pkt in] id=34
-[11:15:35] [NET] Connected. Joining the game...
-[11:15:35] [LUA] [pkt in] id=41
-[11:15:35] [NET] Bad nickname
-[11:15:35] [LUA] [pkt in] id=32
-[11:15:35] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:15:35] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:15:50] [NET] Connecting to 51.75.232.67:1801...
-[11:15:50] [LUA] [pkt in] id=12
-[11:15:50] [LUA] [pkt in] id=34
-[11:15:50] [NET] Connected. Joining the game...
-[11:15:51] [LUA] [pkt in] id=41
-[11:15:51] [NET] Bad nickname
-[11:15:51] [LUA] [pkt in] id=32
-[11:15:51] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:15:51] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:16:06] [NET] Connecting to 51.75.232.67:1801...
-[11:16:06] [LUA] [pkt in] id=12
-[11:16:06] [LUA] [pkt in] id=34
-[11:16:06] [NET] Connected. Joining the game...
-[11:16:06] [LUA] [pkt in] id=41
-[11:16:06] [NET] Bad nickname
-[11:16:06] [LUA] [pkt in] id=32
-[11:16:06] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:16:06] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:16:21] [NET] Connecting to 51.75.232.67:1801...
-[11:16:22] [LUA] [pkt in] id=12
-[11:16:22] [LUA] [pkt in] id=34
-[11:16:22] [NET] Connected. Joining the game...
-[11:16:22] [LUA] [pkt in] id=41
-[11:16:22] [NET] Bad nickname
-[11:16:22] [LUA] [pkt in] id=32
-[11:16:22] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:16:22] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:16:37] [NET] Connecting to 51.75.232.67:1801...
-[11:16:38] [LUA] [pkt in] id=12
-[11:16:38] [LUA] [pkt in] id=34
-[11:16:38] [NET] Connected. Joining the game...
-[11:16:38] [LUA] [pkt in] id=41
-[11:16:38] [NET] Bad nickname
-[11:16:38] [LUA] [pkt in] id=32
-[11:16:38] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:16:38] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:16:53] [NET] Connecting to 51.75.232.67:1801...
-[11:16:53] [LUA] [pkt in] id=12
-[11:16:54] [LUA] [pkt in] id=34
-[11:16:54] [NET] Connected. Joining the game...
-[11:16:54] [LUA] [pkt in] id=41
-[11:16:54] [NET] Bad nickname
-[11:16:54] [LUA] [pkt in] id=32
-[11:16:54] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:16:54] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:17:09] [NET] Connecting to 51.75.232.67:1801...
-[11:17:09] [LUA] [pkt in] id=12
-[11:17:09] [LUA] [pkt in] id=34
-[11:17:09] [NET] Connected. Joining the game...
-[11:17:09] [LUA] [pkt in] id=41
-[11:17:09] [NET] Bad nickname
-[11:17:09] [LUA] [pkt in] id=32
-[11:17:09] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:17:09] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:17:25] [NET] Connecting to 51.75.232.67:1801...
-[11:17:25] [LUA] [pkt in] id=12
-[11:17:25] [LUA] [pkt in] id=34
-[11:17:25] [NET] Connected. Joining the game...
-[11:17:25] [LUA] [pkt in] id=41
-[11:17:25] [NET] Bad nickname
-[11:17:25] [LUA] [pkt in] id=32
-[11:17:25] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:17:25] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:17:40] [NET] Connecting to 51.75.232.67:1801...
-[11:17:41] [LUA] [pkt in] id=12
-[11:17:41] [LUA] [pkt in] id=34
-[11:17:41] [NET] Connected. Joining the game...
-[11:17:41] [LUA] [pkt in] id=41
-[11:17:41] [NET] Bad nickname
-[11:17:41] [LUA] [pkt in] id=32
-[11:17:41] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:17:41] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:17:56] [NET] Connecting to 51.75.232.67:1801...
-[11:17:57] [LUA] [pkt in] id=12
-[11:17:57] [LUA] [pkt in] id=34
-[11:17:57] [NET] Connected. Joining the game...
-[11:17:57] [LUA] [pkt in] id=41
-[11:17:57] [NET] Bad nickname
-[11:17:57] [LUA] [pkt in] id=32
-[11:17:57] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:17:57] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:18:12] [NET] Connecting to 51.75.232.67:1801...
-[11:18:12] [LUA] [pkt in] id=12
-[11:18:12] [LUA] [pkt in] id=34
-[11:18:12] [NET] Connected. Joining the game...
-[11:18:13] [LUA] [pkt in] id=41
-[11:18:13] [NET] Bad nickname
-[11:18:13] [LUA] [pkt in] id=32
-[11:18:13] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:18:13] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
-[11:18:28] [NET] Connecting to 51.75.232.67:1801...
-[11:18:28] [LUA] [pkt in] id=12
-[11:18:28] [LUA] [pkt in] id=34
-[11:18:28] [NET] Connected. Joining the game...
-[11:18:28] [LUA] [pkt in] id=41
-[11:18:28] [NET] Bad nickname
-[11:18:28] [LUA] [pkt in] id=32
-[11:18:28] [LUA] [merged] PACKET_DISCONNECTION_NOTIFICATION
-[11:18:28] [NET] Connection was closed by the server. Reconnecting in 15 seconds.
+[11:41:38]  
+[11:41:38] * ===================================================== *
+[11:41:38]   RakSAMP Lite initialized on 26/03/2026 11:41:38
+[11:41:38]   Authors: jlfm, bartekdvd, P3ti, Rei
+[11:41:38]   Visit t.me/reiscripts
+[11:41:38] * ===================================================== *
+[11:41:38]  
+[11:41:38] [LUA] Loading scripts...
+[11:41:38] [LUA] Z:\workspace\raksamp\lite_debug_run\scripts\blasthk_aim_and_ping_merged.lua loaded
+[11:41:38] [LUA] ========== blasthk_aim_and_ping_merged onLoad ==========
+[11:41:38] [LUA] [SEND PING FIX] LOADED. Author: Ulong (merged)
+[11:41:38] [LUA] [AimSync FIX] Loaded! Author: Ulong (version 1.2+ping-merged)
+[11:41:38] [LUA] [merged] lite_debug.log in instance folder; Connect+Dialog+InitGame trace
+[11:41:38] [NET] Connecting to 51.75.232.67:1801...
+[11:41:38] [LUA] [pkt in] id=39
+[11:41:38] [LUA] [pkt in] id=12
+[11:41:38] [LUA] [pkt in] id=34
+[11:41:38] [NET] Connected. Joining the game...
+[11:41:38] [LUA] [pkt in] id=41
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG]  
+[11:41:38] [MSG] {FFFFFF}| Добро пожаловать на {E24B4B}PRIME RUSSIA{FFFFFF}, сервер —
+[11:41:38] [MSG] {FFFFFF}| — {E24B4B}RED
+[11:41:38] [MSG] {FFFFFF}| В нашем канале Телеграм {E24B4B}t.me/primee_dev{FFFFFF} идёт
+[11:41:38] [MSG] {FFFFFF}| — раздача подарков
+[11:41:38] [MSG] {FFFFFF}| Для участия нужно написать в ЛС группы кодовое
+[11:41:38] [MSG] {FFFFFF}| — слово {E24B4B}#ХОЧУ
+[11:41:38] [MSG]  
+[11:41:40] [AUDIO] 
+[11:41:40] [LUA] [pkt in] id=251
+[11:41:40] [LUA] [pkt in] id=251
+[11:41:40] [NET] Connected to PRIME RUSSIA
+[11:41:40] [RPC] >> Class 0 requested
+[11:41:40] [LUA] [pkt in] id=252
+[11:42:56] [LUA] [pkt in] id=33
+[11:42:56] [LUA] [merged] PACKET_CONNECTION_LOST
+[11:42:56] [NET] The connection was lost. Reconnecting in 15 seconds.
+[11:43:11] [NET] Connecting to 51.75.232.67:1801...
+[11:43:12] [LUA] [pkt in] id=29
+[11:43:12] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:13] [NET] Connecting to 51.75.232.67:1801...
+[11:43:13] [LUA] [pkt in] id=29
+[11:43:14] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:15] [NET] Connecting to 51.75.232.67:1801...
+[11:43:15] [LUA] [pkt in] id=29
+[11:43:15] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:17] [NET] Connecting to 51.75.232.67:1801...
+[11:43:17] [LUA] [pkt in] id=29
+[11:43:17] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:19] [NET] Connecting to 51.75.232.67:1801...
+[11:43:19] [LUA] [pkt in] id=29
+[11:43:19] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:20] [NET] Connecting to 51.75.232.67:1801...
+[11:43:21] [LUA] [pkt in] id=29
+[11:43:21] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:22] [NET] Connecting to 51.75.232.67:1801...
+[11:43:23] [LUA] [pkt in] id=29
+[11:43:23] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:24] [NET] Connecting to 51.75.232.67:1801...
+[11:43:25] [LUA] [pkt in] id=29
+[11:43:25] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:26] [NET] Connecting to 51.75.232.67:1801...
+[11:43:27] [LUA] [pkt in] id=29
+[11:43:27] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:28] [NET] Connecting to 51.75.232.67:1801...
+[11:43:29] [LUA] [pkt in] id=29
+[11:43:29] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:30] [NET] Connecting to 51.75.232.67:1801...
+[11:43:31] [LUA] [pkt in] id=29
+[11:43:31] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:32] [NET] Connecting to 51.75.232.67:1801...
+[11:43:33] [LUA] [pkt in] id=29
+[11:43:33] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:34] [NET] Connecting to 51.75.232.67:1801...
+[11:43:35] [LUA] [pkt in] id=29
+[11:43:35] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:36] [NET] Connecting to 51.75.232.67:1801...
+[11:43:37] [LUA] [pkt in] id=29
+[11:43:37] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:38] [NET] Connecting to 51.75.232.67:1801...
+[11:43:39] [LUA] [pkt in] id=29
+[11:43:39] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:40] [NET] Connecting to 51.75.232.67:1801...
+[11:43:41] [LUA] [pkt in] id=29
+[11:43:41] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:42] [NET] Connecting to 51.75.232.67:1801...
+[11:43:43] [LUA] [pkt in] id=29
+[11:43:43] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:44] [NET] Connecting to 51.75.232.67:1801...
+[11:43:45] [LUA] [pkt in] id=29
+[11:43:45] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[11:43:46] [NET] Connecting to 51.75.232.67:1801...
+[11:43:47] [LUA] [pkt in] id=12
+[11:43:47] [LUA] [pkt in] id=34
+[11:43:47] [NET] Connected. Joining the game...
+[11:43:47] [LUA] [pkt in] id=41
+[11:43:47] [AUDIO] 
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG]  
+[11:43:47] [MSG] {FFFFFF}| Добро пожаловать на {E24B4B}PRIME RUSSIA{FFFFFF}, сервер —
+[11:43:47] [MSG] {FFFFFF}| — {E24B4B}RED
+[11:43:47] [MSG] {FFFFFF}| В нашем канале Телеграм {E24B4B}t.me/primee_dev{FFFFFF} идёт
+[11:43:47] [MSG] {FFFFFF}| — раздача подарков
+[11:43:47] [MSG] {FFFFFF}| Для участия нужно написать в ЛС группы кодовое
+[11:43:47] [MSG] {FFFFFF}| — слово {E24B4B}#ХОЧУ
+[11:43:47] [MSG]  
+[11:43:47] [LUA] [pkt in] id=251
+[11:43:47] [LUA] [pkt in] id=251
+[11:43:48] [NET] Connected to PRIME RUSSIA
+[11:43:48] [RPC] >> Class 0 requested
+[11:43:48] [LUA] [pkt in] id=252

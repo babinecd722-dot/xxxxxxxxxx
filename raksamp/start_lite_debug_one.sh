@@ -11,8 +11,14 @@ export DISPLAY="${DISPLAY:-:1}"
 export WINEARCH="${WINEARCH:-win32}"
 export WINEPREFIX="${WINEPREFIX:-$HOME/.wine-raksamp32}"
 
-pkill -9 -f 'RakSAMP Lite\.exe' 2>/dev/null || true
-sleep 1
+DBGDIR_PREV="${LITE_DEBUG_DIR:-$ROOT/lite_debug_run}"
+if [[ -f "$DBGDIR_PREV/lite.wine.pid" ]]; then
+  PREV_PID=$(cat "$DBGDIR_PREV/lite.wine.pid" 2>/dev/null || true)
+  if [[ -n "$PREV_PID" ]] && kill -0 "$PREV_PID" 2>/dev/null; then
+    kill "$PREV_PID" 2>/dev/null || true
+    sleep 1
+  fi
+fi
 
 python3 -c "
 import json
@@ -24,13 +30,23 @@ port = int(d.get('server_port', 1801))
 f = d.get('nick_silly_first') or ['Test']
 l = d.get('nick_silly_last') or ['Bot']
 nick = f'{f[0]}_{l[0]}'
+pw = str(d.get('lite_account_password') or d.get('lite_register_password') or '')
+rcon = str(d.get('rcon_password') or '')
+ver = str(d.get('clientversion', '0.3.7'))
 print(host)
 print(port)
 print(nick)
+print(pw)
+print(rcon)
+print(ver)
 " > /tmp/lite_dbg_cfg.txt
 HOST=$(sed -n '1p' /tmp/lite_dbg_cfg.txt)
 PORT=$(sed -n '2p' /tmp/lite_dbg_cfg.txt)
 NICK=$(sed -n '3p' /tmp/lite_dbg_cfg.txt)
+LITE_ACCOUNT_PASSWORD=$(sed -n '4p' /tmp/lite_dbg_cfg.txt)
+RCON=$(sed -n '5p' /tmp/lite_dbg_cfg.txt)
+CLIENTVER=$(sed -n '6p' /tmp/lite_dbg_cfg.txt)
+export LITE_ACCOUNT_PASSWORD
 IP_PORT="${HOST}:${PORT}"
 
 rm -rf "$DBGDIR"
@@ -55,8 +71,8 @@ version=04.02.23
 [Server]
 nick=${NICK}
 ip=${IP_PORT}
-pass=
-clientversion=0.3.7
+pass=${RCON}
+clientversion=${CLIENTVER:-0.3.7}
 ping=0
 [Ingame]
 class=0
@@ -81,15 +97,15 @@ delay=300
 step=7.5
 EOF
 
-echo "Debug run: $DBGDIR nick=$NICK -> $IP_PORT"
+echo "Debug run: $DBGDIR nick=$NICK -> $IP_PORT pw_len=${#LITE_ACCOUNT_PASSWORD}"
 (
   cd "$DBGDIR"
   : > lite_debug.log
-  wine "./RakSAMP Lite.exe" >>wine_stdout.log 2>&1 &
+  env LITE_ACCOUNT_PASSWORD="$LITE_ACCOUNT_PASSWORD" wine "./RakSAMP Lite.exe" >>wine_stdout.log 2>&1 &
   echo $! > lite.wine.pid
 )
-sleep 95
+sleep 120
 echo "======== lite_debug.log ========"
-tail -200 "$DBGDIR/lite_debug.log" 2>/dev/null || echo "(empty)"
+cat "$DBGDIR/lite_debug.log" 2>/dev/null || echo "(empty)"
 echo "======== wine_stdout.log (tail) ========"
-tail -30 "$DBGDIR/wine_stdout.log" 2>/dev/null || true
+tail -50 "$DBGDIR/wine_stdout.log" 2>/dev/null || true

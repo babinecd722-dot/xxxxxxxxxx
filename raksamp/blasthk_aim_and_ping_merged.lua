@@ -369,37 +369,76 @@ function onRequestSpawnResponse(response)
 	dbg(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
 end
 
--- Регистрация/логин через диалог (часто «зависает» до InitGame без ответа)
+-- Регистрация/логин через диалог
 function onShowDialog(dialogId, style, title, button1, button2, text)
 	title = title or ""
 	text = text or ""
 	local blob = (title .. " " .. text):lower()
+	local pw = account_pw_from_env()
 	local from_env = os.getenv and (os.getenv("LITE_DIALOG_INPUT") or "") or ""
-	local inp = from_env
-	if inp == "" then
-		inp = account_pw_from_env()
-	end
-	if inp == "" and (blob:find("register", 1, true) or blob:find("регистр", 1, true) or blob:find("password", 1, true) or blob:find("парол", 1, true) or blob:find("login", 1, true) or blob:find("логин", 1, true) or blob:find("sign", 1, true) or blob:find("email", 1, true) or blob:find("аккаунт", 1, true)) then
+	-- Приоритет: LITE_DIALOG_INPUT > LITE_ACCOUNT_PASSWORD > сгенерированный
+	local inp = from_env ~= "" and from_env or pw
+	-- Определяем что сервер хочет
+	local wants_auth = blob:find("register", 1, true) or blob:find("регистр", 1, true)
+		or blob:find("password", 1, true) or blob:find("парол", 1, true)
+		or blob:find("login", 1, true) or blob:find("логин", 1, true)
+		or blob:find("sign", 1, true) or blob:find("email", 1, true)
+		or blob:find("аккаунт", 1, true) or blob:find("account", 1, true)
+		or blob:find("войти", 1, true) or blob:find("вход", 1, true)
+		or blob:find("пароль", 1, true)
+	if inp == "" and wants_auth then
 		inp = "RakBot_" .. tostring(math.random(10000, 99999))
+		dbg("[merged] Dialog: no password in env, using random: " .. inp)
 	end
-	local text_snip = (text or ""):sub(1, 400):gsub("\r", " "):gsub("\n", " ")
-	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q b1=%q b2=%q text_snip=%q", dialogId, style, title or "", button1 or "", button2 or "", text_snip))
-	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
+	local text_snip = (text or ""):sub(1, 300):gsub("\r", " "):gsub("\n", " ")
+	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q b1=%q inp_len=%d text=%q",
+		dialogId, style, title or "", button1 or "", #inp, text_snip))
+	-- INPUT / PASSWORD — отправляем пароль
+	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD then
 		if inp ~= "" then
-			dbg(string.format("[merged] Dialog -> OK + input len=%d", #inp))
+			dbg("[merged] Dialog INPUT/PASSWORD -> OK inp=" .. inp:sub(1,3) .. "***")
 			sendDialogResponse(dialogId, 1, 0, inp)
+			return false
+		else
+			dbg("[merged] Dialog INPUT/PASSWORD -> OK (empty input)")
+			sendDialogResponse(dialogId, 1, 0, "")
 			return false
 		end
 	end
-	if style == DIALOG_STYLE_LIST then
-		dbg("[merged] Dialog LIST -> OK row 0")
+	-- LIST / TABLIST — всегда выбираем первый пункт
+	if style == DIALOG_STYLE_LIST or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
+		if wants_auth and inp ~= "" then
+			dbg("[merged] Dialog LIST/TABLIST (auth) -> OK row 0 inp=" .. inp:sub(1,3) .. "***")
+			sendDialogResponse(dialogId, 1, 0, inp)
+		else
+			dbg("[merged] Dialog LIST/TABLIST -> OK row 0")
+			sendDialogResponse(dialogId, 1, 0, "")
+		end
+		return false
+	end
+	-- MSGBOX — всегда OK
+	if style == DIALOG_STYLE_MSGBOX then
+		dbg("[merged] Dialog MSGBOX -> OK")
 		sendDialogResponse(dialogId, 1, 0, "")
 		return false
 	end
-	if style == DIALOG_STYLE_MSGBOX then
-		dbg("[merged] Dialog msgbox -> OK")
-		sendDialogResponse(dialogId, 1, 0, "")
-		return false
+	-- Любой другой стиль — тоже OK с паролем если есть
+	dbg(string.format("[merged] Dialog unknown style=%d -> OK", style))
+	sendDialogResponse(dialogId, 1, 0, inp)
+	return false
+end
+
+-- Вызывается когда сервер выдаёт spawn info — немедленно спавним
+function onSetSpawnInfo(team, skin, unused, position, rotation, weapons, ammo)
+	dbg(string.format("[merged] onSetSpawnInfo skin=%s pos=%s,%s,%s", tostring(skin), tostring(position and position.x), tostring(position and position.y), tostring(position and position.z)))
+	if not isBotSpawned() then
+		newTask(function()
+			wait(200)
+			if not isBotSpawned() then
+				dbg("[merged] onSetSpawnInfo -> sendSpawnRequest")
+				sendSpawnRequest()
+			end
+		end)
 	end
 end
 
@@ -412,37 +451,48 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 			nclass = math.min(c, 10)
 		end
 	end
-	dbg(string.format("[merged] onInitGame playerId=%s host=%s classes~=%d", tostring(playerId), tostring(hostName), nclass))
+	dbg(string.format("[merged] onInitGame playerId=%s host=%s classes=%d", tostring(playerId), tostring(hostName), nclass))
 	gl.aim_info = genAimSyncInfo()
 	newTask(function()
-		wait(1800)
+		-- Ждём диалогов логина (они могут прийти сразу с InitGame)
+		wait(1200)
 		local pw = account_pw_from_env()
 		if pw ~= "" then
+			dbg("[merged] sending /register and /login pw=" .. tostring(#pw) .. "chars")
 			sendInput("/register " .. pw .. " " .. pw)
-			wait(1400)
+			wait(1500)
 			sendInput("/login " .. pw)
-			wait(1200)
+			wait(1500)
 		end
-		sendInput("!spawn")
-		wait(600)
-		for attempt = 1, 50 do
-			if isBotSpawned() then
-				dbg("[merged] spawned OK")
-				return
-			end
-			if attempt % 6 == 0 then
-				sendInput("!spawn")
-				wait(400)
-			end
-			local cls = (attempt - 1) % nclass
+		-- Первый RequestClass
+		local function tryRequestClass(cls)
 			local rbs = bitStream.new()
 			rbs:writeInt32(cls)
 			rbs:sendRPC(RPC_REQUESTCLASS)
-			wait(800)
-			sendSpawnRequest()
-			wait(2400)
 		end
-		dbg("[merged] spawn timeout — LITE_ACCOUNT_PASSWORD в bots_manifest / env")
+		tryRequestClass(0)
+		wait(500)
+		sendSpawnRequest()
+		wait(800)
+		-- Основной цикл спавна — 60 попыток
+		for attempt = 1, 60 do
+			if isBotSpawned() then
+				dbg("[merged] spawned OK at attempt " .. attempt)
+				return
+			end
+			local cls = (attempt - 1) % nclass
+			dbg(string.format("[merged] spawn attempt %d cls=%d spawned=%s", attempt, cls, tostring(isBotSpawned())))
+			-- Каждые 3 попытки повторяем логин на случай если диалог пришёл позже
+			if pw ~= "" and attempt % 3 == 0 and attempt <= 12 then
+				sendInput("/login " .. pw)
+				wait(600)
+			end
+			tryRequestClass(cls)
+			wait(600)
+			sendSpawnRequest()
+			wait(1800)
+		end
+		dbg("[merged] spawn timeout after 60 attempts. Проверь LITE_ACCOUNT_PASSWORD в bots_manifest.json")
 	end)
 end
 
