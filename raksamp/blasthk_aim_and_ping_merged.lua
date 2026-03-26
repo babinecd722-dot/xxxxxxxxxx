@@ -9,6 +9,21 @@ local vector3d = require("vector3d")
 local ffi = require("ffi")
 require("sampfuncs")
 
+-- Дебаг в файл рядом с RakSAMP Lite.exe (рабочая папка инстанса)
+local LOG = io.open("lite_debug.log", "a")
+local function dbg(...)
+	local parts = {}
+	for i = 1, select("#", ...) do
+		parts[#parts + 1] = tostring(select(i, ...))
+	end
+	local line = os.date("%Y-%m-%d %H:%M:%S ") .. table.concat(parts, " ") .. "\n"
+	if LOG then
+		LOG:write(line)
+		LOG:flush()
+	end
+	print(table.concat(parts, " "))
+end
+
 ffi.cdef[[
 	typedef unsigned long DWORD;
 	DWORD GetCurrentProcessId();
@@ -41,6 +56,7 @@ local gl = {
 	aim_info = {},
 	is_regular_pos = false,
 	cam_pos_offset = vector3d(0, 0, 0),
+	pkt_log_left = 120,
 	custom_spec = {
 		pos = vector3d(-1, -1, -1),
 		front = vector3d(-1, -1, -1)
@@ -210,26 +226,104 @@ end
 
 -- Пакет 34 в samp.events идёт как onConnectionRequestAccepted (см. INCOMING_PACKETS), не через сырой bs в onReceivePacket.
 function onConnectionRequestAccepted(ip, port, playerId, challenge)
+	dbg(string.format("[merged] ConnectionRequestAccepted ip=%s port=%s playerId=%s challenge=%s", tostring(ip), tostring(port), tostring(playerId), tostring(challenge)))
 	if playerId and (playerId >= 0xFFF4 or playerId == 65535 or playerId == 65534) then
-		print(string.format("[merged] ConnectAccepted fix: playerId %s -> 0 (blast.hk/214267)", tostring(playerId)))
+		dbg(string.format("[merged] ConnectAccepted fix: playerId %s -> 0 (blast.hk/214267)", tostring(playerId)))
 		return {ip, port, 0, challenge}
 	end
 end
 
+function onConnectionRejected(reason)
+	dbg("[merged] ConnectionRejected reason=" .. tostring(reason))
+end
+
+function onConnectionLost()
+	dbg("[merged] ConnectionLost")
+end
+
+function onConnectionBanned()
+	dbg("[merged] ConnectionBanned")
+end
+
+function onConnectionAttemptFailed()
+	dbg("[merged] ConnectionAttemptFailed")
+end
+
+function onConnectionNoFreeSlot()
+	dbg("[merged] ConnectionNoFreeSlot")
+end
+
+function onConnectionPasswordInvalid()
+	dbg("[merged] ConnectionPasswordInvalid")
+end
+
+function onConnectionClosed()
+	dbg("[merged] ConnectionClosed / DISCONNECT")
+	gl.is_regular_pos = false
+	gl.bot_move = false
+	gl.cam_pos_offset = vector3d(0, 0, 0)
+end
+
+function onServerMessage(color, text)
+	text = text or ""
+	local short = text:sub(1, 200)
+	dbg(string.format("[merged] ServerMessage color=%s text=%s", tostring(color), short))
+end
+
+function onClientCheck(requestType, subject, offset, length)
+	dbg(string.format("[merged] ClientCheck type=%s subject=%s off=%s len=%s", tostring(requestType), tostring(subject), tostring(offset), tostring(length)))
+end
+
+function onForceClassSelection()
+	dbg("[merged] ForceClassSelection")
+end
+
+function onShowMenu(menuId)
+	dbg("[merged] ShowMenu menuId=" .. tostring(menuId))
+end
+
+function onHideMenu(menuId)
+	dbg("[merged] HideMenu menuId=" .. tostring(menuId))
+end
+
+function onInitMenu(menuId, menuTitle, x, y, twoColumns, columns, rows, menu)
+	local title = menuTitle or ""
+	dbg(string.format("[merged] InitMenu id=%s title=%q menu=%s", tostring(menuId), title, tostring(menu)))
+end
+
+function onGamemodeRestart()
+	dbg("[merged] GamemodeRestart")
+end
+
 function onReceivePacket(id, bs)
-	if id == PACKET_DISCONNECTION_NOTIFICATION or id == PACKET_CONNECTION_LOST or id == PACKET_CONNECTION_BANNED or id == PACKET_INVALID_PASSWORD then
+	if gl.pkt_log_left and gl.pkt_log_left > 0 then
+		gl.pkt_log_left = gl.pkt_log_left - 1
+		dbg("[pkt in] id=" .. tostring(id))
+	end
+	-- Только явные обрывы (не путать с другими id=32 в разных сборках)
+	if id == PACKET_DISCONNECTION_NOTIFICATION then
+		dbg("[merged] PACKET_DISCONNECTION_NOTIFICATION")
 		gl.is_regular_pos = false
 		gl.bot_move = false
 		gl.cam_pos_offset = vector3d(0, 0, 0)
+	elseif id == PACKET_CONNECTION_LOST then
+		dbg("[merged] PACKET_CONNECTION_LOST")
+		gl.is_regular_pos = false
+		gl.bot_move = false
+		gl.cam_pos_offset = vector3d(0, 0, 0)
+	elseif id == PACKET_CONNECTION_BANNED then
+		dbg("[merged] PACKET_CONNECTION_BANNED")
+	elseif id == PACKET_INVALID_PASSWORD then
+		dbg("[merged] PACKET_INVALID_PASSWORD")
 	end
 end
 
 function onRequestClassResponse(canSpawn, team, skin)
-	print(string.format("[merged] RequestClassResponse canSpawn=%s team=%s skin=%s", tostring(canSpawn), tostring(team), tostring(skin)))
+	dbg(string.format("[merged] RequestClassResponse canSpawn=%s team=%s skin=%s", tostring(canSpawn), tostring(team), tostring(skin)))
 end
 
 function onRequestSpawnResponse(response)
-	print(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
+	dbg(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
 end
 
 -- Регистрация/логин через диалог (часто «зависает» до InitGame без ответа)
@@ -242,15 +336,17 @@ function onShowDialog(dialogId, style, title, button1, button2, text)
 	if inp == "" and (blob:find("register", 1, true) or blob:find("регистр", 1, true) or blob:find("password", 1, true) or blob:find("парол", 1, true)) then
 		inp = "RakBot_" .. tostring(math.random(10000, 99999))
 	end
+	local text_snip = (text or ""):sub(1, 400):gsub("\r", " "):gsub("\n", " ")
+	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q b1=%q b2=%q text_snip=%q", dialogId, style, title or "", button1 or "", button2 or "", text_snip))
 	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
 		if inp ~= "" then
-			print(string.format("[merged] Dialog id=%d style=%d -> OK + input len=%d", dialogId, style, #inp))
+			dbg(string.format("[merged] Dialog -> OK + input len=%d", #inp))
 			sendDialogResponse(dialogId, 1, 0, inp)
 			return false
 		end
 	end
 	if style == DIALOG_STYLE_MSGBOX then
-		print(string.format("[merged] Dialog msgbox id=%d -> OK", dialogId))
+		dbg("[merged] Dialog msgbox -> OK")
 		sendDialogResponse(dialogId, 1, 0, "")
 		return false
 	end
@@ -265,13 +361,13 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 			nclass = math.min(c, 10)
 		end
 	end
-	print(string.format("[merged] onInitGame playerId=%s host=%s classes~=%d", tostring(playerId), tostring(hostName), nclass))
+	dbg(string.format("[merged] onInitGame playerId=%s host=%s classes~=%d", tostring(playerId), tostring(hostName), nclass))
 	gl.aim_info = genAimSyncInfo()
 	newTask(function()
 		wait(2000)
 		for attempt = 1, 45 do
 			if isBotSpawned() then
-				print("[merged] spawned OK")
+				dbg("[merged] spawned OK")
 				return
 			end
 			local cls = (attempt - 1) % nclass
@@ -282,14 +378,15 @@ function onInitGame(playerId, hostName, settings, vehicleModels, vehicleFriendly
 			sendSpawnRequest()
 			wait(2800)
 		end
-		print("[merged] spawn timeout (проверь /login, античит, LITE_REGISTER_PASSWORD)")
+		dbg("[merged] spawn timeout (login/античит/LITE_REGISTER_PASSWORD)")
 	end)
 end
 
 function onLoad()
-	print("[SEND PING FIX] LOADED. Author: Ulong (merged)")
-	print(string.format("[AimSync FIX] Loaded! Author: %s (version %s)", CREDITS.AUTHOR, CREDITS.SCRIPT_VERSION))
-	print("[merged] Connect fix + dialog auto (env LITE_REGISTER_PASSWORD) + class/spawn after onInitGame")
+	dbg("========== blasthk_aim_and_ping_merged onLoad ==========")
+	dbg("[SEND PING FIX] LOADED. Author: Ulong (merged)")
+	dbg(string.format("[AimSync FIX] Loaded! Author: %s (version %s)", CREDITS.AUTHOR, CREDITS.SCRIPT_VERSION))
+	dbg("[merged] lite_debug.log in instance folder; Connect+Dialog+InitGame trace")
 	gl.aim_info = genAimSyncInfo()
 	setRate(AIM_SYNC_RATE, 1000)
 	setRate(SPEC_SYNC_RATE, 100)
