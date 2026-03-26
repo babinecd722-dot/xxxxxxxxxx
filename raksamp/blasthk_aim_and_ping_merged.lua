@@ -208,27 +208,28 @@ function onReceiveRPC(id, bs)
 	end
 end
 
-function onReceivePacket(id, bs)
-	-- [RakSamp Lite] Connect Accepted Fix (Ulong / blast.hk threads/214267) — кривой player_index в пакете 34
-	if id == PACKET_CONNECTION_REQUEST_ACCEPTED then
-		local ok, addr, port, pidx, chall = pcall(function()
-			bs:ignoreBits(8)
-			return bs:readUInt32(), bs:readUInt16(), bs:readUInt16(), bs:readUInt32()
-		end)
-		if ok and pidx and (pidx >= 0xFFF4 or pidx == 65535 or pidx == 65534) then
-			bs:setWriteOffset(8)
-			bs:writeUInt32(addr)
-			bs:writeUInt16(port)
-			bs:writeUInt16(0)
-			bs:writeUInt32(chall)
-		end
-		return
+-- Пакет 34 в samp.events идёт как onConnectionRequestAccepted (см. INCOMING_PACKETS), не через сырой bs в onReceivePacket.
+function onConnectionRequestAccepted(ip, port, playerId, challenge)
+	if playerId and (playerId >= 0xFFF4 or playerId == 65535 or playerId == 65534) then
+		print(string.format("[merged] ConnectAccepted fix: playerId %s -> 0 (blast.hk/214267)", tostring(playerId)))
+		return {ip, port, 0, challenge}
 	end
+end
+
+function onReceivePacket(id, bs)
 	if id == PACKET_DISCONNECTION_NOTIFICATION or id == PACKET_CONNECTION_LOST or id == PACKET_CONNECTION_BANNED or id == PACKET_INVALID_PASSWORD then
 		gl.is_regular_pos = false
 		gl.bot_move = false
 		gl.cam_pos_offset = vector3d(0, 0, 0)
 	end
+end
+
+function onRequestClassResponse(canSpawn, team, skin)
+	print(string.format("[merged] RequestClassResponse canSpawn=%s team=%s skin=%s", tostring(canSpawn), tostring(team), tostring(skin)))
+end
+
+function onRequestSpawnResponse(response)
+	print(string.format("[merged] RequestSpawnResponse ok=%s spawned=%s", tostring(response), tostring(isBotSpawned())))
 end
 
 function onLoad()
