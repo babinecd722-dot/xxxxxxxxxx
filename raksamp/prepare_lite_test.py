@@ -13,6 +13,12 @@ OUT = ROOT / "lite_instances"
 
 IGNORE_NAMES = {".git", "__pycache__"}
 
+INI_RELATIVE_PATHS = (
+    Path("settings") / "RakSAMP Lite.ini",
+    Path("Settings") / "RakSAMP Lite.ini",
+    Path("RakSAMP Lite.ini"),
+)
+
 
 def lua_quote(s: str) -> str:
     return s.replace("\\", "\\\\").replace('"', '\\"')
@@ -39,9 +45,40 @@ def copy_lite_tree(dest: Path) -> None:
     shutil.copytree(LITE, dest, ignore=ignore)
 
 
+def _find_or_seed_raklite_ini(dest: Path) -> Path | None:
+    """В zip Lite ini может лежать в settings/, Settings/ или в корне папки клиента."""
+    for rel in INI_RELATIVE_PATHS:
+        p = dest / rel
+        if p.is_file():
+            return p
+    tpl = LITE / "settings" / "RakSAMP Lite.ini"
+    if tpl.is_file():
+        out = dest / "settings" / "RakSAMP Lite.ini"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(tpl, out)
+        return out
+    out = dest / "settings" / "RakSAMP Lite.ini"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(
+        "\n".join(
+            [
+                "[Server]",
+                "nick=nick",
+                "ip=127.0.0.1:7777",
+                "pass=",
+                "clientversion=0.3.7",
+                "ping=0",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return out
+
+
 def patch_settings(dest: Path, *, host: str, port: int, nick: str) -> None:
-    ini = dest / "settings" / "RakSAMP Lite.ini"
-    if not ini.is_file():
+    ini = _find_or_seed_raklite_ini(dest)
+    if ini is None:
         return
     lines = ini.read_text(encoding="utf-8", errors="replace").splitlines()
     addr = f"{host}:{port}"
@@ -61,42 +98,32 @@ def patch_settings(dest: Path, *, host: str, port: int, nick: str) -> None:
                 out.append(f"ip={addr}")
                 continue
         out.append(line)
-    ini.write_text("\n".join(out) + "\n", encoding="utf-8")
+    text = "\n".join(out) + "\n"
+    ini.write_text(text, encoding="utf-8")
+    canon = dest / "settings" / "RakSAMP Lite.ini"
+    if ini.resolve() != canon.resolve():
+        canon.parent.mkdir(parents=True, exist_ok=True)
+        canon.write_text(text, encoding="utf-8")
 
 
-def write_connect_stagger(dest_scripts: Path, slot: str) -> None:
-    """Второй клиент с того же IP — задержка перед allow connect (совет форума: не «быстрый коннект»)."""
-    if slot != "bot2":
-        p = dest_scripts / "01_connect_stagger.lua"
-        if p.is_file():
-            p.unlink()
-        return
-    lua = '''-- Антифлуд: второе окно с того же IP подключается позже (blast.hk / «быстрый коннект»).
-require("addon")
-local ready = 0
-
-function onLoad()
-  local sec = math.random(55, 110)
-  ready = os.time() + sec
-  print("[01_connect_stagger] задержка коннекта " .. sec .. " s")
-end
-
-function onRequestConnect()
-  if os.time() < ready then
-    return false
-  end
-end
-'''
-    (dest_scripts / "01_connect_stagger.lua").write_text(lua, encoding="utf-8")
-
-
-def write_autoconnect(dest_scripts: Path, *, host: str, port: int, nick: str) -> None:
+def write_autoconnect(dest_scripts: Path, *, host: str, port: int, nick: str, slot: str) -> None:
+    """Клиент при старте перезаписывает settings/RakSAMP Lite.ini на localhost — первый коннект шёл не туда.
+    Блокируем onRequestConnect несколько секунд, пока Lua не выставит setServerAddress."""
     dest_scripts.mkdir(parents=True, exist_ok=True)
     addr = f"{host}:{port}"
     a = lua_quote(addr)
     n = lua_quote(nick)
-    lua = f"""-- Автогенерация: адрес/ник для теста (API из темы blast.hk threads/108052).
+    extra = ""
+    if slot == "bot2":
+        extra = """
+  local extra = math.random(55, 110)
+  ready_ts = ready_ts + extra
+  print("[00_autoconnect] +антифлуд второго окна " .. extra .. " s")
+"""
+    lua = f"""-- Автогенерация: адрес/ник (blast.hk threads/108052). onRequestConnect — см. README.
 require("addon")
+
+local ready_ts = 0
 
 function onLoad()
   math.randomseed(os.time())
@@ -104,6 +131,14 @@ function onLoad()
   setBotNick("{n}")
   setRate(RATE_LUA, 100)
   print("[00_autoconnect] {a} nick={n}")
+  -- ~2 с после старта exe перезаписывает ini на 127.0.0.1 — не даём коннектить до setServerAddress
+  ready_ts = os.time() + 6
+{extra}end
+
+function onRequestConnect()
+  if os.time() < ready_ts then
+    return false
+  end
 end
 """
     (dest_scripts / "00_autoconnect.lua").write_text(lua, encoding="utf-8")
@@ -130,8 +165,7 @@ def main() -> int:
         d = OUT / slot
         copy_lite_tree(d)
         patch_settings(d, host=args.host, port=args.port, nick=nick)
-        write_connect_stagger(d / "scripts", slot)
-        write_autoconnect(d / "scripts", host=args.host, port=args.port, nick=nick)
+        write_autoconnect(d / "scripts", host=args.host, port=args.port, nick=nick, slot=slot)
         print(d)
     return 0
 

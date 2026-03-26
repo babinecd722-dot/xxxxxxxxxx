@@ -19,7 +19,7 @@
 
 В **`lite/scripts/`** (порядок по имени):
 
-- **`01_connect_stagger.lua`** — только у **второго** тест-бота: задержка перед коннектом с одного IP (антифлуд; см. тему [108052](https://www.blast.hk/threads/108052/), раздел Rates / совет не делать «быстрый коннект»).
+- **`00_autoconnect.lua`** — также **`onRequestConnect`**: первые секунды коннект блокируется (exe перезаписывает `ini` на localhost до загрузки Lua); у **bot2** добавляется случайная задержка 55–110 с (антифлуд с одного IP).
 - **`02_send_ping_fix.lua`** — Ulong SendPing (с **main** репо).
 - **`03_aim_fix_updated.lua`** — Ulong AimSync; если Lua без **`ffi`**, скрипт сам пишет в лог и не падает.
 - **`04_autospawn.lua`** — **`!spawn`** после спавна (с случайной паузой).
@@ -42,7 +42,7 @@
 
 Или: `python3 launch_lite_gui.py` — поля **51.75.232.67**, **1801**, два ника → **«Старт 2 бота (тест)»**.
 
-Скрипт **`prepare_lite_test.py`** копирует `lite/` в **`lite_instances/bot1`** и **`bot2`**, патчит **`settings/RakSAMP Lite.ini`**, генерит **`scripts/00_autoconnect.lua`** (`setServerAddress` / `setBotNick` из API темы 108052) и **`01_connect_stagger.lua`** для **bot2**.
+Скрипт **`prepare_lite_test.py`** копирует `lite/` в **`lite_instances/bot1`** и **`bot2`**, патчит **`settings/RakSAMP Lite.ini`**, генерит **`scripts/00_autoconnect.lua`** (`setServerAddress` / `setBotNick` + блокировка раннего коннекта).
 
 Между стартом двух окон по умолчанию пауза **35 с** (`LITE_STAGGER` в **`start_lite_test.sh`**).
 
