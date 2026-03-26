@@ -22,6 +22,8 @@ fi
 source "$ROOT/bots/.launch.env"
 # Пауза между ботами с одного IP (антифлуд коннектов). Берётся из bots_manifest stagger_seconds.
 STAGGER="${STAGGER:-${STAGGER_SEC:-200}}"
+# Переопределение из среды: START_ONLY_FIRST_OVERRIDE=3 поднять только 3 слота
+START_ONLY_FIRST="${START_ONLY_FIRST_OVERRIDE:-$START_ONLY_FIRST}"
 
 # Имена каталогов: bot01_Name. START_ONLY_FIRST из .launch.env — лимит клиентов с одного IP.
 n_started=0
