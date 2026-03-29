@@ -12,7 +12,10 @@
   "generate_bot_count": 2,
   "nick_mode": "silly",
   "sequential_prefix": "Us",
-  "comment": "gentle_antikick: runmode 2 (still at spawn), редкие intervals, stagger 15s. 51.75.232.67:1801.",
+
+  "registration_skin": 239,
+  "spawn_location": 0,
+  "comment": "spawn_location: 0=Вокзал,1=последнее место,2=фракция,3=дом,4=гость,5=семья. registration_skin: 239 (default). 51.75.232.67:1801.",
 
   "nick_silly_first": ["Dmitry", "Alexey"],
   "nick_silly_last": ["Novikov", "Petrov"],

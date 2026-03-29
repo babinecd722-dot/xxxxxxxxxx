@@ -75,6 +75,11 @@ local function account_pw_from_env()
 	return os.getenv("LITE_ACCOUNT_PASSWORD") or os.getenv("LITE_REGISTER_PASSWORD") or ""
 end
 
+-- Скин для регистрации (из env REGISTRATION_SKIN или default 239)
+local REGISTRATION_SKIN = tonumber(os.getenv and os.getenv("REGISTRATION_SKIN")) or 239
+-- Локация спавна (0=Вокзал, 1=последнее место, 2=фракция, 3=дом, 4=гость, 5=семья)
+local SPAWN_LOCATION = tonumber(os.getenv and os.getenv("SPAWN_LOCATION")) or 0
+
 -- Читаем ник из settings/RakSAMP Lite.ini (рабочая папка = папка exe)
 local function get_bot_nick()
 	local f = io.open("settings/RakSAMP Lite.ini", "r")
@@ -224,7 +229,7 @@ end
 -- "3G" = RELIABLE_ORDERED(9), ch1
 -- 5A: sendPacketEx(0xFB, priority, reliability, channel, broadcast) — explicit packet ID
 -- данные: screen uint16 + json bytes (NO pkt_id byte, NO length prefix)
-local PR_SEND_MODE = "5B"
+local PR_SEND_MODE = "3C" -- most stable
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
@@ -359,13 +364,39 @@ local function pr_do_register()
 		pw = "Prime" .. tostring(math.random(1000, 9999))
 		dbg("[PR] REGISTER: no password, using generated: " .. pw)
 	end
+	-- Длина пароля должна быть 6-15 символов
+	if #pw < 6 then pw = pw .. string.rep("0", 6 - #pw) end
+	if #pw > 15 then pw = pw:sub(1, 15) end
 	PR.pw = pw
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	-- Шаг 1: {"t":1, "p":"пароль", "s":""} — s = email (пустой)
-	-- Ник задаётся именем подключения (settings/RakSAMP Lite.ini nick=)
-	-- НЕ передаём ник в "s" — это email поле
-	dbg(string.format("[PR] REGISTER step1 attempt=%d pw_len=%d", PR.reg_attempt, #pw))
-	pr_send_json(38, {t=1, p=pw, s=""})
+	-- Помечаем все шаги как выполненные — полная последовательность шлётся сразу
+	PR.sex_sent    = true
+	PR.skin_sent   = true
+	PR.invite_sent = true
+	dbg(string.format("[PR] REGISTER sequence attempt=%d pw_len=%d skin=%d", PR.reg_attempt, #pw, REGISTRATION_SKIN))
+	-- Полная последовательность регистрации (из оригинального клиента):
+	--   {t:1, s:"", p:PASSWORD}  — создать аккаунт
+	--   {t:2, s:"", r:0}         — сбросить fingerprint/ошибку
+	--   {t:4, s:""}              — пропустить инвайт
+	--   {t:3, r:0}               — пол мужской
+	--   {t:5, r:skinId}          — выбрать скин
+	--   {c:1}                    — закрыть GUI
+	-- Все пакеты с задержкой 250 мс между ними
+	newTask(function()
+		local jsons = {
+			string.format('{"t":1,"s":"","p":"%s"}', pw),
+			'{"t":2,"s":"","r":0}',
+			'{"t":4,"s":""}',
+			'{"t":3,"r":0}',
+			string.format('{"t":5,"r":%d}', REGISTRATION_SKIN),
+			'{"c":1}',
+		}
+		for i = 1, #jsons do
+			pr_send(38, jsons[i])
+			wait(250)
+		end
+		dbg("[PR] Registration sequence complete")
+	end)
 end
 
 local function pr_do_sex()
@@ -402,11 +433,11 @@ end
 local function pr_do_spawn_location()
 	if PR.spawn_loc_sent then return end
 	PR.spawn_loc_sent = true
-	-- GUI 50: {"t":0} = Вокзал (сервер вычитает 1, получается SPAWN_TYPE_VOKZAL=0)
-	-- t:1=Вокзал, t:2=последнее место, t:3=фракция, t:4=дом, t:5=гость, t:6=семья
-	-- Мы шлём t=1 что означает Вокзал (как на скриншоте)
-	dbg("[PR] SPAWN_LOCATION: Vokzal (t=1)")
-	pr_send_json(50, {t=1})
+	-- screenId=50: {"t": locationId}
+	-- 0=Вокзал (train station), 1=последнее место, 2=фракция, 3=дом, 4=гость, 5=семья
+	-- Настраивается через SPAWN_LOCATION env (default 0 = Вокзал)
+	dbg(string.format("[PR] SPAWN_LOCATION: t=%d (0=Вокзал)", SPAWN_LOCATION))
+	pr_send_json(50, {t=SPAWN_LOCATION})
 end
 
 -- ================================================================

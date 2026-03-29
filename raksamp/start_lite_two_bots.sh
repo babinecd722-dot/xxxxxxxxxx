@@ -57,6 +57,8 @@ pw = d.get('lite_account_password') or d.get('lite_register_password') or ''
 print(pw)
 print(str(d.get('rcon_password', '')))
 print(str(d.get('clientversion', '0.3.7')))
+print(str(d.get('registration_skin', 239)))
+print(str(d.get('spawn_location', 0)))
 ")
 HOST="${CFG[0]}"
 PORT="${CFG[1]}"
@@ -65,7 +67,9 @@ NICK2="${CFG[3]}"
 LITE_ACCOUNT_PASSWORD="${CFG[4]}"
 RCON="${CFG[5]:-}"
 CLIENTVER="${CFG[6]:-0.3.7}"
-export LITE_ACCOUNT_PASSWORD
+REGISTRATION_SKIN="${CFG[7]:-239}"
+SPAWN_LOCATION="${CFG[8]:-0}"
+export LITE_ACCOUNT_PASSWORD REGISTRATION_SKIN SPAWN_LOCATION
 IP_PORT="${HOST}:${PORT}"
 
 write_ini() {
@@ -132,16 +136,16 @@ for i in 1 2; do
   echo "Инстанс $i: 00_forum_bundle + forum_lua_blasthk + merged"
 done
 
-echo "Запуск wine (LITE_ACCOUNT_PASSWORD ${#LITE_ACCOUNT_PASSWORD} символов из манифеста) ..."
+echo "Запуск wine (pw=${#LITE_ACCOUNT_PASSWORD}chars skin=${REGISTRATION_SKIN} spawn=${SPAWN_LOCATION}) ..."
 (
   cd "$RUNDIR/instance1_${NICK1}"
-  nohup env LITE_ACCOUNT_PASSWORD="$LITE_ACCOUNT_PASSWORD" wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite1.log" 2>&1 &
+  nohup env LITE_ACCOUNT_PASSWORD="$LITE_ACCOUNT_PASSWORD" REGISTRATION_SKIN="$REGISTRATION_SKIN" SPAWN_LOCATION="$SPAWN_LOCATION" wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite1.log" 2>&1 &
   echo $! >"$RUNDIR/lite1.wine.pid"
 )
 sleep 4
 (
   cd "$RUNDIR/instance2_${NICK2}"
-  nohup env LITE_ACCOUNT_PASSWORD="$LITE_ACCOUNT_PASSWORD" wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite2.log" 2>&1 &
+  nohup env LITE_ACCOUNT_PASSWORD="$LITE_ACCOUNT_PASSWORD" REGISTRATION_SKIN="$REGISTRATION_SKIN" SPAWN_LOCATION="$SPAWN_LOCATION" wine "./RakSAMP Lite.exe" >>"$RUNDIR/lite2.log" 2>&1 &
   echo $! >"$RUNDIR/lite2.wine.pid"
 )
 echo "PID: $(cat "$RUNDIR/lite1.wine.pid") $(cat "$RUNDIR/lite2.wine.pid")"
