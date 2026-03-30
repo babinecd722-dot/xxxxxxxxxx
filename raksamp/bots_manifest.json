@@ -17,8 +17,8 @@
   "spawn_location": 0,
   "comment": "spawn_location: 0=Вокзал,1=последнее место,2=фракция,3=дом,4=гость,5=семья. registration_skin: 239 (default). 51.75.232.67:1801.",
 
-  "nick_silly_first": ["Dmitry", "Alexey"],
-  "nick_silly_last": ["Novikov", "Petrov"],
+  "nick_silly_first": ["Roman","Vitaly","Oleg","Kirill","Timur","Ruslan","Anton","Nikita","Vladislav","Evgeny"],
+  "nick_silly_last": ["Orlov","Zaycev","Gromov","Stepanov","Nikitin","Fedorov","Makarov","Titov","Kozlov","Frolov"],
 
   "nick_first_names": [],
   "nick_last_names": [],

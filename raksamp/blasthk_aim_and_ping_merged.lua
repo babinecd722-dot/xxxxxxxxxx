@@ -214,10 +214,11 @@ end
 -- Используем 5-аргументный вариант: packet_id = 0xFB, данные = screen_id + json_len + json
 -- Отправка GUI-пакета серверу.
 -- Тестируем разные форматы чтобы найти правильный.
--- Правильный формат исходящего пакета (из реверса APK PRIME RUSSIA):
---   [uint8: 0xFB] [uint32 LE: screen_id] [json bytes]  — без length-prefix
--- "4A" = правильный формат: uint32 screen_id, без length prefix
-local PR_SEND_MODE = "4A"
+-- Подтверждённый формат (из анализа входящего пакета в логе):
+--   Входящий: [uint8 pkt_id][uint16 screen_id][uint16 json_len][uint16 json_len_dup][json]
+--   Исходящий (симметричный): то же самое = режим "3C"
+-- "4A" (uint32 screen_id) был НЕВЕРЕН — сервер читал json_len=0 и игнорировал JSON
+local PR_SEND_MODE = "3C"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
@@ -333,7 +334,7 @@ local NICK_LAST = {
 }
 
 local function gen_rp_nick()
-	-- Формат строго First_Last — без цифр
+	-- Формат First_Last — без цифр (совместим с SA-MP RP правилами именования)
 	local first = NICK_FIRST[math.random(#NICK_FIRST)]
 	local last  = NICK_LAST[math.random(#NICK_LAST)]
 	return first .. "_" .. last
