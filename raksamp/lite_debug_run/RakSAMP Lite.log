@@ -1,583 +1,398 @@
-[16:35:34]  
-[16:35:34] * ===================================================== *
-[16:35:34]   RakSAMP Lite initialized on 26/03/2026 16:35:34
-[16:35:34]   Authors: jlfm, bartekdvd, P3ti, Rei
-[16:35:34]   Visit t.me/reiscripts
-[16:35:34] * ===================================================== *
-[16:35:34]  
-[16:35:34] [LUA] Loading scripts...
-[16:35:34] [LUA] Z:\workspace\raksamp\lite_debug_run\scripts\blasthk_aim_and_ping_merged.lua loaded
-[16:35:34] [LUA] ========== blasthk_aim_and_ping_merged onLoad ==========
-[16:35:34] [LUA] [merged] aim_fix + send_ping_fix + PRIME RUSSIA GUI handler
-[16:35:34] [LUA] [merged] GUI packets: in=251/252 out=251
-[16:35:34] [LUA] [merged] pw_len=15
-[16:35:34] [LUA] [merged] samp.events callbacks registered via MODULE
-[16:35:34] [NET] Connecting to 51.75.232.67:1801...
-[16:35:35] [LUA] [pkt in] id=39
-[16:35:35] [LUA] [pkt in] id=12
-[16:35:35] [LUA] [pkt in] id=34
-[16:35:35] [LUA] [merged] ConnectionRequestAccepted ip=-764354301 port=41490 playerId=1
-[16:35:35] [NET] Connected. Joining the game...
-[16:35:35] [LUA] [pkt in] id=41
-[16:35:35] [LUA] [RPC in] id=60
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:35] [MSG]  
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| ..... .......... .. {E24B4B}PRIME RUSSIA{FFFFFF}, ...... ." hex=7B 46 46 46 46 46 46 7D 7C 20 C4 EE E1 F0 EE 20 EF EE E6 E0 EB EE E2 E0 F2 FC 20 ED E0 20 7B 45 32 34 42 34 42 7D 50 52 49 4D 45 20 52 55 53 53 49 41 7B 46 46 46 46 46 46 7D 2C 20 F1 E5 F0 E2 E5 F0 20 97 
-[16:35:35] [MSG] {FFFFFF}| Добро пожаловать на {E24B4B}PRIME RUSSIA{FFFFFF}, сервер —
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| . {E24B4B}RED" hex=7B 46 46 46 46 46 46 7D 7C 20 97 20 7B 45 32 34 42 34 42 7D 52 45 44 
-[16:35:35] [MSG] {FFFFFF}| — {E24B4B}RED
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| . ..... ...... ........ {E24B4B}t.me/primee_dev{FFFFFF} ...." hex=7B 46 46 46 46 46 46 7D 7C 20 C2 20 ED E0 F8 E5 EC 20 EA E0 ED E0 EB E5 20 D2 E5 EB E5 E3 F0 E0 EC 20 7B 45 32 34 42 34 42 7D 74 2E 6D 65 2F 70 72 69 6D 65 65 5F 64 65 76 7B 46 46 46 46 46 46 7D 20 E8 E4 B8 F2 
-[16:35:35] [MSG] {FFFFFF}| В нашем канале Телеграм {E24B4B}t.me/primee_dev{FFFFFF} идёт
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| . ....... ........" hex=7B 46 46 46 46 46 46 7D 7C 20 97 20 F0 E0 E7 E4 E0 F7 E0 20 EF EE E4 E0 F0 EA EE E2 
-[16:35:35] [MSG] {FFFFFF}| — раздача подарков
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| ... ....... ..... ........ . .. ...... ......." hex=7B 46 46 46 46 46 46 7D 7C 20 C4 EB FF 20 F3 F7 E0 F1 F2 E8 FF 20 ED F3 E6 ED EE 20 ED E0 EF E8 F1 E0 F2 FC 20 E2 20 CB D1 20 E3 F0 F3 EF EF FB 20 EA EE E4 EE E2 EE E5 
-[16:35:35] [MSG] {FFFFFF}| Для участия нужно написать в ЛС группы кодовое
-[16:35:35] [LUA] [RPC in] id=93
-[16:35:35] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii="{FFFFFF}| . ..... {E24B4B}#...." hex=7B 46 46 46 46 46 46 7D 7C 20 97 20 F1 EB EE E2 EE 20 7B 45 32 34 42 34 42 7D 23 D5 CE D7 D3 
-[16:35:36] [MSG] {FFFFFF}| — слово {E24B4B}#ХОЧУ
-[16:35:36] [LUA] [RPC in] id=93
-[16:35:36] [LUA] [merged] ServerMsg color=FFFFFFFFFFFFFFFF ascii=" " hex=20 
-[16:35:36] [MSG]  
-[16:35:36] [LUA] [RPC in] id=29
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=168
-[16:35:36] [LUA] [RPC in] id=168
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=168
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=168
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=168
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=108
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:36] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:37] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=44
-[16:35:38] [LUA] [RPC in] id=139
-[16:35:38] [LUA] [merged] onInitGame playerId=1 host=PRIME RUSSIA classes=1
-[16:35:38] [LUA] [merged] onInitGame: waiting for JSON GUI flow (screen 38/50)
-[16:35:38] [NET] Connected to PRIME RUSSIA
-[16:35:38] [RPC] >> Class 0 requested
-[16:35:38] [LUA] [RPC in] id=135
-[16:35:38] [LUA] [RPC in] id=157
-[16:35:38] [LUA] [RPC in] id=158
-[16:35:38] [LUA] [pkt in] id=252
-[16:35:38] [LUA] [PR-IN] pkt=252 unread_bits=160
-[16:35:38] [LUA] [PR-IN] screen=38 json_len=13 remaining=15
-[16:35:38] [LUA] [PR-IN] trimming 2 leading bytes before JSON
-[16:35:38] [LUA] [PR-IN] screen=38 json={"o":1,"r":0}
-[16:35:38] [LUA] [PR-IN] screen=38 json={"o":1,"r":0}
-[16:35:38] [LUA] [PR] GUI38 OPEN: REGISTRATION mode
-[16:35:38] [LUA] [RPC in] id=41
-[16:35:38] [AUDIO] 
-[16:35:38] [LUA] [RPC in] id=168
-[16:35:38] [LUA] [pkt in] id=251
-[16:35:38] [LUA] [PR-IN] pkt=251 unread_bits=432
-[16:35:38] [LUA] [PR-IN] screen=5 json_len=0 remaining=49
-[16:35:38] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
-[16:35:38] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
-[16:35:38] [LUA] [pkt in] id=251
-[16:35:38] [LUA] [PR-IN] pkt=251 unread_bits=432
-[16:35:38] [LUA] [PR-IN] screen=5 json_len=0 remaining=49
-[16:35:38] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
-[16:35:38] [LUA] [PR-IN] screen=5 json=0http://wh3606.web3.maze-host.ru/music/enter_.mp3
-[16:35:38] [LUA] [RPC in] id=128
-[16:35:38] [LUA] [merged] RequestClassResponse canSpawn=true skin=0
-[16:35:40] [LUA] [PR] REGISTER step1 attempt=1 pw_len=15
-[16:35:40] [LUA] [PR-SEND mode=5B] screen=38 len=36 json={"t":1,"s":"","p":"RakLiteBot_2026"}
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:43] [LUA] [RPC in] id=47
-[16:35:43] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=60
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:46] [LUA] [RPC in] id=44
-[16:35:46] [LUA] [RPC in] id=47
-[16:35:47] [LUA] [RPC in] id=44
-[16:35:47] [LUA] [RPC in] id=47
-[16:35:47] [LUA] [RPC in] id=44
-[16:35:55] [LUA] [PR] No response to t=1 after 15s, retrying register
-[16:35:55] [LUA] [PR] REGISTER step1 attempt=2 pw_len=15
-[16:35:55] [LUA] [PR-SEND mode=5B] screen=38 len=36 json={"t":1,"s":"","p":"RakLiteBot_2026"}
-[16:36:00] [LUA] [RPC in] id=94
-[16:36:00] [LUA] [RPC in] id=29
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:12] [LUA] [RPC in] id=47
-[16:36:12] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:15] [LUA] [RPC in] id=47
-[16:36:15] [LUA] [RPC in] id=44
-[16:36:16] [LUA] [RPC in] id=60
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:40] [LUA] [RPC in] id=47
-[16:36:40] [LUA] [RPC in] id=44
-[16:36:41] [LUA] [RPC in] id=47
-[16:36:41] [LUA] [RPC in] id=44
-[16:36:41] [LUA] [RPC in] id=47
-[16:36:41] [LUA] [RPC in] id=44
-[16:36:41] [LUA] [RPC in] id=47
-[16:36:41] [LUA] [RPC in] id=44
-[16:36:41] [LUA] [RPC in] id=47
-[16:36:41] [LUA] [RPC in] id=44
-[16:36:43] [LUA] [RPC in] id=47
-[16:36:43] [LUA] [RPC in] id=44
-[16:36:43] [LUA] [RPC in] id=47
-[16:36:43] [LUA] [RPC in] id=44
-[16:36:43] [LUA] [RPC in] id=47
-[16:36:43] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:44] [LUA] [RPC in] id=47
-[16:36:44] [LUA] [RPC in] id=44
-[16:36:46] [LUA] [RPC in] id=60
+[02:04:52]  
+[02:04:52] * ===================================================== *
+[02:04:52]   RakSAMP Lite initialized on 30/03/2026 02:04:52
+[02:04:52]   Authors: jlfm, bartekdvd, P3ti, Rei
+[02:04:52]   Visit t.me/reiscripts
+[02:04:52] * ===================================================== *
+[02:04:52]  
+[02:04:52] [LUA] Loading scripts...
+[02:04:52] [LUA] Z:\home\user\xxxxxxxxxx\raksamp\lite_debug_run\scripts\blasthk_aim_and_ping_merged.lua loaded
+[02:04:52] [LUA] ========== blasthk_aim_and_ping_merged onLoad ==========
+[02:04:52] [LUA] [merged] aim_fix + send_ping_fix + PRIME RUSSIA GUI handler
+[02:04:52] [LUA] [merged] GUI packets: in=251/252 out=251
+[02:04:52] [LUA] [merged] pw_len=15
+[02:04:52] [LUA] [merged] samp.events callbacks registered via MODULE
+[02:04:52] [NET] Connecting to 51.75.232.67:1801...
+[02:04:53] [LUA] [pkt in] id=29
+[02:04:53] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:04:54] [NET] Connecting to 51.75.232.67:1801...
+[02:04:55] [LUA] [pkt in] id=29
+[02:04:55] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:04:56] [NET] Connecting to 51.75.232.67:1801...
+[02:04:57] [LUA] [pkt in] id=29
+[02:04:57] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:04:58] [NET] Connecting to 51.75.232.67:1801...
+[02:04:59] [LUA] [pkt in] id=29
+[02:04:59] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:00] [NET] Connecting to 51.75.232.67:1801...
+[02:05:01] [LUA] [pkt in] id=29
+[02:05:01] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:02] [NET] Connecting to 51.75.232.67:1801...
+[02:05:03] [LUA] [pkt in] id=29
+[02:05:03] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:04] [NET] Connecting to 51.75.232.67:1801...
+[02:05:05] [LUA] [pkt in] id=29
+[02:05:05] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:06] [NET] Connecting to 51.75.232.67:1801...
+[02:05:07] [LUA] [pkt in] id=29
+[02:05:07] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:08] [NET] Connecting to 51.75.232.67:1801...
+[02:05:09] [LUA] [pkt in] id=29
+[02:05:09] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:10] [NET] Connecting to 51.75.232.67:1801...
+[02:05:11] [LUA] [pkt in] id=29
+[02:05:11] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:12] [NET] Connecting to 51.75.232.67:1801...
+[02:05:13] [LUA] [pkt in] id=29
+[02:05:13] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:14] [NET] Connecting to 51.75.232.67:1801...
+[02:05:15] [LUA] [pkt in] id=29
+[02:05:15] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:16] [NET] Connecting to 51.75.232.67:1801...
+[02:05:17] [LUA] [pkt in] id=29
+[02:05:17] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:18] [NET] Connecting to 51.75.232.67:1801...
+[02:05:19] [LUA] [pkt in] id=29
+[02:05:19] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:20] [NET] Connecting to 51.75.232.67:1801...
+[02:05:21] [LUA] [pkt in] id=29
+[02:05:21] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:22] [NET] Connecting to 51.75.232.67:1801...
+[02:05:23] [LUA] [pkt in] id=29
+[02:05:23] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:24] [NET] Connecting to 51.75.232.67:1801...
+[02:05:25] [LUA] [pkt in] id=29
+[02:05:25] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:26] [NET] Connecting to 51.75.232.67:1801...
+[02:05:27] [LUA] [pkt in] id=29
+[02:05:27] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:28] [NET] Connecting to 51.75.232.67:1801...
+[02:05:29] [LUA] [pkt in] id=29
+[02:05:29] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:30] [NET] Connecting to 51.75.232.67:1801...
+[02:05:31] [LUA] [pkt in] id=29
+[02:05:31] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:32] [NET] Connecting to 51.75.232.67:1801...
+[02:05:33] [LUA] [pkt in] id=29
+[02:05:33] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:34] [NET] Connecting to 51.75.232.67:1801...
+[02:05:35] [LUA] [pkt in] id=29
+[02:05:35] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:36] [NET] Connecting to 51.75.232.67:1801...
+[02:05:37] [LUA] [pkt in] id=29
+[02:05:37] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:38] [NET] Connecting to 51.75.232.67:1801...
+[02:05:39] [LUA] [pkt in] id=29
+[02:05:39] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:40] [NET] Connecting to 51.75.232.67:1801...
+[02:05:41] [LUA] [pkt in] id=29
+[02:05:41] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:42] [NET] Connecting to 51.75.232.67:1801...
+[02:05:43] [LUA] [pkt in] id=29
+[02:05:43] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:44] [NET] Connecting to 51.75.232.67:1801...
+[02:05:45] [LUA] [pkt in] id=29
+[02:05:45] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:46] [NET] Connecting to 51.75.232.67:1801...
+[02:05:47] [LUA] [pkt in] id=29
+[02:05:47] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:48] [NET] Connecting to 51.75.232.67:1801...
+[02:05:49] [LUA] [pkt in] id=29
+[02:05:49] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:50] [NET] Connecting to 51.75.232.67:1801...
+[02:05:51] [LUA] [pkt in] id=29
+[02:05:51] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:52] [NET] Connecting to 51.75.232.67:1801...
+[02:05:53] [LUA] [pkt in] id=29
+[02:05:53] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:54] [NET] Connecting to 51.75.232.67:1801...
+[02:05:55] [LUA] [pkt in] id=29
+[02:05:55] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:56] [NET] Connecting to 51.75.232.67:1801...
+[02:05:57] [LUA] [pkt in] id=29
+[02:05:57] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:05:58] [NET] Connecting to 51.75.232.67:1801...
+[02:05:59] [LUA] [pkt in] id=29
+[02:05:59] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:00] [NET] Connecting to 51.75.232.67:1801...
+[02:06:01] [LUA] [pkt in] id=29
+[02:06:01] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:02] [NET] Connecting to 51.75.232.67:1801...
+[02:06:03] [LUA] [pkt in] id=29
+[02:06:03] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:04] [NET] Connecting to 51.75.232.67:1801...
+[02:06:05] [LUA] [pkt in] id=29
+[02:06:05] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:06] [NET] Connecting to 51.75.232.67:1801...
+[02:06:06] [LUA] [pkt in] id=29
+[02:06:06] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:07] [NET] Connecting to 51.75.232.67:1801...
+[02:06:08] [LUA] [pkt in] id=29
+[02:06:08] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:09] [NET] Connecting to 51.75.232.67:1801...
+[02:06:10] [LUA] [pkt in] id=29
+[02:06:10] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:11] [NET] Connecting to 51.75.232.67:1801...
+[02:06:12] [LUA] [pkt in] id=29
+[02:06:12] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:13] [NET] Connecting to 51.75.232.67:1801...
+[02:06:14] [LUA] [pkt in] id=29
+[02:06:14] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:15] [NET] Connecting to 51.75.232.67:1801...
+[02:06:16] [LUA] [pkt in] id=29
+[02:06:16] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:17] [NET] Connecting to 51.75.232.67:1801...
+[02:06:18] [LUA] [pkt in] id=29
+[02:06:18] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:19] [NET] Connecting to 51.75.232.67:1801...
+[02:06:20] [LUA] [pkt in] id=29
+[02:06:20] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:21] [NET] Connecting to 51.75.232.67:1801...
+[02:06:22] [LUA] [pkt in] id=29
+[02:06:22] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:23] [NET] Connecting to 51.75.232.67:1801...
+[02:06:24] [LUA] [pkt in] id=29
+[02:06:24] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:25] [NET] Connecting to 51.75.232.67:1801...
+[02:06:26] [LUA] [pkt in] id=29
+[02:06:26] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:27] [NET] Connecting to 51.75.232.67:1801...
+[02:06:28] [LUA] [pkt in] id=29
+[02:06:28] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:29] [NET] Connecting to 51.75.232.67:1801...
+[02:06:30] [LUA] [pkt in] id=29
+[02:06:30] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:31] [NET] Connecting to 51.75.232.67:1801...
+[02:06:32] [LUA] [pkt in] id=29
+[02:06:32] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:33] [NET] Connecting to 51.75.232.67:1801...
+[02:06:34] [LUA] [pkt in] id=29
+[02:06:34] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:35] [NET] Connecting to 51.75.232.67:1801...
+[02:06:36] [LUA] [pkt in] id=29
+[02:06:36] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:37] [NET] Connecting to 51.75.232.67:1801...
+[02:06:38] [LUA] [pkt in] id=29
+[02:06:38] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:39] [NET] Connecting to 51.75.232.67:1801...
+[02:06:40] [LUA] [pkt in] id=29
+[02:06:40] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:41] [NET] Connecting to 51.75.232.67:1801...
+[02:06:42] [LUA] [pkt in] id=29
+[02:06:42] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:43] [NET] Connecting to 51.75.232.67:1801...
+[02:06:44] [LUA] [pkt in] id=29
+[02:06:44] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:45] [NET] Connecting to 51.75.232.67:1801...
+[02:06:46] [LUA] [pkt in] id=29
+[02:06:46] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:47] [NET] Connecting to 51.75.232.67:1801...
+[02:06:48] [LUA] [pkt in] id=29
+[02:06:48] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:49] [NET] Connecting to 51.75.232.67:1801...
+[02:06:50] [LUA] [pkt in] id=29
+[02:06:50] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:51] [NET] Connecting to 51.75.232.67:1801...
+[02:06:52] [LUA] [pkt in] id=29
+[02:06:52] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:53] [NET] Connecting to 51.75.232.67:1801...
+[02:06:54] [LUA] [pkt in] id=29
+[02:06:54] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:55] [NET] Connecting to 51.75.232.67:1801...
+[02:06:56] [LUA] [pkt in] id=29
+[02:06:56] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:57] [NET] Connecting to 51.75.232.67:1801...
+[02:06:58] [LUA] [pkt in] id=29
+[02:06:58] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:06:59] [NET] Connecting to 51.75.232.67:1801...
+[02:07:00] [LUA] [pkt in] id=29
+[02:07:00] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:01] [NET] Connecting to 51.75.232.67:1801...
+[02:07:02] [LUA] [pkt in] id=29
+[02:07:02] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:03] [NET] Connecting to 51.75.232.67:1801...
+[02:07:04] [LUA] [pkt in] id=29
+[02:07:04] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:05] [NET] Connecting to 51.75.232.67:1801...
+[02:07:06] [LUA] [pkt in] id=29
+[02:07:06] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:07] [NET] Connecting to 51.75.232.67:1801...
+[02:07:08] [LUA] [pkt in] id=29
+[02:07:08] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:09] [NET] Connecting to 51.75.232.67:1801...
+[02:07:10] [LUA] [pkt in] id=29
+[02:07:10] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:11] [NET] Connecting to 51.75.232.67:1801...
+[02:07:12] [LUA] [pkt in] id=29
+[02:07:12] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:13] [NET] Connecting to 51.75.232.67:1801...
+[02:07:14] [LUA] [pkt in] id=29
+[02:07:14] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:15] [NET] Connecting to 51.75.232.67:1801...
+[02:07:16] [LUA] [pkt in] id=29
+[02:07:16] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:17] [NET] Connecting to 51.75.232.67:1801...
+[02:07:18] [LUA] [pkt in] id=29
+[02:07:18] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:19] [NET] Connecting to 51.75.232.67:1801...
+[02:07:20] [LUA] [pkt in] id=29
+[02:07:20] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:21] [NET] Connecting to 51.75.232.67:1801...
+[02:07:22] [LUA] [pkt in] id=29
+[02:07:22] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:23] [NET] Connecting to 51.75.232.67:1801...
+[02:07:24] [LUA] [pkt in] id=29
+[02:07:24] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:25] [NET] Connecting to 51.75.232.67:1801...
+[02:07:26] [LUA] [pkt in] id=29
+[02:07:26] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:27] [NET] Connecting to 51.75.232.67:1801...
+[02:07:28] [LUA] [pkt in] id=29
+[02:07:28] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:29] [NET] Connecting to 51.75.232.67:1801...
+[02:07:30] [LUA] [pkt in] id=29
+[02:07:30] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:31] [NET] Connecting to 51.75.232.67:1801...
+[02:07:32] [LUA] [pkt in] id=29
+[02:07:32] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:33] [NET] Connecting to 51.75.232.67:1801...
+[02:07:33] [LUA] [pkt in] id=29
+[02:07:33] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:34] [NET] Connecting to 51.75.232.67:1801...
+[02:07:35] [LUA] [pkt in] id=29
+[02:07:35] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:36] [NET] Connecting to 51.75.232.67:1801...
+[02:07:37] [LUA] [pkt in] id=29
+[02:07:37] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:38] [NET] Connecting to 51.75.232.67:1801...
+[02:07:39] [LUA] [pkt in] id=29
+[02:07:39] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:40] [NET] Connecting to 51.75.232.67:1801...
+[02:07:41] [LUA] [pkt in] id=29
+[02:07:41] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:42] [NET] Connecting to 51.75.232.67:1801...
+[02:07:43] [LUA] [pkt in] id=29
+[02:07:43] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:44] [NET] Connecting to 51.75.232.67:1801...
+[02:07:45] [LUA] [pkt in] id=29
+[02:07:45] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:46] [NET] Connecting to 51.75.232.67:1801...
+[02:07:47] [LUA] [pkt in] id=29
+[02:07:47] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:48] [NET] Connecting to 51.75.232.67:1801...
+[02:07:49] [LUA] [pkt in] id=29
+[02:07:49] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:50] [NET] Connecting to 51.75.232.67:1801...
+[02:07:51] [LUA] [pkt in] id=29
+[02:07:51] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:52] [NET] Connecting to 51.75.232.67:1801...
+[02:07:53] [LUA] [pkt in] id=29
+[02:07:53] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:54] [NET] Connecting to 51.75.232.67:1801...
+[02:07:55] [LUA] [pkt in] id=29
+[02:07:55] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:56] [NET] Connecting to 51.75.232.67:1801...
+[02:07:57] [LUA] [pkt in] id=29
+[02:07:57] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:07:58] [NET] Connecting to 51.75.232.67:1801...
+[02:07:59] [LUA] [pkt in] id=29
+[02:07:59] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:00] [NET] Connecting to 51.75.232.67:1801...
+[02:08:01] [LUA] [pkt in] id=29
+[02:08:01] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:02] [NET] Connecting to 51.75.232.67:1801...
+[02:08:03] [LUA] [pkt in] id=29
+[02:08:03] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:04] [NET] Connecting to 51.75.232.67:1801...
+[02:08:05] [LUA] [pkt in] id=29
+[02:08:05] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:06] [NET] Connecting to 51.75.232.67:1801...
+[02:08:07] [LUA] [pkt in] id=29
+[02:08:07] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:08] [NET] Connecting to 51.75.232.67:1801...
+[02:08:09] [LUA] [pkt in] id=29
+[02:08:09] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:10] [NET] Connecting to 51.75.232.67:1801...
+[02:08:11] [LUA] [pkt in] id=29
+[02:08:11] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:12] [NET] Connecting to 51.75.232.67:1801...
+[02:08:13] [LUA] [pkt in] id=29
+[02:08:13] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:14] [NET] Connecting to 51.75.232.67:1801...
+[02:08:15] [LUA] [pkt in] id=29
+[02:08:15] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:16] [NET] Connecting to 51.75.232.67:1801...
+[02:08:17] [LUA] [pkt in] id=29
+[02:08:17] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:18] [NET] Connecting to 51.75.232.67:1801...
+[02:08:19] [LUA] [pkt in] id=29
+[02:08:19] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:20] [NET] Connecting to 51.75.232.67:1801...
+[02:08:21] [LUA] [pkt in] id=29
+[02:08:21] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:22] [NET] Connecting to 51.75.232.67:1801...
+[02:08:23] [LUA] [pkt in] id=29
+[02:08:23] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:24] [NET] Connecting to 51.75.232.67:1801...
+[02:08:25] [LUA] [pkt in] id=29
+[02:08:25] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:26] [NET] Connecting to 51.75.232.67:1801...
+[02:08:27] [LUA] [pkt in] id=29
+[02:08:27] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:28] [NET] Connecting to 51.75.232.67:1801...
+[02:08:29] [LUA] [pkt in] id=29
+[02:08:29] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:30] [NET] Connecting to 51.75.232.67:1801...
+[02:08:31] [LUA] [pkt in] id=29
+[02:08:31] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:32] [NET] Connecting to 51.75.232.67:1801...
+[02:08:33] [LUA] [pkt in] id=29
+[02:08:33] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:34] [NET] Connecting to 51.75.232.67:1801...
+[02:08:35] [LUA] [pkt in] id=29
+[02:08:35] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:36] [NET] Connecting to 51.75.232.67:1801...
+[02:08:37] [LUA] [pkt in] id=29
+[02:08:37] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:38] [NET] Connecting to 51.75.232.67:1801...
+[02:08:39] [LUA] [pkt in] id=29
+[02:08:39] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:40] [NET] Connecting to 51.75.232.67:1801...
+[02:08:41] [LUA] [pkt in] id=29
+[02:08:41] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:42] [NET] Connecting to 51.75.232.67:1801...
+[02:08:43] [LUA] [pkt in] id=29
+[02:08:43] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:44] [NET] Connecting to 51.75.232.67:1801...
+[02:08:45] [LUA] [pkt in] id=29
+[02:08:45] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:46] [NET] Connecting to 51.75.232.67:1801...
+[02:08:46] [LUA] [pkt in] id=29
+[02:08:46] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:47] [NET] Connecting to 51.75.232.67:1801...
+[02:08:48] [LUA] [pkt in] id=29
+[02:08:48] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:49] [NET] Connecting to 51.75.232.67:1801...
+[02:08:50] [LUA] [pkt in] id=29
+[02:08:50] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:51] [NET] Connecting to 51.75.232.67:1801...
+[02:08:52] [LUA] [pkt in] id=29
+[02:08:52] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:53] [NET] Connecting to 51.75.232.67:1801...
+[02:08:54] [LUA] [pkt in] id=29
+[02:08:54] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:55] [NET] Connecting to 51.75.232.67:1801...
+[02:08:56] [LUA] [pkt in] id=29
+[02:08:56] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:57] [NET] Connecting to 51.75.232.67:1801...
+[02:08:58] [LUA] [pkt in] id=29
+[02:08:58] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:08:59] [NET] Connecting to 51.75.232.67:1801...
+[02:09:00] [LUA] [pkt in] id=29
+[02:09:00] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:09:01] [NET] Connecting to 51.75.232.67:1801...
+[02:09:02] [LUA] [pkt in] id=29
+[02:09:02] [NET] Connection attempt failed. Reconnecting in 1 seconds.
+[02:09:03] [NET] Connecting to 51.75.232.67:1801...
+[02:09:04] [LUA] [pkt in] id=29
+[02:09:04] [NET] Connection attempt failed. Reconnecting in 1 seconds.
