@@ -2,16 +2,9 @@
 # ============================================================
 #  RakSAMP Lite — установка и запуск двух ботов PRIME RUSSIA
 #
-#  ОДНА КОМАНДА (приватный репо — нужен GitHub токен):
+#  ОДНА КОМАНДА:
 #
-#    GHTOKEN=ghp_ВАШ_ТОКЕН bash <(curl -fsSL \
-#      -H "Authorization: token ghp_ВАШ_ТОКЕН" \
-#      "https://raw.githubusercontent.com/babinecd722-dot/xxxxxxxxxx/claude/bot-registration-spawn-ZXMf3/raksamp/install.sh")
-#
-#  Или сохранить и запустить:
-#    curl -fsSL -H "Authorization: token ghp_ВАШ_ТОКЕН" \
-#      "https://raw.githubusercontent.com/babinecd722-dot/xxxxxxxxxx/claude/bot-registration-spawn-ZXMf3/raksamp/install.sh" \
-#      -o install.sh && GHTOKEN=ghp_ВАШ_ТОКЕН bash install.sh
+#    bash <(curl -fsSL "https://raw.githubusercontent.com/babinecd722-dot/xxxxxxxxxx/claude/bot-registration-spawn-ZXMf3/raksamp/install.sh")
 #
 # ============================================================
 set -euo pipefail
@@ -22,19 +15,10 @@ REPO="babinecd722-dot/xxxxxxxxxx"
 RAW="https://raw.githubusercontent.com/${REPO}/${BRANCH}/raksamp"
 ZIP_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/RakSAMP%20Lite.zip"
 
-# GitHub token (опционально, для приватного репо)
-GHTOKEN="${GHTOKEN:-}"
-AUTH=""
-[[ -n "$GHTOKEN" ]] && AUTH="-H \"Authorization: token $GHTOKEN\""
-
 dl() {
     local url="$1" dst="$2"
     mkdir -p "$(dirname "$dst")"
-    if [[ -n "$GHTOKEN" ]]; then
-        curl -fsSL -H "Authorization: token $GHTOKEN" "$url" -o "$dst"
-    else
-        curl -fsSL "$url" -o "$dst"
-    fi
+    curl -fsSL "$url" -o "$dst"
     echo "  + $dst"
 }
 
