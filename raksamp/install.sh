@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 # ============================================================
-#  RakSAMP Lite — установка и запуск двух ботов
-#  Использование:
-#    mkdir -p /root/rakbot && cd /root/rakbot && bash <(curl -sL <URL_ЭТОГО_ФАЙЛА>)
-#  Или с токеном приватного репо:
-#    GHTOKEN=ghp_xxx bash <(curl -sL -H "Authorization: token $GHTOKEN" <URL>)
+#  RakSAMP Lite — установка и запуск двух ботов PRIME RUSSIA
+#
+#  ОДНА КОМАНДА (приватный репо — нужен GitHub токен):
+#
+#    GHTOKEN=ghp_ВАШ_ТОКЕН bash <(curl -fsSL \
+#      -H "Authorization: token ghp_ВАШ_ТОКЕН" \
+#      "https://raw.githubusercontent.com/babinecd722-dot/xxxxxxxxxx/claude/bot-registration-spawn-ZXMf3/raksamp/install.sh")
+#
+#  Или сохранить и запустить:
+#    curl -fsSL -H "Authorization: token ghp_ВАШ_ТОКЕН" \
+#      "https://raw.githubusercontent.com/babinecd722-dot/xxxxxxxxxx/claude/bot-registration-spawn-ZXMf3/raksamp/install.sh" \
+#      -o install.sh && GHTOKEN=ghp_ВАШ_ТОКЕН bash install.sh
+#
 # ============================================================
 set -euo pipefail
 
