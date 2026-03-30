@@ -214,38 +214,19 @@ end
 -- Используем 5-аргументный вариант: packet_id = 0xFB, данные = screen_id + json_len + json
 -- Отправка GUI-пакета серверу.
 -- Тестируем разные форматы чтобы найти правильный.
--- PR_SEND_MODE: "5A"=5arg без extra, "5B"=5arg с 2 extra, "3A"=3arg+pktid без extra, "3B"=3arg+pktid+2extra
--- Confirmed format from traffic analysis:
--- incoming: [pkt_id][screen uint16][json_len uint16][json_len uint16 DUPLICATE][json]
--- The "2 extra bytes" are a SECOND copy of json_len (both = len of json string)
--- "3C" = [pkt_id][screen uint16][json_len uint16][json_len uint16 DUP][json]
--- "3D" = [pkt_id][screen uint16][json] — NO length prefix at all
--- Пробуем 3D — минимальный формат
--- Пробуем разные комбинации reliability/channel
--- "3C" = RELIABLE_ORDERED(9), ch0 + double json_len
--- "3D" = no len, RELIABLE_ORDERED(9), ch0
--- "3E" = sendRPCEx fallback
--- "3F" = RELIABLE(8), ch0, no len
--- "3G" = RELIABLE_ORDERED(9), ch1
--- 5A: sendPacketEx(0xFB, priority, reliability, channel, broadcast) — explicit packet ID
--- данные: screen uint16 + json bytes (NO pkt_id byte, NO length prefix)
-local PR_SEND_MODE = "3C" -- most stable
+-- Правильный формат исходящего пакета (из реверса APK PRIME RUSSIA):
+--   [uint8: 0xFB] [uint32 LE: screen_id] [json bytes]  — без length-prefix
+-- "4A" = правильный формат: uint32 screen_id, без length prefix
+local PR_SEND_MODE = "4A"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
-	if PR_SEND_MODE == "5A" then
-		bs:writeUInt16(screen_id)
-		bs:writeUInt16(#json_str)
+	if PR_SEND_MODE == "4A" then
+		-- ПРАВИЛЬНЫЙ формат (реверс APK): [uint8 pkt_id][uint32 LE screen_id][json bytes]
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt32(screen_id)
 		bs:writeString(json_str)
-		local ok, err = pcall(function() bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false) end)
-		if not ok then dbg("[PR] 5A failed: " .. tostring(err)) end
-	elseif PR_SEND_MODE == "5B" then
-		bs:writeUInt16(screen_id)
-		bs:writeUInt16(#json_str)
-		bs:writeUInt8(0); bs:writeUInt8(0)
-		bs:writeString(json_str)
-		local ok, err = pcall(function() bs:sendPacketEx(PKT_GUI_OUT, 1, 9, 0, false) end)
-		if not ok then dbg("[PR] 5B failed: " .. tostring(err)) end
+		bs:sendPacketEx(1, 9, 0)
 	elseif PR_SEND_MODE == "3A" then
 		bs:writeUInt8(PKT_GUI_OUT)
 		bs:writeUInt16(screen_id)
@@ -364,39 +345,23 @@ local function pr_do_register()
 		pw = "Prime" .. tostring(math.random(1000, 9999))
 		dbg("[PR] REGISTER: no password, using generated: " .. pw)
 	end
-	-- Длина пароля должна быть 6-15 символов
 	if #pw < 6 then pw = pw .. string.rep("0", 6 - #pw) end
 	if #pw > 15 then pw = pw:sub(1, 15) end
 	PR.pw = pw
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	-- Помечаем все шаги как выполненные — полная последовательность шлётся сразу
-	PR.sex_sent    = true
-	PR.skin_sent   = true
-	PR.invite_sent = true
-	dbg(string.format("[PR] REGISTER sequence attempt=%d pw_len=%d skin=%d", PR.reg_attempt, #pw, REGISTRATION_SKIN))
-	-- Полная последовательность регистрации (из оригинального клиента):
-	--   {t:1, s:"", p:PASSWORD}  — создать аккаунт
-	--   {t:2, s:"", r:0}         — сбросить fingerprint/ошибку
-	--   {t:4, s:""}              — пропустить инвайт
-	--   {t:3, r:0}               — пол мужской
-	--   {t:5, r:skinId}          — выбрать скин
-	--   {c:1}                    — закрыть GUI
-	-- Все пакеты с задержкой 250 мс между ними
-	newTask(function()
-		local jsons = {
-			string.format('{"t":1,"s":"","p":"%s"}', pw),
-			'{"t":2,"s":"","r":0}',
-			'{"t":4,"s":""}',
-			'{"t":3,"r":0}',
-			string.format('{"t":5,"r":%d}', REGISTRATION_SKIN),
-			'{"c":1}',
-		}
-		for i = 1, #jsons do
-			pr_send(38, jsons[i])
-			wait(250)
-		end
-		dbg("[PR] Registration sequence complete")
-	end)
+	PR.sex_sent = true; PR.skin_sent = true; PR.invite_sent = true
+	dbg(string.format("[PR] REGISTER attempt=%d pw_len=%d skin=%d", PR.reg_attempt, #pw, REGISTRATION_SKIN))
+	-- Точная последовательность из оригинального клиента (leaked):
+	local JSONs = {
+		string.format('{"t":1,"s":"","p":"%s"}', pw),
+		'{"t":2,"s":"","r":0}',
+		'{"t":4,"s":""}',
+		'{"t":3,"r":0}',
+		string.format('{"t":5,"r":%d}', REGISTRATION_SKIN),
+		'{"c":1}',
+	}
+	for i = 1, #JSONs do pr_send(38, JSONs[i]) wait(250) end
+	dbg("[PR] Registration sequence sent")
 end
 
 local function pr_do_sex()
@@ -481,27 +446,15 @@ local function handle_pr_packet(screen_id, json_str)
 				PR.is_registration = true
 				dbg("[PR] GUI38 OPEN: REGISTRATION mode")
 				newTask(function()
-					-- Ждём как будто пользователь вводит пароль (2 секунды)
-					wait(2000)
+					wait(800)
 					pr_do_register()
-					-- Если сервер не ответил за 15 сек — пробуем ещё раз
-					wait(15000)
-					if PR.active and not PR.sex_sent then
-						dbg("[PR] No response to t=1 after 15s, retrying register")
-						pr_do_register()
-					end
 				end)
 			else
 				PR.is_registration = false
 				dbg("[PR] GUI38 OPEN: LOGIN mode")
 				newTask(function()
-					wait(1500)
+					wait(800)
 					pr_do_login()
-					wait(15000)
-					if PR.active and PR.login_attempts < 3 then
-						dbg("[PR] No response to t=6 after 15s, retrying login")
-						pr_do_login()
-					end
 				end)
 			end
 			return
@@ -595,57 +548,69 @@ local function handle_pr_packet(screen_id, json_str)
 		end
 
 	-- ========================
-	-- screenId=10 — SAMP-диалог
+	-- screenId=10 — SAMP-диалог (PRIME RUSSIA обёртка)
+	-- {"o":1,"i":style,"c":"title","s":"text","l":"btn1","r":"btn2"}
+	-- Ответ: {"r":button,"i":"input","l":0}
 	-- ========================
 	elseif screen_id == 10 then
 		if o == 1 then
-			local style = t["i"] or t["style"] or 0
-			local title = t["c"] or ""
-			local text  = t["s"] or ""
-			local btn1  = t["l"] or ""
-			local btn2  = t["r"] or ""
-			dbg(string.format("[PR] DIALOG style=%s title=%s text=%s",
-				tostring(style), tostring(title), tostring(text):sub(1,80)))
+			local style = tonumber(t["i"]) or 0
+			local title = tostring(t["c"] or "")
+			local text  = tostring(t["s"] or "")
+			local btn1  = tostring(t["l"] or "")
+			local btn2  = tostring(t["r"] or "")
+			dbg(string.format("[PR] SCR10 style=%d title=%q text=%q",
+				style, title, text:sub(1, 80)))
 
-			local pw = account_pw_from_env()
-			local blob = (tostring(title) .. " " .. tostring(text)):lower()
+			local pw   = account_pw_from_env()
+			local blob = (title .. " " .. text):lower()
 
-			-- Инвайт — скипаем
-			if blob:find("пригласил", 1, true) or blob:find("invite", 1, true) then
-				dbg("[PR] DIALOG: invite skip")
+			-- Инвайт → отклонить (btn0)
+			if blob:find("пригласил", 1, true) or blob:find("invite", 1, true)
+			or blob:find("инвайт", 1, true) then
+				dbg("[SCR10] invite skip → r=0")
 				pr_send_json(10, {r=0, i="", l=0})
 				return
 			end
-
-			-- Выбор пола
-			if blob:find("пол", 1, true) and (blob:find("выбер", 1, true) or blob:find("мужск", 1, true)) then
-				dbg("[PR] DIALOG: sex -> male (row 0)")
+			-- Правила / приветствие → принять
+			if blob:find("правил", 1, true) or blob:find("ознакомл", 1, true)
+			or blob:find("добро пожаловать", 1, true) or blob:find("welcome", 1, true) then
+				dbg("[SCR10] rules/welcome → OK")
 				pr_send_json(10, {r=1, i="", l=0})
 				return
 			end
-
-			-- Место спавна
-			if blob:find("спавн", 1, true) or blob:find("spawn", 1, true) or blob:find("место", 1, true) then
-				dbg("[PR] DIALOG: spawn location -> row 0")
+			-- Пол → мужской
+			if blob:find("пол", 1, true) or blob:find("gender", 1, true)
+			or blob:find("мужчин", 1, true) then
+				dbg("[SCR10] sex → male row 0")
 				pr_send_json(10, {r=1, i="", l=0})
-				pr_do_spawn_location()
 				return
 			end
-
-			-- Пароль/логин
-			if blob:find("парол", 1, true) or blob:find("password", 1, true) or blob:find("логин", 1, true) then
-				if pw ~= "" then
-					dbg("[PR] DIALOG: password -> OK with pw")
-					pr_send_json(10, {r=1, i=pw, l=0})
-				else
-					pr_send_json(10, {r=1, i="", l=0})
-				end
+			-- Спавн
+			if blob:find("спавн", 1, true) or blob:find("spawn", 1, true)
+			or blob:find("вокзал", 1, true) then
+				dbg("[SCR10] spawn → row 0")
+				pr_send_json(10, {r=1, i="", l=0})
 				return
 			end
-
-			-- По умолчанию — OK пустым
-			dbg("[PR] DIALOG: default OK")
-			pr_send_json(10, {r=1, i=pw, l=0})
+			-- Пароль / логин
+			if blob:find("парол", 1, true) or blob:find("password", 1, true)
+			or blob:find("логин", 1, true) then
+				local inp = pw ~= "" and pw or ""
+				dbg("[SCR10] password/login → OK pw_len=" .. #inp)
+				pr_send_json(10, {r=1, i=inp, l=0})
+				return
+			end
+			-- По стилю: INPUT/PASSWORD (style 3/4)
+			if style == 3 or style == 4 then
+				local inp = pw ~= "" and pw or ""
+				dbg("[SCR10] INPUT/PASSWORD style → OK")
+				pr_send_json(10, {r=1, i=inp, l=0})
+				return
+			end
+			-- Fallback → btn1 OK
+			dbg("[SCR10] default → OK btn1")
+			pr_send_json(10, {r=1, i="", l=0})
 		end
 
 	-- ========================
@@ -1119,62 +1084,100 @@ function onSetSpawnInfo(team, skin, unused, position, rotation, weapons, ammo)
 	-- Спавн происходит после screen=50 SpawnLocation, не здесь
 end
 
--- SA-MP диалог (стандартный, не PRIME RUSSIA)
-function onShowDialog(dialogId, style, title, button1, button2, text)
+-- ================================================================
+-- Dialog Receiver — обработчик стандартных SA-MP диалогов
+-- ================================================================
+-- Возвращает true если диалог обработан
+local function dialog_receiver(dialogId, style, title, button1, button2, text)
 	title = title or ""
-	text = text or ""
+	text  = text  or ""
+	local pw   = account_pw_from_env()
 	local blob = (title .. " " .. text):lower()
-	local pw = account_pw_from_env()
-	local inp = pw
-	local text_snip = text:sub(1, 200):gsub("\r", " "):gsub("\n", " ")
-	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q text=%q",
-		dialogId, style, title, text_snip))
 
-	-- Инвайт
-	if blob:find("пригласил", 1, true) or blob:find("invite", 1, true) then
-		dbg("[PR-DIALOG] invite skip")
+	-- ── Приглашение (invite) ─────────────────────────────
+	if blob:find("пригласил", 1, true) or blob:find("invite", 1, true)
+	or blob:find("инвайт", 1, true) then
+		dbg("[DLG] invite skip → btn0")
 		sendDialogResponse(dialogId, 0, 0, "")
-		return false
-	end
-	-- Пол
-	if blob:find("пол", 1, true) and (blob:find("выбер", 1, true) or blob:find("мужск", 1, true)) then
-		dbg("[PR-DIALOG] sex male")
-		sendDialogResponse(dialogId, 1, 0, "")
-		return false
-	end
-	-- Место спавна
-	if blob:find("спавн", 1, true) or blob:find("spawn location", 1, true) then
-		dbg("[PR-DIALOG] spawn location row 0")
-		sendDialogResponse(dialogId, 1, 0, "")
-		pr_do_spawn_location()
-		return false
-	end
-	-- Скин
-	if blob:find("персонаж", 1, true) or blob:find("скин", 1, true) or blob:find("внешн", 1, true) then
-		dbg("[PR-DIALOG] skin confirm 78")
-		sendDialogResponse(dialogId, 1, 0, "78")
-		return false
+		return true
 	end
 
-	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD then
-		if inp == "" then inp = "RakBot_" .. tostring(math.random(10000, 99999)) end
-		dbg("[merged] Dialog INPUT/PASSWORD -> OK pw=" .. inp:sub(1,3) .. "***")
-		sendDialogResponse(dialogId, 1, 0, inp)
-		return false
+	-- ── Правила / Приветствие → принять ─────────────────
+	if blob:find("правил", 1, true) or blob:find("ознакомл", 1, true)
+	or blob:find("добро пожаловать", 1, true) or blob:find("welcome", 1, true)
+	or blob:find("принимаю", 1, true) or blob:find("согласен", 1, true) then
+		dbg("[DLG] rules/welcome → OK btn1")
+		sendDialogResponse(dialogId, 1, 0, "")
+		return true
 	end
-	if style == DIALOG_STYLE_LIST or style == DIALOG_STYLE_TABLIST or style == DIALOG_STYLE_TABLIST_HEADERS then
-		dbg("[merged] Dialog LIST/TABLIST -> row 0")
-		sendDialogResponse(dialogId, 1, 0, (inp ~= "" and inp or ""))
-		return false
+
+	-- ── Пол → мужской (первая строка в LIST, или btn1 в MSGBOX) ──
+	if blob:find("пол", 1, true) or blob:find("gender", 1, true)
+	or blob:find("мужчин", 1, true) or blob:find("женщин", 1, true) then
+		dbg("[DLG] sex select → male row 0")
+		sendDialogResponse(dialogId, 1, 0, "")
+		return true
+	end
+
+	-- ── Место спавна ─────────────────────────────────────
+	if blob:find("спавн", 1, true) or blob:find("spawn", 1, true)
+	or blob:find("вокзал", 1, true) or blob:find("точку", 1, true) then
+		dbg("[DLG] spawn location → row 0")
+		sendDialogResponse(dialogId, 1, 0, "")
+		return true
+	end
+
+	-- ── Скин / персонаж ──────────────────────────────────
+	if blob:find("персонаж", 1, true) or blob:find("скин", 1, true)
+	or blob:find("внешн", 1, true) or blob:find("skin", 1, true) then
+		dbg("[DLG] skin → row 0")
+		sendDialogResponse(dialogId, 1, 0, "")
+		return true
+	end
+
+	-- ── Пароль / логин / регистрация ─────────────────────
+	if blob:find("парол", 1, true) or blob:find("password", 1, true)
+	or blob:find("логин", 1, true) or blob:find("login", 1, true)
+	or blob:find("регистр", 1, true) then
+		local inp = pw ~= "" and pw or ("RakBot_" .. tostring(math.random(10000, 99999)))
+		dbg("[DLG] password/login → OK with pw len=" .. #inp)
+		sendDialogResponse(dialogId, 1, 0, inp)
+		return true
+	end
+
+	-- ── По стилю ─────────────────────────────────────────
+	if style == DIALOG_STYLE_INPUT or style == DIALOG_STYLE_PASSWORD then
+		local inp = pw ~= "" and pw or ("RakBot_" .. tostring(math.random(10000, 99999)))
+		dbg("[DLG] INPUT/PASSWORD → OK pw_len=" .. #inp)
+		sendDialogResponse(dialogId, 1, 0, inp)
+		return true
+	end
+	if style == DIALOG_STYLE_LIST or style == DIALOG_STYLE_TABLIST
+	or style == DIALOG_STYLE_TABLIST_HEADERS then
+		dbg("[DLG] LIST/TABLIST → row 0")
+		sendDialogResponse(dialogId, 1, 0, "")
+		return true
 	end
 	if style == DIALOG_STYLE_MSGBOX then
-		dbg("[merged] Dialog MSGBOX -> OK")
+		dbg("[DLG] MSGBOX → OK")
 		sendDialogResponse(dialogId, 1, 0, "")
+		return true
+	end
+
+	-- ── Fallback → OK ────────────────────────────────────
+	dbg(string.format("[DLG] fallback style=%d → OK", style))
+	sendDialogResponse(dialogId, 1, 0, "")
+	return true
+end
+
+-- SA-MP диалог (стандартный, не PRIME RUSSIA)
+function onShowDialog(dialogId, style, title, button1, button2, text)
+	local text_snip = (text or ""):sub(1, 200):gsub("[\r\n]", " ")
+	dbg(string.format("[merged] ShowDialog id=%d style=%d title=%q text=%q",
+		dialogId, style, title or "", text_snip))
+	if dialog_receiver(dialogId, style, title, button1, button2, text) then
 		return false
 	end
-	dbg(string.format("[merged] Dialog style=%d -> OK", style))
-	sendDialogResponse(dialogId, 1, 0, inp)
-	return false
 end
 
 -- InitGame
