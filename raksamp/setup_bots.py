@@ -362,6 +362,11 @@ def bots_from_manifest(data: dict) -> list[dict]:
     if mode in ("sequential", "seq", "bulk"):
         prefix = str(data.get("sequential_prefix", "Us"))
         return _sequential_nicks(count, prefix)
+    if mode in ("cool", "gamer", "english"):
+        return [
+            {"nick": n, "class_id": i % 10}
+            for i, n in enumerate(_cool_fill_nicks(count, permissive=False))
+        ]
 
     first = data.get("nick_first_names")
     last = data.get("nick_last_names")

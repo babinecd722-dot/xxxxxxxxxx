@@ -6,3 +6,5 @@ raksamp/*.run.log
 raksamp/lite_run/
 raksamp/lite_debug_run/
 raksamp/lite_gui/
+lite_run/
+lite_multi_launch.log
