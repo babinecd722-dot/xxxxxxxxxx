@@ -10,7 +10,7 @@
   "auto_spawn": true,
   "auto_spawn_chat_spawn": false,
   "gentle_antikick": true,
-  "generate_bot_count": 40,
+  "generate_bot_count": 50,
   "nick_mode": "cool",
   "sequential_prefix": "Us",
   "clientversion": "0.3.7",
