@@ -223,11 +223,13 @@ local PR_SEND_MODE = "FIXED"
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
 	if PR_SEND_MODE == "FIXED" then
-		-- Точный формат: [pkt][uint16 screen][uint16 len][uint16 len_dup][json bytes]
+		-- Точный формат: [pkt][uint16 screen][uint16 len][uint16 0][json bytes]
+		-- Подтверждён реверсом: сервер шлёт [pkt][screen][len][00 00][json],
+		-- второй uint16 всегда 0 (не дублирование длины!)
 		bs:writeUInt8(PKT_GUI_OUT)
 		bs:writeUInt16(screen_id)
 		bs:writeUInt16(#json_str)
-		bs:writeUInt16(#json_str)   -- дублирование длины — как у сервера
+		bs:writeUInt16(0)           -- второй uint16 = 0 (как у сервера)
 		for i = 1, #json_str do
 			bs:writeUInt8(json_str:byte(i))
 		end
@@ -265,7 +267,7 @@ local function pr_send(screen_id, json_str)
 		bs:writeUInt8(PKT_GUI_OUT)
 		bs:writeUInt16(screen_id)
 		bs:writeUInt16(#json_str)
-		bs:writeUInt16(#json_str)
+		bs:writeUInt16(0)
 		for i = 1, #json_str do
 			bs:writeUInt8(json_str:byte(i))
 		end
