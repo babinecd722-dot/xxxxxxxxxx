@@ -213,30 +213,44 @@ end
 -- 5 args: bs:sendPacketEx(packetId, priority, reliability, channel, broadcast)  → явный packet_id
 -- Используем 5-аргументный вариант: packet_id = 0xFB, данные = screen_id + json_len + json
 -- ================================================================
--- ДИАГНОСТИКА writeString:
---   Если writeString добавляет uint16 length-prefix:
---     "3D" → [FB][uint16 screen][uint16 len_auto][json]    ← правильный формат
---     "3C" → [FB][uint16 screen][len][len][len_auto][json] ← лишний len
---   Если writeString пишет raw bytes (без prefix):
---     "3D" → [FB][uint16 screen][json]                     ← неверно (нет len)
---     "3C" → [FB][uint16 screen][len][len][json]           ← правильный формат
--- getNumberOfBitsUsed() разница покажет правду (логируется ниже)
--- Текущий тест: "3D" — если writeString с prefix это даст [pkt][screen][len][json]
-local PR_SEND_MODE = "3D"
+-- Формат исходящего пакета (подтверждён реверсом входящих от сервера):
+--   [uint8 pkt_id=0xFB][uint16 LE screen_id][uint16 LE json_len][uint16 LE json_len_dup][json bytes]
+-- writeString() в RakSAMP Lite добавляет uint16 length-prefix → нельзя использовать.
+-- Пишем JSON байт за байтом через writeUInt8.
+-- ================================================================
+local PR_SEND_MODE = "FIXED"
 
 local function pr_send(screen_id, json_str)
 	local bs = bitStream.new()
-	if PR_SEND_MODE == "3D" then
+	if PR_SEND_MODE == "FIXED" then
+		-- Точный формат: [pkt][uint16 screen][uint16 len][uint16 len_dup][json bytes]
 		bs:writeUInt8(PKT_GUI_OUT)
 		bs:writeUInt16(screen_id)
-		local bits_before = bs:getNumberOfBitsUsed()
-		bs:writeString(json_str)
-		local bits_after = bs:getNumberOfBitsUsed()
-		local extra = (bits_after - bits_before) / 8 - #json_str
-		dbg(string.format("[PR-SEND-DBG] writeString extra_bytes=%d (0=raw,2=uint16prefix,4=uint32prefix)", extra))
+		bs:writeUInt16(#json_str)
+		bs:writeUInt16(#json_str)   -- дублирование длины — как у сервера
+		for i = 1, #json_str do
+			bs:writeUInt8(json_str:byte(i))
+		end
+		bs:sendPacketEx(1, 9, 0)
+	elseif PR_SEND_MODE == "FIXED_NOLEN2" then
+		-- Без дублирования: [pkt][uint16 screen][uint16 len][json bytes]
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		bs:writeUInt16(#json_str)
+		for i = 1, #json_str do
+			bs:writeUInt8(json_str:byte(i))
+		end
+		bs:sendPacketEx(1, 9, 0)
+	elseif PR_SEND_MODE == "FIXED_NOLEN" then
+		-- Без length: [pkt][uint16 screen][json bytes]
+		bs:writeUInt8(PKT_GUI_OUT)
+		bs:writeUInt16(screen_id)
+		for i = 1, #json_str do
+			bs:writeUInt8(json_str:byte(i))
+		end
 		bs:sendPacketEx(1, 9, 0)
 	elseif PR_SEND_MODE == "4A" then
-		-- ПРАВИЛЬНЫЙ формат (реверс APK): [uint8 pkt_id][uint32 LE screen_id][json bytes]
+		-- uint32 screen_id (ИЗВЕСТНО НЕВЕРНО — оставлено для истории)
 		bs:writeUInt8(PKT_GUI_OUT)
 		bs:writeUInt32(screen_id)
 		bs:writeString(json_str)
@@ -247,59 +261,14 @@ local function pr_send(screen_id, json_str)
 		bs:writeUInt16(#json_str)
 		bs:writeString(json_str)
 		bs:sendPacketEx(1, 9, 0)
-	elseif PR_SEND_MODE == "3C" then
-		-- CONFIRMED FORMAT: pkt_id + screen + json_len + json_len_again + json
-		bs:writeUInt8(PKT_GUI_OUT)
-		bs:writeUInt16(screen_id)
-		bs:writeUInt16(#json_str)    -- json_len первый раз
-		bs:writeUInt16(#json_str)    -- json_len второй раз (дублирование)
-		bs:writeString(json_str)
-		bs:sendPacketEx(1, 9, 0)
-	elseif PR_SEND_MODE == "3E" then
-		-- Через sendRPCEx(rpcId=251, priority=1)
-		-- данные: [screen uint16][json bytes]
-		bs:writeUInt16(screen_id)
-		bs:writeString(json_str)
-		local ok, err = pcall(function() bs:sendRPCEx(PKT_GUI_OUT, 1) end)
-		if not ok then
-			dbg("[PR] sendRPCEx failed: " .. tostring(err))
-			-- fallback
-			bs = bitStream.new()
-			bs:writeUInt8(PKT_GUI_OUT)
-			bs:writeUInt16(screen_id)
-			bs:writeString(json_str)
-			bs:sendPacketEx(1, 9, 0)
-		end
-	elseif PR_SEND_MODE == "3F" then
-		-- RELIABLE(8) channel=0, no len
-		bs:writeUInt8(PKT_GUI_OUT)
-		bs:writeUInt16(screen_id)
-		bs:writeString(json_str)
-		bs:sendPacketEx(1, 8, 0)
-	elseif PR_SEND_MODE == "3G" then
-		-- RELIABLE_ORDERED(9) channel=1
-		bs:writeUInt8(PKT_GUI_OUT)
-		bs:writeUInt16(screen_id)
-		bs:writeString(json_str)
-		bs:sendPacketEx(1, 9, 1)
-	elseif PR_SEND_MODE == "3H" then
-		-- UNRELIABLE(6) channel=0, no len  
-		bs:writeUInt8(PKT_GUI_OUT)
-		bs:writeUInt16(screen_id)
-		bs:writeString(json_str)
-		bs:sendPacketEx(1, 6, 0)
-	elseif PR_SEND_MODE == "3D" then
-		-- Минимальный формат: [pkt_id][screen uint16][json bytes] — без length поля
-		bs:writeUInt8(PKT_GUI_OUT)
-		bs:writeUInt16(screen_id)
-		bs:writeString(json_str)
-		bs:sendPacketEx(1, 9, 0)
-	else -- "3B"
+	else -- fallback = FIXED
 		bs:writeUInt8(PKT_GUI_OUT)
 		bs:writeUInt16(screen_id)
 		bs:writeUInt16(#json_str)
-		bs:writeUInt8(0); bs:writeUInt8(0)
-		bs:writeString(json_str)
+		bs:writeUInt16(#json_str)
+		for i = 1, #json_str do
+			bs:writeUInt8(json_str:byte(i))
+		end
 		bs:sendPacketEx(1, 9, 0)
 	end
 	dbg(string.format("[PR-SEND mode=%s] screen=%d len=%d json=%s", PR_SEND_MODE, screen_id, #json_str, json_str:sub(1, 200)))
@@ -365,9 +334,12 @@ local function pr_do_register()
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
 	PR.sex_sent = true; PR.skin_sent = true; PR.invite_sent = true
 	dbg(string.format("[PR] REGISTER attempt=%d pw_len=%d skin=%d", PR.reg_attempt, #pw, REGISTRATION_SKIN))
-	-- Точная последовательность из оригинального клиента (leaked):
+	-- Последовательность регистрации:
+	-- t=1: установить ник/пароль; t=2: подтверждение; t=4: пропустить инвайт;
+	-- t=3: пол (0=муж); t=5: скин (r=gameId); c=1: закрыть GUI
+	local nick = (PR.nick ~= "" and PR.nick) or get_bot_nick() or ""
 	local JSONs = {
-		string.format('{"t":1,"s":"","p":"%s"}', pw),
+		string.format('{"t":1,"s":"%s","p":"%s"}', nick, pw),
 		'{"t":2,"s":"","r":0}',
 		'{"t":4,"s":""}',
 		'{"t":3,"r":0}',
@@ -901,116 +873,76 @@ function onReceivePacket(id, bs)
 
 	-- ============================================================
 	-- PRIME RUSSIA кастомные GUI пакеты: 0xFB=251, 0xFC=252
+	-- Формат: [uint8 pkt_id][uint16 LE screen][uint16 LE json_len][uint16 LE json_len_dup][json bytes]
 	-- ============================================================
 	if id == PKT_GUI_IN or id == PKT_GUI_IN2 then
 		local unread_bits = bs:getNumberOfUnreadBits()
-		dbg(string.format("[PR-IN] pkt=%d unread_bits=%d bytes=%d", id, unread_bits, math.floor(unread_bits/8)))
-		-- Минимум: 1(pkt_id) + 2(screen_id) + 2(json_len) = 40 bits
-		if unread_bits < 40 then return end
+		local total_bytes = math.floor(unread_bits / 8)
+		dbg(string.format("[PR-IN] pkt=%d total_bytes=%d", id, total_bytes))
 
-		-- Hex dump первых 20 байт для диагностики формата
-		do
-			local nb = math.min(20, math.floor(unread_bits/8))
-			local hbuf = ffi.new("uint8_t[?]", nb+1)
-			local ok_hd = pcall(function() bs:readBuffer(tonumber(ffi.cast("intptr_t", hbuf)), nb) end)
-			if ok_hd then
-				local hex = ""
-				for i = 0, nb-1 do hex = hex .. string.format("%02X ", hbuf[i]) end
-				dbg("[PR-IN-HEX] first " .. nb .. " bytes: " .. hex)
-				-- Создаём новый bitstream из оставшихся данных — не можем "unread",
-				-- поэтому парсим hex вручную и продолжаем чтение из буфера
-				-- Сохраняем: pkt_id=hbuf[0], screen=hbuf[1..2], len=hbuf[3..4], dup=hbuf[5..6]
-				local pkt_id_raw   = hbuf[0]
-				local screen_raw   = hbuf[1] + hbuf[2]*256
-				local jsonlen_raw  = hbuf[3] + hbuf[4]*256
-				local dup_raw      = hbuf[5] + hbuf[6]*256
-				dbg(string.format("[PR-IN-PARSE] pkt_id=0x%02X screen=%d jsonlen=%d dup=%d",
-					pkt_id_raw, screen_raw, jsonlen_raw, dup_raw))
-				-- Читаем оставшиеся байты пакета
-				local rem_bits = bs:getNumberOfUnreadBits()
-				local rem = math.floor(rem_bits/8)
-				if rem > 0 then
-					local jbuf = ffi.new("uint8_t[?]", rem+1)
-					bs:readBuffer(tonumber(ffi.cast("intptr_t", jbuf)), rem)
-					jbuf[rem] = 0
-					local json_str = ffi.string(jbuf, rem)
-					local js = json_str:find("[{%[]")
-					if js and js > 1 then json_str = json_str:sub(js) end
-					dbg(string.format("[PR-IN] screen=%d json=%s", screen_raw, json_str:sub(1,300)))
-					local ok2, err = pcall(handle_pr_packet, screen_raw, json_str)
-					if not ok2 then dbg("[PR-IN] handle error: " .. tostring(err)) end
-				end
-			end
-		end
-		return false
-	end
-	-- (old parsing path below, unreachable when hex-dump path runs)
-	if false and (id == PKT_GUI_IN or id == PKT_GUI_IN2) then
-		bs:readUInt8()   -- пропускаем packet_id (0xFB/0xFC)
-
-		-- screen_id = uint16
-		local screen_id = bs:readUInt16()
-
-		-- json_len = uint16
-		local json_len = bs:readUInt16()
-
-		local remaining_bytes = math.floor(bs:getNumberOfUnreadBits() / 8)
-		dbg(string.format("[PR-IN] screen=%d json_len=%d remaining=%d", screen_id, json_len, remaining_bytes))
-
-		-- json_len указывает размер JSON, но перед ним могут быть ещё байты.
-		-- Используем remaining_bytes (все остатки) и потом найдём { в строке.
-		-- Если json_len > 0 и корректен используем его как ориентир но читаем всё.
-		-- (анализ пакета: 2 доп. байта перед { — возможно padding или доп. поле)
-
-		if remaining_bytes <= 0 then
-			dbg("[PR-IN] no json data")
-			return
-		end
-
-		-- Используем readBuffer через ffi для безопасного чтения
-		local buf = ffi.new("uint8_t[?]", remaining_bytes + 1)
-		local rb_ok, rb_err = pcall(function()
-			bs:readBuffer(tonumber(ffi.cast("intptr_t", buf)), remaining_bytes)
-		end)
-		if not rb_ok then
-			dbg("[PR-IN] readBuffer fail: " .. tostring(rb_err))
-			-- Fallback: читаем побайтово только нужное количество
-			local json_bytes = {}
-			for i = 1, remaining_bytes do
-				local b_ok, b = pcall(function() return bs:readUInt8() end)
-				if not b_ok then break end
-				json_bytes[i] = string.char(b)
-			end
-			local json_str = table.concat(json_bytes)
-			if json_str ~= "" then
-				local ok2, err = pcall(handle_pr_packet, screen_id, json_str)
-				if not ok2 then dbg("[PR-IN] handle error: " .. tostring(err)) end
-			end
+		-- Минимум: 1(pkt_id) + 2(screen) + 2(len) + 2(dup) = 7 байт
+		if total_bytes < 7 then
+			dbg("[PR-IN] too short, skip")
 			return false
 		end
 
-		buf[remaining_bytes] = 0
-		local json_str = ffi.string(buf, remaining_bytes)
+		-- Читаем ВСЕ байты сразу побайтово (надёжно, без ffi-pointer проблем)
+		local all_bytes = {}
+		for i = 1, total_bytes do
+			local ok_b, bv = pcall(function() return bs:readUInt8() end)
+			if not ok_b then break end
+			all_bytes[i] = bv
+		end
+		local got = #all_bytes
 
-		if json_str == "" or json_str == "\0" then
-			dbg("[PR-IN] empty json")
-			return
+		-- Hex dump первых 20 байт
+		local hex = ""
+		for i = 1, math.min(got, 20) do
+			hex = hex .. string.format("%02X ", all_bytes[i])
+		end
+		dbg("[PR-IN-HEX] " .. hex)
+
+		-- Парсим заголовок
+		-- byte[1] = pkt_id (0xFB/0xFC)
+		-- byte[2..3] = screen_id LE uint16
+		-- byte[4..5] = json_len LE uint16
+		-- byte[6..7] = json_len_dup LE uint16
+		local pkt_id_raw  = all_bytes[1] or 0
+		local screen      = (all_bytes[2] or 0) + (all_bytes[3] or 0) * 256
+		local json_len    = (all_bytes[4] or 0) + (all_bytes[5] or 0) * 256
+		local json_len2   = (all_bytes[6] or 0) + (all_bytes[7] or 0) * 256
+		dbg(string.format("[PR-IN-PARSE] pkt=0x%02X screen=%d len=%d dup=%d total=%d",
+			pkt_id_raw, screen, json_len, json_len2, got))
+
+		-- JSON начинается с байта 8 (индекс 8, т.к. Lua 1-based)
+		if got < 8 then
+			dbg("[PR-IN] no json bytes")
+			return false
 		end
 
-		-- Находим начало JSON объекта (ищем первый '{' или '[')
-		local json_start = json_str:find("[{%[]")
-		if json_start and json_start > 1 then
-			dbg(string.format("[PR-IN] trimming %d leading bytes before JSON", json_start - 1))
-			json_str = json_str:sub(json_start)
+		local json_parts = {}
+		for i = 8, got do
+			json_parts[#json_parts + 1] = string.char(all_bytes[i])
+		end
+		local json_str = table.concat(json_parts)
+
+		-- Дополнительная защита: ищем начало JSON если есть мусор
+		local js = json_str:find("[{%[]")
+		if js and js > 1 then
+			dbg(string.format("[PR-IN] trimming %d leading bytes", js - 1))
+			json_str = json_str:sub(js)
 		end
 
-		dbg(string.format("[PR-IN] screen=%d json=%s", screen_id, json_str:sub(1, 300)))
-		local ok2, err = pcall(handle_pr_packet, screen_id, json_str)
-		if not ok2 then
-			dbg("[PR-IN] handle error: " .. tostring(err))
+		if json_str == "" then
+			dbg("[PR-IN] empty json after trim")
+			return false
 		end
-		return false  -- consume packet
-	end  -- end old path (unreachable)
+
+		dbg(string.format("[PR-IN] screen=%d json=%s", screen, json_str:sub(1, 300)))
+		local ok2, err = pcall(handle_pr_packet, screen, json_str)
+		if not ok2 then dbg("[PR-IN] handle error: " .. tostring(err)) end
+		return false
+	end
 end
 
 -- ================================================================
