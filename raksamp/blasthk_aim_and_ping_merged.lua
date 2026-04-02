@@ -334,22 +334,17 @@ local function pr_do_register()
 	if #pw > 15 then pw = pw:sub(1, 15) end
 	PR.pw = pw
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	PR.sex_sent = true; PR.skin_sent = true; PR.invite_sent = true
-	dbg(string.format("[PR] REGISTER attempt=%d pw_len=%d skin=%d", PR.reg_attempt, #pw, REGISTRATION_SKIN))
-	-- Последовательность регистрации:
-	-- t=1: установить ник/пароль; t=2: подтверждение; t=4: пропустить инвайт;
-	-- t=3: пол (0=муж); t=5: скин (r=gameId); c=1: закрыть GUI
+	-- Сбрасываем флаги — шаги выполняются по ответам сервера (step-by-step)
+	PR.sex_sent = false; PR.skin_sent = false; PR.invite_sent = false
 	local nick = (PR.nick ~= "" and PR.nick) or get_bot_nick() or ""
-	local JSONs = {
-		string.format('{"t":1,"s":"%s","p":"%s"}', nick, pw),
-		'{"t":2,"s":"","r":0}',
-		'{"t":4,"s":""}',
-		'{"t":3,"r":0}',
-		string.format('{"t":5,"r":%d}', REGISTRATION_SKIN),
-		'{"c":1}',
-	}
-	for i = 1, #JSONs do pr_send(38, JSONs[i]) wait(250) end
-	dbg("[PR] Registration sequence sent")
+	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d skin=%d",
+		PR.reg_attempt, nick, #pw, REGISTRATION_SKIN))
+	-- Шаг 1: создать аккаунт. Остальные шаги придут по ответам сервера:
+	--   сервер → {"t":3}  → мы: {"t":3,"r":0} (пол)
+	--   сервер → {"t":0}  → мы: {"t":4,"s":""} (инвайт), затем {"t":5,"r":skin} (скин)
+	--   сервер → {"t":-1} → готово
+	pr_send(38, string.format('{"t":1,"s":"%s","p":"%s"}', nick, pw))
+	dbg("[PR] Registration t=1 sent, waiting for server steps...")
 end
 
 local function pr_do_sex()
