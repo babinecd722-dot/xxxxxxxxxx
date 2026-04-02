@@ -339,17 +339,17 @@ local function pr_do_register()
 	local nick = (PR.nick ~= "" and PR.nick) or get_bot_nick() or ""
 	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d skin=%d",
 		PR.reg_attempt, nick, #pw, REGISTRATION_SKIN))
-	-- t=1: создать аккаунт (nick + pass)
-	-- t=2: обязательный ACK — без него сервер не продвигает флоу к {"t":3}
-	-- Остальные шаги придут по ответам сервера:
-	--   recv {"t":3}  → send {"t":3,"r":0} (пол мужской)
-	--   recv {"t":0}  → send {"t":4,"s":""} (пропустить инвайт)
-	--   recv {"t":0}  → send {"t":5,"r":skin} (скин)
+	-- t=1: создать аккаунт (только пароль, ник НЕ передаём в s — сервер знает ник из подключения)
+	-- t=2: обязательный ACK — без него сервер не продвигает флоу
+	-- Остальные шаги по ответам сервера:
+	--   recv {"t":0}  → send {"t":4,"s":""} (инвайт пропустить)
+	--   recv {"t":0}  → send {"t":3,"r":0} (пол мужской)
+	--   recv {"t":3}  → send {"t":5,"r":skin} (скин)
 	--   recv {"t":-1} → регистрация завершена
-	pr_send(38, string.format('{"t":1,"s":"%s","p":"%s"}', nick, pw))
+	pr_send(38, string.format('{"t":1,"p":"%s"}', pw))
 	wait(300)
 	pr_send(38, '{"t":2,"s":"","r":0}')
-	dbg("[PR] Registration t=1+t=2 sent, waiting for server step t=3...")
+	dbg("[PR] Registration t=1+t=2 sent, waiting for server t=0 (invite)...")
 end
 
 local function pr_do_sex()
@@ -459,10 +459,11 @@ local function handle_pr_packet(screen_id, json_str)
 		-- Входящий step response {"t":N} — строго по протоколу:
 		--
 		-- РЕГИСТРАЦИЯ:
-		--   send {t:1, p:pw, s:""}
-		--   recv {t:3}  → send {t:3, r:0} (пол мужской)
+		--   send {t:1, p:pw}            ← ник НЕ передаём, сервер знает из подключения
+		--   send {t:2, s:"", r:0}       ← обязательный ACK
 		--   recv {t:0}  → send {t:4, s:""} (инвайт пропустить)
-		--   recv {t:0}  → send {t:5, r:skinId} (скин)
+		--   recv {t:0}  → send {t:3, r:0} (пол мужской)
+		--   recv {t:3}  → send {t:5, r:skinId} (скин)
 		--   recv {t:-1} → регистрация завершена
 		--
 		-- ЛОГИН:
@@ -472,30 +473,30 @@ local function handle_pr_packet(screen_id, json_str)
 		-- ================================================
 		if tp ~= nil then
 			if tp == 3 then
-				-- После {t:1} сервер отвечает {t:3} → выбор пола
-				dbg("[PR] GUI38 t=3: server ready for sex selection → send male")
+				-- Сервер {t:3} = подтверждение пола, просит выбрать скин
+				dbg("[PR] GUI38 t=3: skin selection prompt → send skin")
 				newTask(function()
 					wait(400)
-					pr_do_sex()
+					pr_do_skin()
 				end)
 
 			elseif tp == 0 then
 				-- t=0 = OK/next step
 				dbg("[PR] GUI38 t=0 (OK/next)")
 				if PR.is_registration then
-					-- Порядок: пол уже отправлен → инвайт → скин
+					-- Порядок: инвайт → пол (скин придёт по t=3 от сервера)
 					if not PR.invite_sent then
 						newTask(function()
 							wait(400)
 							pr_do_invite_skip()
 						end)
-					elseif not PR.skin_sent then
+					elseif not PR.sex_sent then
 						newTask(function()
 							wait(400)
-							pr_do_skin()
+							pr_do_sex()
 						end)
 					else
-						dbg("[PR] GUI38 t=0: registration steps complete, waiting t=-1")
+						dbg("[PR] GUI38 t=0: registration steps complete, waiting t=3 (skin)")
 					end
 				else
 					-- Логин: t=0 = успешно вошли
