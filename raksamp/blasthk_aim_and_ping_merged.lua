@@ -334,17 +334,22 @@ local function pr_do_register()
 	if #pw > 15 then pw = pw:sub(1, 15) end
 	PR.pw = pw
 	PR.reg_attempt = (PR.reg_attempt or 0) + 1
-	-- Сбрасываем флаги — шаги выполняются по ответам сервера (step-by-step)
+	-- Сбрасываем флаги — остальные шаги по ответам сервера (step-by-step)
 	PR.sex_sent = false; PR.skin_sent = false; PR.invite_sent = false
 	local nick = (PR.nick ~= "" and PR.nick) or get_bot_nick() or ""
 	dbg(string.format("[PR] REGISTER attempt=%d nick=%s pw_len=%d skin=%d",
 		PR.reg_attempt, nick, #pw, REGISTRATION_SKIN))
-	-- Шаг 1: создать аккаунт. Остальные шаги придут по ответам сервера:
-	--   сервер → {"t":3}  → мы: {"t":3,"r":0} (пол)
-	--   сервер → {"t":0}  → мы: {"t":4,"s":""} (инвайт), затем {"t":5,"r":skin} (скин)
-	--   сервер → {"t":-1} → готово
+	-- t=1: создать аккаунт (nick + pass)
+	-- t=2: обязательный ACK — без него сервер не продвигает флоу к {"t":3}
+	-- Остальные шаги придут по ответам сервера:
+	--   recv {"t":3}  → send {"t":3,"r":0} (пол мужской)
+	--   recv {"t":0}  → send {"t":4,"s":""} (пропустить инвайт)
+	--   recv {"t":0}  → send {"t":5,"r":skin} (скин)
+	--   recv {"t":-1} → регистрация завершена
 	pr_send(38, string.format('{"t":1,"s":"%s","p":"%s"}', nick, pw))
-	dbg("[PR] Registration t=1 sent, waiting for server steps...")
+	wait(300)
+	pr_send(38, '{"t":2,"s":"","r":0}')
+	dbg("[PR] Registration t=1+t=2 sent, waiting for server step t=3...")
 end
 
 local function pr_do_sex()
