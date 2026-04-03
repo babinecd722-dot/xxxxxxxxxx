@@ -1,0 +1,90 @@
+PRIME RUSSIA launcher — PRIMERUSSIA.apk (prime-rp.online)
+========================================================
+Скачано: curl -kfsSL https://prime-rp.online/PRIMERUSSIA.apk
+Распаковка: unzip → /workspace/prime_apk_extract
+Декод: apktool d → /workspace/prime_apk_decoded
+
+Нативные .so (lib/arm64-v8a и armeabi-v7a)
+------------------------------------------
+- libblackrussia-client.so  — клиент / JNI / сеть
+- libplugin.so
+- libNoesis.so, libbass.so, libcrypto.so, libssl.so, …
+
+Цепочка JSON → сеть (Java/Kotlin)
+---------------------------------
+com.blackhub.bronline.game.GUIManager.sendJsonData(int screenId, JSONObject json)
+  → json.toString()
+  → getBytes("windows-1251")
+  → com.blackhub.bronline.game.core.JNIJSONTransport.sendJsonData(int, byte[])
+
+То же кодирование, что в боте (windows-1251).
+
+Экран регистрации / логина в лаунчере
+--------------------------------------
+Все вызовы из пакета registration идут с screenId = 0x26 = **38 decimal**.
+
+См. smali: const/16 v1, 0x26 → sendJsonData(38, ...)
+
+Это совпадает с RakSAMP-ботом (screen 38), но порядок шагов и поля JSON
+должны совпадать с реальными UI-классами, а не только с догадками.
+
+Ключевые классы (decompiled smali)
+----------------------------------
+com/blackhub/bronline/game/gui/registration/
+  GUIRegistration.smali
+  UILayoutRegistrationLogin*.smali      — логин
+  UILayoutRegistrationCreatePassword*.smali — создание пароля / регистрация
+  UILayoutRegistrationInvite*.smali     — инвайт
+  UILayoutRegistrationSex*.smali        — пол
+  UILayoutRegistrationPerson*.smali   — скин (t=-1 preview + t=5 confirm в других inner)
+
+ЛОГИН (UILayoutRegistrationLogin$4, успешный submit)
+  JSONObject: t = 6 (const/4 v2, 0x6)
+              s = текст пароля из поля
+              r = 0/1 — состояние switchAuto (запомнить и т.п.)
+  sendJsonData(38, json)
+
+  Ошибки валидации пароля — отдельная ветка с showGUI(0xD, …) и t=2 (локальный UI).
+
+ACK после шагов (GUIRegistration.smali, ~строки 404–426 в smali)
+  t = 2
+  s = ""
+  r = 0
+  sendJsonData(38, json)
+
+РЕГИСТРАЦИЯ — шаг «создать пароль» (UILayoutRegistrationCreatePassword$8,
+ветка mIsRegistration == true)
+  t = 1
+  s = текст из edit1 (первое поле пароля)
+  p = текст из edit2 (второе поле — повтор/второй ввод)
+  sendJsonData(38, json)
+
+Важно: в APK на t=1 в полях s и p уходят ДВА строковых пароля (два поля формы),
+а не «ник + пароль». Ник берётся из подключения к серверу (как в SA-MP).
+
+ИНВАЙТ (UILayoutRegistrationInvite$5)
+  t = 4
+  s = ""
+  sendJsonData(38, json)
+
+ПОЛ (UILayoutRegistrationSex$3)
+  t = 3
+  r = 0 если выбран мужской (isMaleActive), иначе 1 после xor в smali
+  sendJsonData(38, json)
+
+Скин: смотреть UILayoutRegistrationPerson*.smali — там JSONObject с t/i/r
+и sendJsonData(38, …).
+
+Откуда брать «все RPC»
+-----------------------
+- SA-MP RPC (139, 151, …) в логах RakSAMP — это протокол игры; в APK они
+  уходят через libblackrussia-client.so (JNI), не как отдельные Java-файлы
+  с перечислением id.
+- Для полного списка RPC: strings + nm/objdump по libblackrussia-client.so
+  или динамический лог клиента.
+
+Артефакты в репозитории
+------------------------
+/workspace/PRIMERUSSIA.apk              — исходный APK (~88 MB)
+/workspace/prime_apk_extract/         — сырой unzip
+/workspace/prime_apk_decoded/         — apktool (smali + декодированные res)
