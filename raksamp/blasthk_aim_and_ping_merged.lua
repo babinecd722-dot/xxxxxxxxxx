@@ -6,15 +6,20 @@
   Сервер шлёт данные GUI ботам через кастомный ENet-канал.
   В логах RakSAMP Lite это пакеты id=251 (0xFB) и id=252 (0xFC).
 
-  Формат входящего пакета (id=251/252):
-    [1 byte] packet_id (251 или 252)
-    [4 bytes LE] screen_id (guiid)
-    [N bytes] JSON строка в windows-1251
+  Формат входящего пакета (id=251/252) — ПОДТВЕРЖДЁН hex-дампом:
+    [1 byte]  packet_id (251=0xFB или 252=0xFC)
+    [2 bytes LE] screen_id (uint16, НЕ uint32!)
+    [2 bytes LE] json_len  (uint16)
+    [2 bytes LE] 0x0000    (всегда ноль)
+    [N bytes] JSON строка
+    Пример: FC 26 00 0D 00 00 00 7B...  → pkt=0xFC screen=38 len=13 dup=0 json={...}
 
   Ответный пакет (клиент → сервер, id=251):
-    [1 byte] 251 (0xFB)
-    [4 bytes LE] screen_id
-    [N bytes] JSON строка в windows-1251
+    [1 byte]  0xFB (packet_id)
+    [2 bytes LE] screen_id (uint16)
+    [2 bytes LE] json_len  (uint16)
+    [2 bytes LE] 0x0000
+    [N bytes] JSON байт за байтом (НЕ writeString — добавляет prefix!)
 
   Все сообщения windows-1251. В Lua строки байтовые — всё работает напрямую.
 
@@ -23,15 +28,24 @@
       r=0 → регистрация, r=1 → логин
 
     ЛОГИН:         {"t":6, "s":"ПАРОЛЬ", "r":0}
-    РЕГИСТРАЦИЯ:   {"t":1, "s":"НИК", "p":"ПАРОЛЬ"}
-    ВЫБОР ПОЛА:    {"t":3, "r":0}  (0=муж, 1=жен)
-    СКИН PREVIEW:  {"t":-1, "i":78}
-    СКИН CONFIRM:  {"t":5, "r":78}
-    ИНВАЙТ СКИП:   {"t":4, "s":""}
+    РЕГИСТРАЦИЯ:   {"t":1, "p":"ПАРОЛЬ"}  ← ник НЕ нужен (сервер знает из подключения)
+    ACK:           {"t":2, "s":"", "r":0}  ← обязательный ACK сразу после t=1!
+    ИНВАЙТ СКИП:   {"t":4, "s":""}        ← первый шаг после ACK
+    ВЫБОР ПОЛА:    {"t":3, "r":0}         ← второй шаг (0=муж, 1=жен)
+    СКИН CONFIRM:  {"t":5, "r":78}        ← после {"t":3} от сервера
     ЗАКРЫТЬ GUI:   {"c":1}
 
-    Входящий {"t":0} → ОК, следующий шаг
-    Входящий {"t":3} → выбор скина (isMale confirmed)
+    Порядок регистрации (строго):
+      client→ {t:1, p:pw}      server→ (принимает)
+      client→ {t:2, s:"", r:0} server→ {"t":0}
+      client→ {t:4, s:""}      server→ {"t":0}
+      client→ {t:3, r:0}       server→ {"t":3}
+      client→ {t:5, r:skinId}  server→ {"t":-1} (готово)
+
+    Входящий {"t":0} → ОК, следующий шаг (инвайт или пол)
+    Входящий {"t":3} → запрос выбора скина
+    Входящий {"t":-1} → регистрация завершена
+    Входящий {"t":2} → ошибка (при логине = неверный пароль)
 
   screenId=10 — SAMP-диалог
     Входящий: {"o":1, "i":style, "c":"title", "s":"text", "l":"btn1", "r":"btn2"}
@@ -607,6 +621,7 @@ local function handle_pr_packet(screen_id, json_str)
 	-- ========================
 	elseif screen_id == 50 then
 		if o == 1 then
+			PR.spawn_loc_sent = false  -- сбрасываем при каждом открытии screen=50
 			dbg("[PR] SPAWN_LOCATION: server opened, choosing first slot → then sendSpawnRequest")
 			newTask(function()
 				wait(400)
@@ -994,6 +1009,10 @@ end
 function onConnectionLost()
 	dbg("[merged] ConnectionLost")
 	PR.active = false
+	PR.sex_sent = false
+	PR.skin_sent = false
+	PR.invite_sent = false
+	PR.spawn_loc_sent = false
 	PR.login_attempts = 0
 end
 
@@ -1056,7 +1075,8 @@ end
 function onRequestClassResponse(canSpawn, team, skin)
 	dbg(string.format("[merged] RequestClassResponse canSpawn=%s skin=%s", tostring(canSpawn), tostring(skin)))
 	-- НЕ шлём sendSpawnRequest здесь! Спавн управляется через JSON GUI цепочку:
-	-- screen=38 t=0 → пол → скин → инвайт → screen=50 SpawnLocation → спавн
+	-- screen=38: t=1+t=2 → recv t=0→инвайт → recv t=0→пол → recv t=3→скин → recv t=-1
+	-- → screen=50: SpawnLocation → sendSpawnRequest
 end
 
 function onRequestSpawnResponse(response)
