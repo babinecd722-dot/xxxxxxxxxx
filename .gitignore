@@ -11,3 +11,7 @@ lite_multi_launch.log
 PRIMERUSSIA.apk
 prime_apk_extract/
 prime_apk_decoded/
+prime_java_cfr/
+prime_jadx_java/
+prime_jadx_launcher/
+prime_jadx_samples/
