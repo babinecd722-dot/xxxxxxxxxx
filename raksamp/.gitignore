@@ -3,3 +3,4 @@ lite_gui/
 bots/
 *.run.log
 RakSAMPClient.exe
+.env
